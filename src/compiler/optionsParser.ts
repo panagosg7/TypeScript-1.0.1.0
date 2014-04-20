@@ -62,7 +62,7 @@ module TypeScript {
             this.printVersion();
 
             var optionsWord = getLocalizedText(DiagnosticCode.options, null);
-            var fileWord = getLocalizedText(DiagnosticCode.file1, null);
+            var fileWord = getLocalizedText(DiagnosticCode.file, null);
             var tscSyntax = "tsc [" + optionsWord + "] [" + fileWord + " ..]";
             var syntaxHelp = getLocalizedText(DiagnosticCode.Syntax_0, [tscSyntax]);
             this.host.printLine(syntaxHelp);

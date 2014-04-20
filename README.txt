@@ -25,3 +25,47 @@ Scalable JavaScript development with types, classes and modules.
         - You can also override the host or specify a test for this command. Use host=<hostName> or tests=<testPath>. 
     - jake baseline-accept - This replaces the baseline test results with the results obtained from jake runtests. 
     - jake -T lists the above commands. 
+
+
+
+## Adding New Diagnostics
+
+1.	Just add them in the JSON file: `src/compiler/resources/diagnosticMessages.json`
+
+2.	And then run the `generate.sh` script in the same folder. This will create these files:
+	    - `diagnosticInformationMap.generated.ts`
+	    - `diagnosticCode.generated.ts`
+
+3.	Check the renaming of the string you added as a diagnostic to access the 
+		relevant entry.
+
+
+
+
+In the older version you would need to add diagnostic information in ALL the following:
+    - diagnosticInformationMap.generated.ts
+    - diagnosticMessages.json
+    - diagnosticCode.generated.ts
+
+Keeping the original files diagnosticInformationMap.generated.ts and
+diagnosticCode.generated.ts for reference. Though they are not really
+compatible with JSON file. Somebody tampered with some of the entries...
+
+
+
+
+## Projects that use TypeScript
+
+0.	TypeScript Compiler
+
+1.	TouchDevelop (link: https://www.touchdevelop.com/)
+
+2.	jRIAppTS (link: https://github.com/BBGONE/jRIAppTS)
+
+3.	LeapMotionTS (link: https://github.com/logotype/LeapMotionTS)
+
+4.	Turbulenz (link: https://github.com/turbulenz/turbulenz_engine)
+
+5.	GrindFest (link: https://github.com/GrindFest/GrindFest)
+
+

@@ -10,6 +10,9 @@ module TypeScript {
         public allowAutomaticSemicolonInsertion: boolean = true;
         public noImplicitAny: boolean = false;
         public noLib: boolean = false;
+        //RefScript - begin
+        public refScript: boolean = false;
+        //RefScript - end
         public codeGenTarget: LanguageVersion = LanguageVersion.EcmaScript3;
         public moduleGenTarget: ModuleGenTarget = ModuleGenTarget.Unspecified;
         public outFileOption: string = "";
@@ -34,6 +37,9 @@ module TypeScript {
         private _allowAutomaticSemicolonInsertion: boolean;
         private _noImplicitAny: boolean;
         private _noLib: boolean;
+        //RefScript - begin
+        private _refScript: boolean;
+        //RefScript - end
         private _codeGenTarget: LanguageVersion;
         private _moduleGenTarget: ModuleGenTarget;
         private _outFileOption: string;
@@ -54,6 +60,9 @@ module TypeScript {
         public allowAutomaticSemicolonInsertion() { return this._allowAutomaticSemicolonInsertion; }
         public noImplicitAny() { return this._noImplicitAny; }
         public noLib() { return this._noLib; }
+        //RefScript - begin
+        public refScript() { return this._refScript; }
+        //RefScript - end
         public codeGenTarget() { return this._codeGenTarget; }
         public moduleGenTarget() { return this._moduleGenTarget; }
         public outFileOption() { return this._outFileOption; }
@@ -75,6 +84,9 @@ module TypeScript {
             allowAutomaticSemicolonInsertion: boolean,
             noImplicitAny: boolean,
             noLib: boolean,
+            //RefScript - begin
+            refScript: boolean,
+            //RefScript - end
             codeGenTarget: LanguageVersion,
             moduleGenTarget: ModuleGenTarget,
             outFileOption: string,
@@ -95,6 +107,9 @@ module TypeScript {
             this._allowAutomaticSemicolonInsertion = allowAutomaticSemicolonInsertion;
             this._noImplicitAny = noImplicitAny;
             this._noLib = noLib;
+            //RefScript - begin
+            this._refScript = refScript;
+            //RefScript - end
             this._codeGenTarget = codeGenTarget;
             this._moduleGenTarget = moduleGenTarget;
             this._outFileOption = outFileOption;
@@ -126,6 +141,9 @@ module TypeScript {
                 settings.allowAutomaticSemicolonInsertion,
                 settings.noImplicitAny,
                 settings.noLib,
+                //RefScript - begin
+                settings.refScript,
+                //RefScript - end
                 settings.codeGenTarget,
                 settings.moduleGenTarget,
                 settings.outFileOption,

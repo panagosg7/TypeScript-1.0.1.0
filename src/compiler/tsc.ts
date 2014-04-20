@@ -277,7 +277,7 @@ module TypeScript {
                     locCode: DiagnosticCode.Concatenate_and_emit_output_to_single_file,
                     args: null
                 },
-                type: DiagnosticCode.file2,
+                type: DiagnosticCode.file,
                 set: (str) => {
                     mutableSettings.outFileOption = str;
                 }
@@ -380,6 +380,18 @@ module TypeScript {
                     mutableSettings.noLib = true;
                 }
             });
+
+          //RefScript - begin
+          opts.flag('nano', {
+            usage: {
+              locCode: DiagnosticCode.Translate_to_RefScript_JSON_format,
+                args: null
+              },
+              set: () => {
+                mutableSettings.refScript = true;
+              }
+            });
+            //RefScript - end
 
             opts.flag('diagnostics', {
                 experimental: true,

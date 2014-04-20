@@ -36,3 +36,8 @@
 ///<reference path='typecheck\pullTypeInstantiation.ts' />
 ///<reference path='syntaxTreeToAstVisitor.ts' />
 ///<reference path='typescript.ts' />
+
+// ///<reference path='refscript\annot.ts' />
+// ///<reference path='refscript\syntax.ts' />
+// ///<reference path='refscript\types.ts' />
+// ///<reference path='refscript\translate.ts' />
