@@ -1723,4 +1723,9 @@
         "category": "Error",
         "code": 7018
     },
+
+    "Translate to RefScript (JSON format)":{
+        "category": "Message",
+        "code": 8000
+    }
 }
