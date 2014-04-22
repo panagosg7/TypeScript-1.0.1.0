@@ -13,13 +13,13 @@ module TypeScript {
         lastOrDefault(func: (v: T, index: number) => boolean): T;
     
 		//RefScript - begin
-		toRsExp(helper: RsHelper): RsASTList<RsExpression>;
-		toRsStmt(helper: RsHelper): RsASTList<RsStatement>;
-		toRsLValue(helper: RsHelper): RsASTList<RsLValue>;
-		toRsClassElt(helper: RsHelper): RsASTList<RsClassElt>;
-		toRsForInit(helper: RsHelper): RsASTList<RsForInit>;
-		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>
-		toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl>;	// Needs to be this way to capture ambient declarations.
+		toRsExp(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression>;
+		toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement>;
+		toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue>;
+		toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt>;
+		toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit>;
+		toRsMemList<T extends RsAST>(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<T>
+		toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): RsASTList<RsVarDecl>;	// Needs to be this way to capture ambient declarations.
 		//RefScript - end
 
     }
@@ -28,35 +28,35 @@ module TypeScript {
 module TypeScript.Syntax {
 
 	//RefScript - begin
-	function toRsAST<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+	function toRsAST<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> {
 		return new RsASTList(list.toArray().map(m => m.toRsAST(helper)));
 	}
 
-	function toRsExp<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsExpression> {
+	function toRsExp<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression> {
 		throw new Error("toRsExp not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsStatement> {
+	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> {
 		return new RsASTList(list.toArray().map(m => m.toRsStmt(helper)));
 	}
 
-	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> {
 		throw new Error("toRsMemList not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsLValue<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsLValue> {
+	function toRsLValue<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> {
 		throw new Error("toRsLValue not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsClassElt> {
+	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> {
 		throw new Error("toRsClassElt not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsForInit> {
+	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> {
 		throw new Error("toRsForInit not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsVarDecl<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns: RsAnnotation[]): RsASTList<RsVarDecl> {
+	function toRsVarDecl<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsVarDecl> {
 		throw new Error("toRsVarDecl not implemented for " + SyntaxKind[list.kind()]);
 	}
 	//RefScript - end
@@ -185,14 +185,14 @@ module TypeScript.Syntax {
         }
 
 		//RefScript - begin
-		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
-		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
-		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
-		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
+		public toRsAST(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end
     }
 
@@ -340,14 +340,14 @@ module TypeScript.Syntax {
         }
 
 		//RefScript - begin
-		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
-		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
-		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
-		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
+		public toRsAST(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end
    }
 
@@ -545,13 +545,13 @@ module TypeScript.Syntax {
 		}
 
 		//RefScript - begin
-		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
-		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
-		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
-		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsAST(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
 		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end 
     }

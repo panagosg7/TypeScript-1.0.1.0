@@ -24,7 +24,7 @@ module TypeScript {
 		toRsClassElt(helper: RsHelper): RsASTList<RsClassElt>;
 		toRsForInit(helper: RsHelper): RsASTList<RsForInit>;
 		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>
-		toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike>;	// Needs to be this way to capture ambient declarations.
+		toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<IRsVarDeclLike>;	// Needs to be this way to capture ambient declarations.
 		//RefScript - end
 
     }
@@ -38,7 +38,7 @@ module TypeScript.Syntax {
 	}
 
 	function toRsExp<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsExpression> {
-		throw new Error("toRsExp not implemented for " + SyntaxKind[list.kind()]);
+		return new RsASTList(list.toNonSeparatorArray().map(m => m.toRsExp(helper)));
 	}
 
 	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsStatement> {
@@ -46,7 +46,7 @@ module TypeScript.Syntax {
 	}
 
 	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
-		throw new Error("toRsMemList not implemented for " + SyntaxKind[list.kind()]);
+		return new RsASTList(list.toNonSeparatorArray().map(m => m.toRsMemList(helper)));
 	}
 
 	function toRsLValue<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsLValue> {

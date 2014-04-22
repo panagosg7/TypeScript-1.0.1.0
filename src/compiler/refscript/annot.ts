@@ -69,7 +69,7 @@ module TypeScript {
 
 		public getContent(): string { throw new Error("ABSTRACT: RsAnnotation.getContent"); }
 
-		public getKind(): AnnotKind { return this._tag;	}
+		public kind(): AnnotKind { return this._tag;	}
 
 		public toObject(): any {
 			var obj: any = {};

@@ -468,6 +468,7 @@ module TypeScript {
 		}
 
 		/** Returns annotations of the current ISyntaxElement node */
+        // FIXME: preComments does not work
 		public getRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
 			var annStrings: string[] = [];
 			var pre = ASTHelpers.preComments(this);

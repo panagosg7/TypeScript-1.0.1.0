@@ -960,7 +960,7 @@ module TypeScript {
 
 			var name = this.identifier.text();
 			var anns = this.getRsAnnotations(AnnotContext.OtherContext);
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.getKind() === AnnotKind.RawBind);
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 
 			if (bindAnnNames.length > 0 && !arrays_equal(bindAnnNames, [name])) {
@@ -1068,16 +1068,23 @@ module TypeScript {
             return false;
         }
 
-        //RsJS - begin
+        //RefScript - begin
         public toRsAST(helper: RsHelper): RsAST {
             return this.variableDeclaration.toRsAST(helper);
         }
 
         public toRsStmt(helper: RsHelper): RsStatement {
-            return this.variableDeclaration.toRsStmt(helper);
+            var anns: RsAnnotation[] =
+                ArrayUtilities.concat(this.modifiers.toArray()
+                    .map(m => m.leadingTrivia().toArray()
+                        .filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+                        .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+                        .filter(t => t ? true : false)
+                        .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext))));
+            // Pass over the annotations to the lower levels.
+            return this.variableDeclaration.toRsStmt(helper, anns);
         }
-        //RsJS - end
-	
+        //RefScript - end
     }
 
     export class VariableDeclarationSyntax extends SyntaxNode {
@@ -1147,30 +1154,13 @@ module TypeScript {
             return false;
         }
 
-		//RsJS - begin
-		//FIXME: This goes too deep !!!
-		//private definedVars(): Identifier[] {
-		//	var definedIds: Identifier[] = [];
-		//	TypeScript.getAstWalkerFactory().walk(this, function (cur: AST, parent: AST, walker: IAstWalker) {
-		//		if (cur.SyntaxKind() === SyntaxKind.VariableDeclarator) {
-		//			var varDecl = <VariableDeclarator>cur;
-		//			definedIds = definedIds.concat(varDecl.id);
-		//		}
-		//		return cur;
-		//	});
-		//	return definedIds;
-		//}
-
-		//public definedNames(): string[] {
-		//	return this.definedVars().map(id => id.text());
-		//}
-
+		//RefScript - begin
 		public toRsForInit(helper: RsHelper): RsForInit {
 			//Gather all annotations from the current node and all Bind annotations from the children nodes.
 			var anns = this.getAllRsAnnotations(AnnotContext.OtherContext);
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.getKind() === AnnotKind.RawBind);
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.kind() === AnnotKind.RawBind);
 			var sortedBinds = bindAnns.map(b => b.getBinderName()).sort();
-			var noBindAnns: RsAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.getKind() !== AnnotKind.RawBind);
+			var noBindAnns: RsAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.kind() !== AnnotKind.RawBind);
 			//Sanity checks
 			this.sanityCheck(helper, bindAnns);
 			//All variable declarators need to be translated to RsVarDecls
@@ -1181,31 +1171,34 @@ module TypeScript {
 			return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
 		}
 
-		public toRsStmt(helper: RsHelper): RsStatement {
-			//Gather all annotations from the current node and all Bind annotations from the children nodes.
-			var anns = this.getAllRsAnnotations(AnnotContext.OtherContext);
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.getKind() === AnnotKind.RawBind);
-			var noBindAnns: RsAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.getKind() !== AnnotKind.RawBind);
-			//Sanity checks
-			this.sanityCheck(helper, bindAnns);
-			//Adding all annotations for children nodes
+		public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
+            var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
+                .filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+                .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+                .filter(t => t ? true : false)
+                .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
 
-			//All variable declarators need to be translated to either RsVarDecls or EmptyStatements
+            //All variable declarators need to be translated to either RsVarDecls or EmptyStatements
+            var bindAnns = parentAnns.concat(anns).filter(a => a.kind() === AnnotKind.RawBind);
+            var noBindAnns = parentAnns.concat(anns).filter(a => a.kind() !== AnnotKind.RawBind);
+
+            //Descend into the variable declarators
 			var decls = this.variableDeclarators.toRsVarDecl(helper, bindAnns);
+
 			if (decls.members.every(d => d instanceof RsVarDecl)) {
 				return new RsVarDeclStmt(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
 			}
 			else if (decls.members.every(d => d instanceof RsEmptyStmt)) {
 				//Here we are dealing with Ambient definitions, so keep all the no-binder annotations as they are,
 				//and translate the binder ones to extern annotations.
-				var allAnnots: RsAnnotation[] =
+				var declAnnots: RsAnnotation[] =
 					noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(AnnotKind.RawExtern, b.getContent())));
-				return new RsEmptyStmt(helper.getSourceSpan(this), allAnnots);
+				return new RsEmptyStmt(helper.getSourceSpan(this), declAnnots);
 			} else {
 				throw new Error("VariableDeclaration:toRsStmt: This shouldn't happen.");
 			}
 		}
-		//RsJS - end
+		//RefScript - end
     }
 
     export class VariableDeclaratorSyntax extends SyntaxNode {
@@ -1284,59 +1277,37 @@ module TypeScript {
         }
 
         //RefScript - begin
-        public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike {
-
-            //If this is an ambient variable, force it to have a type annotation.
-            var pullDecl = helper.getDeclForAST(this);
-            if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
-
-                if (anns.filter(a => a.getKind() === AnnotKind.RawBind && a.getBinderName() === this.propertyName.text()).length !== 1) {
+        public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
+            //Invariant: anns are of kind RawBind
+            if (anns) {
+                var anns1 = anns.filter(a => a.getBinderName() === this.propertyName.text());
+                //If this is an ambient variable, force it to have a type annotation.
+                var pullDecl = helper.getDeclForAST(this);
+                if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
+                    if (anns1.length === 1) {
+                        //We are counting on the fact that TypeScript only allows VariableStatements to be ambient or not 
+                        //alltogether, so we won't be mixing up EmptyStatements and VariableDeclarators.
+                        //The actual annotations are handled by VariableDeclaration, so we don't have to populate them here.
+                        return new RsEmptyStmt(helper.getSourceSpan(this), anns1);
+                    }
                     console.log(helper.getSourceSpan(this).toString());
-                    console.log("Ambient variable declarator for '" + this.propertyName.text() + "' needs to have exactly one type annotation.");
+                    console.log("Ambient variable declarator for '" + this.propertyName.text() +
+                        "' needs to have exactly one type annotation.");
                     process.exit(1);
                 }
-                //Ambient Variable declarators are translated to "extern"'s in RefScript, and added to an EmptyStatement
-                //We are counting on the fact that TypeScript only allows VariableStatements to be ambient or not 
-                //alltogether, so we won't be mixing up EmptyStatements and VariableDeclarators.
-                //The actual annotations are handled by VariableDeclaration, so we don't have to populate them here.
-                return new RsEmptyStmt(helper.getSourceSpan(this), []);
+                //This is a normal declaration
+
+                if (anns1.length < 2) {
+                    //All necessary binders need to be in @anns@
+                    return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper),
+                        (this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
+                }
+                console.log(helper.getSourceSpan(this).toString());
+                console.log("Variable declarator for '" + this.propertyName.text() +
+                    "' needs to have at most one type annotation.");
+                process.exit(1);
             }
-
-            //All necessary binders need to be in @anns@
-            return new RsVarDecl(helper.getSourceSpan(this),
-                anns.filter(a => a.getBinderName() === this.propertyName.text()),
-                this.propertyName.toRsId(helper),
-                (this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
-        }
-
-
-        //public definedNames(): string[] {
-        //    return [this.id.text()];
-        //}
-
-        //public toRsClassElt(helper: RsHelper): RsClassElt {
-        //    var anns = this.getRsAnnotations(AnnotContext.ClassFieldContext);
-        //    var binderNames = <RsBindAnnotation[]>anns.filter(b => b.getKind() === AnnotKind.RawField);
-        //    // Do some checks on the binder names etc. 
-        //    // Keep in mind that the annotation is allowed to be missing
-        //    this.sanityCheck(helper, binderNames);
-        //    // Adding the annotations in the enclosing RsVarDecl instead of the top-level.
-        //    return new RsMemberVarDecl(helper.getSourceSpan(this), [],
-        //        hasFlag(this.getVarFlags(), VariableFlags.Static),
-        //        new RsVarDecl(helper.getSourceSpan(this),
-        //            anns, this.id.toRsAST(helper),
-        //            (this.init) ? this.init.toRsExp(helper) : null));
-        //}
-
-        ////Meh... Just do the check
-        //public interfaceEltSanityCheck(helper: RsHelper) {
-        //    var anns = this.getRsAnnotations(AnnotContext.ClassFieldContext);
-        //    var binderNames = <RsBindAnnotation[]>anns.filter(b => b.getKind() === AnnotKind.RawField);
-        //    // Do some checks on the binder names etc. 
-        //    // Keep in mind that the annotation is allowed to be missing
-        //    this.sanityCheck(helper, binderNames);
-        //}
-	
+       }
 		////RefScript - end
     }
 
@@ -2961,6 +2932,24 @@ module TypeScript {
             if (this.expression.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+        //RefScript - begin
+        public toRsLValue(helper: RsHelper): RsLValue {
+            switch (this.kind()) {
+                case SyntaxKind.MemberAccessExpression: {
+                    return new RsLDot(helper.getSourceSpan(this),
+                        this.getRsAnnotations(AnnotContext.OtherContext),
+                        this.expression.toRsExp(helper),
+                        this.name.text());
+                }
+                //case SyntaxKind.ElementAccessExpression:
+                //    return new RsLBracket(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.operand1.toRsExp(helper), this.operand2.toRsExp(helper));
+                default: {
+                    throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsLValue");
+                }
+            }
+        }
+        //RefScript - end
     }
 
     export class PostfixUnaryExpressionSyntax extends SyntaxNode implements IPostfixExpressionSyntax {
@@ -3235,10 +3224,20 @@ module TypeScript {
             if (this.argumentList.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+        //RefScript - begin
+        public toRsExp(helper: RsHelper): RsExpression {
+            return new RsCallExpr(helper.getSourceSpan(this),
+                this.getRsAnnotations(AnnotContext.OtherContext),
+                this.expression.toRsExp(helper),
+                this.argumentList.arguments.toRsExp(helper));
+        }
+		//RefScript - end
+
     }
 
     export class ArgumentListSyntax extends SyntaxNode {
-    public arguments: ISeparatedSyntaxList<IExpressionSyntax>;
+        public arguments: ISeparatedSyntaxList<IExpressionSyntax>;
         constructor(public typeArgumentList: TypeArgumentListSyntax,
                     public openParenToken: ISyntaxToken,
                     _arguments: ISeparatedSyntaxList<IExpressionSyntax>,
@@ -3504,34 +3503,7 @@ module TypeScript {
                     throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for : " + SyntaxKind[this.kind()]);
             }
         }
-
-
-        //public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
-        //    switch (this.SyntaxKind()) {
-        //        case SyntaxKind.Member: {
-        //            switch (this.operand1.SyntaxKind()) {
-        //                case SyntaxKind.Name:
-        //                    return new RsASTList([
-        //                        new RsPropId(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), (<Identifier>this.operand1).toRsAST(helper)),
-        //                        this.operand2.toRsExp(helper)
-        //                    ]);
-        //                case SyntaxKind.NumericLiteral:
-        //                    return new RsASTList([
-        //                        new RsPropNum(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), (<NumberLiteral>this.operand1).value),
-        //                        this.operand2.toRsExp(helper)
-        //                    ]);
-        //                case SyntaxKind.StringLiteral:
-        //                    return new RsASTList([
-        //                        new RsPropString(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), (<StringLiteral>this.operand1).actualText),
-        //                        this.operand2.toRsExp(helper)
-        //                    ]);
-        //            }
-        //        }
-        //        default:
-        //            throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsMemList:default");
-        //    }
-        //}
-		//RefScript - end
+    	//RefScript - end
 
     }
 
@@ -6750,6 +6722,16 @@ module TypeScript {
             if (this.propertyAssignments.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+        //RefScript - begin
+        public toRsExp(helper: RsHelper): RsExpression {
+            return new RsObjectLit(
+                helper.getSourceSpan(this),
+                this.getRsAnnotations(AnnotContext.OtherContext),
+                this.propertyAssignments.toRsMemList(helper));
+        }
+        //RefScript - end
+
     }
 
     export class SimplePropertyAssignmentSyntax extends SyntaxNode implements IPropertyAssignmentSyntax {
@@ -6826,6 +6808,16 @@ module TypeScript {
             if (this.expression.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+        //RefScript - begin
+        public toRsMemList(helper: RsHelper) {
+            var pName = this.propertyName;
+            return new RsASTList(
+                [new RsPropId(helper.getSourceSpan(pName),
+                    [] /*pName.getRsAnnotations(AnnotContext.OtherContext)*/,
+                    this.propertyName.toRsId(helper))]);
+        }
+        //RefScript - end
     }
 
     export class FunctionPropertyAssignmentSyntax extends SyntaxNode implements IPropertyAssignmentSyntax {

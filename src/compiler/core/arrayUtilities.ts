@@ -249,5 +249,21 @@ module TypeScript {
 
             return -1;
         }
+
+        public static concatMap<T,U>(array: T[][], func: (v: T) => U): U[] {
+            var result: U[] = [];
+            for (var i = 0, n = array.length; i < n; i++) {
+                var ts: T[] = array[i];
+                var us: U[] = ts.map(func);
+                for (var j = 0, m = us.length; j < m; j++) {
+                    result.push(us[j]);
+                }
+            }
+            return result;
+        }
+
+        public static concat<T, U>(array: T[][]): T[]{
+            return ArrayUtilities.concatMap(array, (x:T) => x);
+        }
     }
 }
