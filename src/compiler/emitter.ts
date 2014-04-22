@@ -2358,6 +2358,18 @@ module TypeScript {
             this.emit(ast);
         }
 
+		//RefScript - begin
+		public emitJSON(ast: ISyntaxElement, startLine: boolean) {
+            if (ast === null) {
+                return;
+            }
+			var helper = new RsHelper(this.semanticInfoChain);
+			var json = JSON.stringify(ast.toRsAST(helper).toObject(), undefined, 2);
+			this.writeToOutput(json);
+        }
+		//RefScript - end
+
+
         public emitAccessorMemberDeclaration(funcDecl: ISyntaxElement, name: ISyntaxToken, className: string, isProto: boolean) {
             if (funcDecl.kind() !== SyntaxKind.GetAccessor) {
                 var accessorSymbol = PullHelpers.getAccessorSymbol(funcDecl, this.semanticInfoChain);

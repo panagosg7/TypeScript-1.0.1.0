@@ -92,9 +92,10 @@ var compilerSources = [
 	"syntax/syntaxNode.ts",
 	"syntax/syntaxNodeInvariantsChecker.ts",
 	"syntax/syntaxNodeOrToken.ts",
-	"syntax/syntaxNodes.generated.ts",
+	// "syntax/syntaxNodes.generated.ts",		// RefScript will be using a fixed version
+	"syntax/syntaxNodes.ts",
 	"syntax/syntaxRewriter.generated.ts",
-	"syntax/syntaxToken.generated.ts",
+	"syntax/syntaxTokenGen.ts",
 	"syntax/syntaxToken.ts",
 	"syntax/syntaxTokenReplacer.ts",
 	"syntax/syntaxTree.ts",
@@ -126,6 +127,10 @@ var compilerSources = [
 	"typecheck/pullTypeResolutionContext.ts",
 	"typecheck/pullTypeEnclosingTypeWalker.ts",
 	"typecheck/pullTypeInstantiation.ts",
+	"refscript/annot.ts",
+	"refscript/syntax.ts",
+	"refscript/translate.ts",
+	"refscript/types.ts",
 	"typescript.ts"
 ].map(function (f) {
 	return path.join(compilerDirectory, f);
@@ -340,6 +345,10 @@ task("lib", libraryTargets);
 desc("Builds the full compiler and services");
 task("local", ["lib", typescriptFile, tscFile, serviceFile]);
 
+// Local target to build the compiler
+desc("Builds the full compiler and services");
+task("tsc", ["lib", tscFile]);
+
 // Local target to build the compiler and services
 desc("Emit debug mode files with sourcemaps");
 task("setDebugMode", function() {
@@ -490,48 +499,51 @@ task("baseline-accept-rwc", function() {
 	jake.rmRf(refRwcBaseline);
 	fs.renameSync(localRwcBaseline, refRwcBaseline);
 });
+
+
+// Disabling the following since we are going to be using a fixed version of the syntaxNodes
 																					
-// Syntax Generator
-var syntaxGeneratorOutFile = compilerDirectory + "syntax/SyntaxGenerator.js";
-var syntaxGeneratorInFile = compilerDirectory + "syntax/SyntaxGenerator.ts";
-file(compilerDirectory + "syntax/syntaxKind.ts");
-file(compilerDirectory + "syntax/syntaxFacts.ts");
-compileFile(syntaxGeneratorOutFile, [syntaxGeneratorInFile], [syntaxGeneratorInFile, compilerDirectory + "syntax/syntaxKind.ts", compilerDirectory + "syntax/syntaxFacts.ts"], [], /*useBuiltCompiler:*/ false);
+// // Syntax Generator
+// var syntaxGeneratorOutFile = compilerDirectory + "syntax/SyntaxGenerator.js";
+// var syntaxGeneratorInFile = compilerDirectory + "syntax/SyntaxGenerator.ts";
+// file(compilerDirectory + "syntax/syntaxKind.ts");
+// file(compilerDirectory + "syntax/syntaxFacts.ts");
+// compileFile(syntaxGeneratorOutFile, [syntaxGeneratorInFile], [syntaxGeneratorInFile, compilerDirectory + "syntax/syntaxKind.ts", compilerDirectory + "syntax/syntaxFacts.ts"], [], /*useBuiltCompiler:*/ false);
 
-desc("Builds and runs the syntax generator");
-task("run-syntax-generator", [syntaxGeneratorOutFile], function() {
-	host = process.env.host || process.env.TYPESCRIPT_HOST || "node";
-	var cmd = host + " " + syntaxGeneratorOutFile;
-	console.log(cmd);
-	var ex = jake.createExec([cmd]);
-	// Add listeners for output and error
-	ex.addListener("stdout", function(output) {
-		process.stdout.write(output);
-	});
-	ex.addListener("stderr", function(error) {
-		process.stderr.write(error);
-	});
-	ex.addListener("cmdEnd", function() {
-		complete();
-	});
-	ex.run();	
-}, {async: true});
+// desc("Builds and runs the syntax generator");
+// task("run-syntax-generator", [syntaxGeneratorOutFile], function() {
+// 	host = process.env.host || process.env.TYPESCRIPT_HOST || "node";
+// 	var cmd = host + " " + syntaxGeneratorOutFile;
+// 	console.log(cmd);
+// 	var ex = jake.createExec([cmd]);
+// 	// Add listeners for output and error
+// 	ex.addListener("stdout", function(output) {
+// 		process.stdout.write(output);
+// 	});
+// 	ex.addListener("stderr", function(error) {
+// 		process.stderr.write(error);
+// 	});
+// 	ex.addListener("cmdEnd", function() {
+// 		complete();
+// 	});
+// 	ex.run();	
+// }, {async: true});
 
-desc("Builds and runs the Fidelity tests");
-task("run-fidelity-tests", [fidelityTestsOutFile], function() {
-	host = process.env.host || process.env.TYPESCRIPT_HOST || "node";
-	var cmd = host + " " + fidelityTestsOutFile;
-	console.log(cmd);
-	var ex = jake.createExec([cmd]);
-	// Add listeners for output and error
-	ex.addListener("stdout", function(output) {
-		process.stdout.write(output);
-	});
-	ex.addListener("stderr", function(error) {
-		process.stderr.write(error);
-	});
-	ex.addListener("cmdEnd", function() {
-		complete();
-	});
-	ex.run();	
-}, {async: true});
+// desc("Builds and runs the Fidelity tests");
+// task("run-fidelity-tests", [fidelityTestsOutFile], function() {
+// 	host = process.env.host || process.env.TYPESCRIPT_HOST || "node";
+// 	var cmd = host + " " + fidelityTestsOutFile;
+// 	console.log(cmd);
+// 	var ex = jake.createExec([cmd]);
+// 	// Add listeners for output and error
+// 	ex.addListener("stdout", function(output) {
+// 		process.stdout.write(output);
+// 	});
+// 	ex.addListener("stderr", function(error) {
+// 		process.stderr.write(error);
+// 	});
+// 	ex.addListener("cmdEnd", function() {
+// 		complete();
+// 	});
+// 	ex.run();	
+// }, {async: true});

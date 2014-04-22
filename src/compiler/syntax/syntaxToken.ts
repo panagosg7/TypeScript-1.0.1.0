@@ -551,6 +551,46 @@ module TypeScript.Syntax {
         public nextToken(includeSkippedTokens: boolean = false): ISyntaxToken {
             return Syntax.nextToken(this, includeSkippedTokens);
         }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsAST {
+			throw new Error("toRsAST not implemented for " +  SyntaxKind[this.kind()]);
+		}
+
+		public toRsExp(helper: RsHelper): RsExpression {
+			throw new Error("toRsExp not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsStmt(helper: RsHelper): RsStatement {
+			throw new Error("toRsStmt not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsId(helper: RsHelper): RsId {
+			throw new Error("toRsId not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
+			throw new Error("toRsMemList not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsLValue(helper: RsHelper): RsLValue {
+			throw new Error("toRsLValue not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsClassElt(helper: RsHelper): RsClassElt {
+			throw new Error("toRsClassElt not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsForInit(helper: RsHelper): RsForInit {
+			throw new Error("toRsForInit not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsVarDecl {
+			throw new Error("toRsVarDecl not implemented for " + SyntaxKind[this.kind()]);
+		}
+		//RefScript - end
+
+
     }
 
     export function emptyToken(kind: SyntaxKind): ISyntaxToken {
@@ -730,6 +770,45 @@ module TypeScript.Syntax {
         public nextToken(includeSkippedTokens: boolean = false): ISyntaxToken {
             return Syntax.nextToken(this, includeSkippedTokens);
         }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsAST {
+			throw new Error("RealizedToken toRsAST not implemented for " +  SyntaxKind[this.kind()]);
+		}
+
+		public toRsExp(helper: RsHelper): RsExpression {
+			throw new Error("RealizedToken toRsExp not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsStmt(helper: RsHelper): RsStatement {
+			throw new Error("RealizedToken toRsStmt not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsId(helper: RsHelper): RsId {
+			throw new Error("toRsId not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
+			throw new Error("RealizedToken toRsMemList not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsLValue(helper: RsHelper): RsLValue {
+			throw new Error("RealizedToken toRsLValue not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsClassElt(helper: RsHelper): RsClassElt {
+			throw new Error("RealizedToken toRsClassElt not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsForInit(helper: RsHelper): RsForInit {
+			throw new Error("RealizedToken toRsForInit not implemented for " + SyntaxKind[this.kind()]);
+		}
+
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsVarDecl {
+			throw new Error("RealizedToken toRsVarDecl not implemented for " + SyntaxKind[this.kind()]);
+		}
+		//RefScript - end
+
     }
 
     export function token(kind: SyntaxKind, info: ITokenInfo = null, fullStart = -1): ISyntaxToken {

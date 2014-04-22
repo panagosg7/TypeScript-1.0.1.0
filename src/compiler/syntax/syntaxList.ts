@@ -11,10 +11,56 @@ module TypeScript {
 
         firstOrDefault(func: (v: T, index: number) => boolean): T;
         lastOrDefault(func: (v: T, index: number) => boolean): T;
+    
+		//RefScript - begin
+		toRsExp(helper: RsHelper): RsASTList<RsExpression>;
+		toRsStmt(helper: RsHelper): RsASTList<RsStatement>;
+		toRsLValue(helper: RsHelper): RsASTList<RsLValue>;
+		toRsClassElt(helper: RsHelper): RsASTList<RsClassElt>;
+		toRsForInit(helper: RsHelper): RsASTList<RsForInit>;
+		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>
+		toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl>;	// Needs to be this way to capture ambient declarations.
+		//RefScript - end
+
     }
 }
 
 module TypeScript.Syntax {
+
+	//RefScript - begin
+	function toRsAST<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+		return new RsASTList(list.toArray().map(m => m.toRsAST(helper)));
+	}
+
+	function toRsExp<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsExpression> {
+		throw new Error("toRsExp not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsStatement> {
+		return new RsASTList(list.toArray().map(m => m.toRsStmt(helper)));
+	}
+
+	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+		throw new Error("toRsMemList not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsLValue<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsLValue> {
+		throw new Error("toRsLValue not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsClassElt> {
+		throw new Error("toRsClassElt not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper): RsASTList<RsForInit> {
+		throw new Error("toRsForInit not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsVarDecl<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns: RsAnnotation[]): RsASTList<RsVarDecl> {
+		throw new Error("toRsVarDecl not implemented for " + SyntaxKind[list.kind()]);
+	}
+	//RefScript - end
+ 
     // TODO: stop exporting this once typecheck bug is fixed.
     export class EmptySyntaxList<T extends ISyntaxNodeOrToken> implements ISyntaxList<T> {
         public parent: ISyntaxElement = null;
@@ -137,6 +183,17 @@ module TypeScript.Syntax {
         public lastOrDefault(func: (v: ISyntaxNodeOrToken, index: number) => boolean): T {
             return null;
         }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end
     }
 
     var _emptyList: ISyntaxList<ISyntaxNodeOrToken> = <any>new EmptySyntaxList<ISyntaxNodeOrToken>();
@@ -281,7 +338,18 @@ module TypeScript.Syntax {
         public lastOrDefault(func: (v: ISyntaxNodeOrToken, index: number) => boolean): T {
             return func && func(this.item, 0) ? this.item : null;
         }
-    }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end
+   }
 
     class NormalSyntaxList<T extends ISyntaxNodeOrToken> implements ISyntaxList<T> {
         public parent: ISyntaxElement = null;
@@ -474,7 +542,18 @@ module TypeScript.Syntax {
 
         public lastOrDefault(func: (v: T, index: number) => boolean): T {
             return ArrayUtilities.lastOrDefault(this.nodeOrTokens, func);
-        }
+		}
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end 
     }
 
     export function list<T extends ISyntaxNodeOrToken>(nodes: T[]): ISyntaxList<T> {

@@ -1,4 +1,5 @@
 ///<reference path='references.ts' />
+///<reference path='..\references.ts' />
 
 module TypeScript {
     export interface ISeparatedSyntaxList<T extends ISyntaxNodeOrToken> extends ISyntaxElement {
@@ -14,10 +15,58 @@ module TypeScript {
         nonSeparatorAt(index: number): T;
 
         insertChildrenInto(array: ISyntaxElement[], index: number): void;
+
+		//RefScript - begin
+		toRsAST(helper: RsHelper): RsASTList<RsAST>;
+		toRsExp(helper: RsHelper): RsASTList<RsExpression>;
+		toRsStmt(helper: RsHelper): RsASTList<RsStatement>;
+		toRsLValue(helper: RsHelper): RsASTList<RsLValue>;
+		toRsClassElt(helper: RsHelper): RsASTList<RsClassElt>;
+		toRsForInit(helper: RsHelper): RsASTList<RsForInit>;
+		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>
+		toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike>;	// Needs to be this way to capture ambient declarations.
+		//RefScript - end
+
     }
 }
 
 module TypeScript.Syntax {
+
+	//RefScript - begin
+	function toRsAST<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+		return new RsASTList(list.toNonSeparatorArray().map(m => m.toRsAST(helper)));
+	}
+
+	function toRsExp<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsExpression> {
+		throw new Error("toRsExp not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsStatement> {
+		return new RsASTList(list.toNonSeparatorArray().map(m => m.toRsStmt(helper)));
+	}
+
+	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsAST> {
+		throw new Error("toRsMemList not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsLValue<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsLValue> {
+		throw new Error("toRsLValue not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsClassElt> {
+		throw new Error("toRsClassElt not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper): RsASTList<RsForInit> {
+		throw new Error("toRsForInit not implemented for " + SyntaxKind[list.kind()]);
+	}
+
+	function toRsVarDecl<T extends ISyntaxNodeOrToken>(list: ISeparatedSyntaxList<T>, helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike> {
+		return new RsASTList(list.toNonSeparatorArray().map(m => m.toRsVarDecl(helper, anns)));
+	}
+	//RefScript - end
+ 
+ 
     class EmptySeparatedSyntaxList<T extends ISyntaxNodeOrToken> implements ISeparatedSyntaxList<T> {
         public parent: ISyntaxElement = null;
 
@@ -166,6 +215,18 @@ module TypeScript.Syntax {
         trailingTriviaWidth() {
             return 0;
         }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end
+ 
     }
 
     var _emptySeparatedList: ISeparatedSyntaxList<ISyntaxNodeOrToken> = new EmptySeparatedSyntaxList<ISyntaxNodeOrToken>();
@@ -309,6 +370,18 @@ module TypeScript.Syntax {
         public insertChildrenInto(array: ISyntaxElement[], index: number): void {
             array.splice(index, 0, this.item);
         }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end
+
     }
 
     class NormalSeparatedSyntaxList<T extends ISyntaxNodeOrToken> implements ISeparatedSyntaxList<T> {
@@ -520,7 +593,18 @@ module TypeScript.Syntax {
                 array.splice.apply(array, [index, <any>0].concat(this.elements));
             }
         }
-    }
+
+		//RefScript - begin
+		public toRsAST(helper: RsHelper): RsASTList<RsAST> { return toRsAST(this, helper); }
+		public toRsExp(helper: RsHelper): RsASTList<RsExpression> {return toRsExp(this, helper); } 
+		public toRsStmt(helper: RsHelper): RsASTList<RsStatement> { return toRsStmt(this, helper); }
+		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsLValue(helper: RsHelper): RsASTList<RsLValue> { return toRsLValue(this, helper); }
+		public toRsClassElt(helper: RsHelper): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsForInit(helper: RsHelper): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<IRsVarDeclLike> { return toRsVarDecl(this, helper, anns); } 
+		//RefScript - end
+   }
 
     export function separatedList<T extends ISyntaxNodeOrToken>(nodes: ISyntaxNodeOrToken[]): ISeparatedSyntaxList<T> {
         return separatedListAndValidate<T>(nodes, false);

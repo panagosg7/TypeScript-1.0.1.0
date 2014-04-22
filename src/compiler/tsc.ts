@@ -103,6 +103,7 @@ module TypeScript {
                     this.logger.log(" noResolve " + this.compilationSettings.noResolve());
                     this.logger.log(" noImplicitAny " + this.compilationSettings.noImplicitAny());
                     this.logger.log(" nolib " + this.compilationSettings.noLib());
+					this.logger.log(" refscript " + this.compilationSettings.refScript());
                     this.logger.log(" target " + this.compilationSettings.codeGenTarget());
                     this.logger.log(" module " + this.compilationSettings.moduleGenTarget());
                     this.logger.log(" out " + this.compilationSettings.outFileOption());
@@ -381,15 +382,15 @@ module TypeScript {
                 }
             });
 
-          //RefScript - begin
-          opts.flag('nano', {
-            usage: {
-              locCode: DiagnosticCode.Translate_to_RefScript_JSON_format,
-                args: null
-              },
-              set: () => {
-                mutableSettings.refScript = true;
-              }
+			//RefScript - begin
+			opts.flag('refscript', {
+				usage: {
+					locCode: DiagnosticCode.Translate_to_RefScript_JSON_format,
+					args: null
+				},
+				set: () => {
+					mutableSettings.refScript = true;
+				}
             });
             //RefScript - end
 

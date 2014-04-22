@@ -386,6 +386,10 @@ module TypeScript {
             return TypeScriptCompiler.mapToFileNameExtension(".js", fileName, wholeFileNameReplaced);
         }
 
+        static mapToJSONFileName(fileName: string, wholeFileNameReplaced: boolean) {
+            return TypeScriptCompiler.mapToFileNameExtension(".json", fileName, wholeFileNameReplaced);
+        }
+
         // Caller is responsible for closing the returned emitter.
         // May throw exceptions.
         private emitDocumentWorker(document: Document, emitOptions: EmitOptions, emitter?: Emitter): Emitter {
@@ -417,6 +421,37 @@ module TypeScript {
             return emitter;
         }
 
+		private emitJSONWorker(document: Document, emitOptions: EmitOptions, emitter?: Emitter): Emitter {
+            var sourceUnit = document.sourceUnit();
+            Debug.assert(this._shouldEmit(document));
+
+            var typeScriptFileName = document.fileName;
+            if (!emitter) {
+                var jsonFileName = this.mapOutputFileName(document, emitOptions, TypeScriptCompiler.mapToJSONFileName);
+                var outFile = new TextWriter(jsonFileName, this.writeByteOrderMarkForDocument(document), OutputFileType.JavaScript);
+
+                emitter = new Emitter(jsonFileName, outFile, emitOptions, this.semanticInfoChain);
+
+                if (this.compilationSettings().mapSourceFiles()) {
+                    // We always create map files next to the jsFiles
+                    var sourceMapFile = new TextWriter(jsonFileName + SourceMapper.MapFileExtension, /*writeByteOrderMark:*/ false, OutputFileType.SourceMap); 
+                    emitter.createSourceMapper(document, jsonFileName, outFile, sourceMapFile, emitOptions.resolvePath);
+                }
+            }
+            else if (this.compilationSettings().mapSourceFiles()) {
+                // Already emitting into js file, update the mapper for new source info
+                emitter.setSourceMapperNewSourceFile(document);
+            }
+
+            // Set location info
+            emitter.setDocument(document);
+            emitter.emitJSON(sourceUnit, /*startLine:*/false);
+
+            return emitter;
+        }
+
+
+
         // Private.  only for use by compiler or CompilerIterator
         public _emitDocument(
             document: Document,
@@ -443,6 +478,33 @@ module TypeScript {
             return sharedEmitter;
         }
 
+		public _emitJSON(
+            document: Document,
+            emitOptions: EmitOptions,
+            onSingleFileEmitComplete: (files: OutputFile[]) => void,
+            sharedEmitter: Emitter): Emitter {
+
+            // Emitting module or multiple files, always goes to single file
+                if (this._shouldEmit(document)) {
+                if (document.emitToOwnOutputFile()) {
+                    // We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
+                    var singleEmitter = this.emitJSONWorker(document, emitOptions);
+                    if (singleEmitter) {
+                        onSingleFileEmitComplete(singleEmitter.getOutputFiles());
+                    }
+                }
+                else {
+                    // We're not outputting to multiple files.  Keep using the same emitter and don't
+                    // close until below.
+                    sharedEmitter = this.emitJSONWorker(document, emitOptions, sharedEmitter);
+                }
+            }
+
+            return sharedEmitter;
+        }
+
+
+
         // Will not throw exceptions.
         public emitAll(resolvePath: (path: string) => string): EmitOutput {
             var start = new Date().getTime();
@@ -455,7 +517,9 @@ module TypeScript {
             }
 
             var fileNames = this.fileNames();
-            var sharedEmitter: Emitter = null;
+			var sharedEmitter: Emitter = null;
+
+			var sharedJSONEmitter: Emitter = null;
 
             // Iterate through the files, as long as we don't get an error.
             for (var i = 0, n = fileNames.length; i < n; i++) {
@@ -466,6 +530,14 @@ module TypeScript {
                 sharedEmitter = this._emitDocument(document, emitOptions,
                     files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
                     sharedEmitter);
+
+				//RefScript - begin
+				if (this.compilationSettings().refScript()) {
+					sharedJSONEmitter = this._emitJSON(document, emitOptions,
+						files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
+						sharedJSONEmitter);
+				}
+				//RefScript - end
             }
 
             if (sharedEmitter) {
@@ -493,6 +565,14 @@ module TypeScript {
             if (document.emitToOwnOutputFile()) {
                 this._emitDocument(document, emitOptions,
                     files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files), /*sharedEmitter:*/ null);
+
+				//RefScript - begin
+				if (this.compilationSettings().refScript()) {
+					this._emitJSON(document, emitOptions,
+						files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
+						null);
+				}
+				//RefScript - end
                 return emitOutput;
             }
             else {
@@ -1122,6 +1202,9 @@ module TypeScript {
         private _current: CompileResult = null;
         private _emitOptions: EmitOptions = null;
         private _sharedEmitter: Emitter = null;
+		//RefScript - begin
+        private _sharedJSONEmitter: Emitter = null;
+		//RefScript - end
         private _sharedDeclarationEmitter: DeclarationEmitter = null;
         private hadSyntacticDiagnostics: boolean = false;
         private hadSemanticDiagnostics: boolean = false;
@@ -1278,6 +1361,14 @@ module TypeScript {
                     document, this._emitOptions,
                     outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
                     this._sharedEmitter);
+
+				//RefScript - begin
+				if (this.compiler.compilationSettings().refScript()) {
+					this._sharedJSONEmitter = this.compiler._emitJSON(document, this._emitOptions,
+						outputFiles =>  { this._current = CompileResult.fromOutputFiles(outputFiles) },
+						this._sharedJSONEmitter);
+				}
+				//RefScript - end
                 return true;
             }
 
