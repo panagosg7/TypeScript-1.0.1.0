@@ -400,7 +400,6 @@ module TypeScript {
 	}
 
 	export class RsIntLit extends RsExpression {
-
 		public toObject() {
 			return {
 				IntLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
@@ -409,14 +408,13 @@ module TypeScript {
 		}
 
 		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public num: number) { super(ann); }
+        			public ann: RsAnnotation[],
+		        	public num: number) { super(ann); }
 	}
 
 
 
 	export class RsStringLit extends RsExpression {
-
 		public toObject() {
 			//Quotes fix
 			var l = this.str.length;
@@ -429,8 +427,8 @@ module TypeScript {
 		}
 
 		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public str: string) { super(ann); }
+        			public ann: RsAnnotation[],
+		        	public str: string) { super(ann); }
 	}
 	
 	export class RsFuncExpr extends RsExpression {
@@ -878,23 +876,22 @@ module TypeScript {
 	}
 
 	export class RsForStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				ForStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					(this.init) ? this.init.toObject() : null,
+                ForStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+                    (this.init) ? this.init.toObject() : null,
 					(this.test) ? this.test.toObject() : null,
 					this.inc.toObject(),
-					this.body.toObject()
-				]
+					this.body.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public init: RsForInit, /*Maybe*/ public test: RsExpression,
-			/*Maybe*/ public inc: RsExpression, public body: RsStatement) {
-			super(ann);
-		}
+        constructor(    public span: RsSourceSpan,
+                        public ann: RsAnnotation[],
+                        public init: RsForInit,
+              /*Maybe*/ public test: RsExpression,
+              /*Maybe*/ public inc: RsExpression,
+                        public body: RsStatement) {	super(ann);	}
 	}
 
 	export class RsIfStmt extends RsStatement {

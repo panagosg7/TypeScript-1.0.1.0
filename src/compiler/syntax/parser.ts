@@ -5211,11 +5211,11 @@ module TypeScript.Parser {
         }
 
         private parseSeparatedSyntaxListWorker<T extends ISyntaxNodeOrToken>(currentListType: ListParsingState): { skippedTokens: ISyntaxToken[]; list: ISeparatedSyntaxList<T>; } {
-            var items: ISyntaxNodeOrToken[] = this.getArray();
+            var items: T[] = this.getArray();
             var skippedTokens: ISyntaxToken[] = this.getArray();
             Debug.assert(items.length === 0);
             Debug.assert(skippedTokens.length === 0);
-            Debug.assert(skippedTokens !== items);
+            //Debug.assert(skippedTokens !== items);
 
             var separatorKind = this.separatorKind(currentListType);
             var allowAutomaticSemicolonInsertion = separatorKind === SyntaxKind.SemicolonToken;
@@ -5267,7 +5267,7 @@ module TypeScript.Parser {
                 var currentToken = this.currentToken();
                 if (currentToken.tokenKind === separatorKind || currentToken.tokenKind === SyntaxKind.CommaToken) {
                     // Consume the last separator and continue parsing list elements.
-                    items.push(this.eatAnyToken());
+                    items.push(<any>this.eatAnyToken());
                     continue;
                 }
 
@@ -5295,7 +5295,7 @@ module TypeScript.Parser {
                 // consume the '}' just fine.  So ASI doesn't apply.
 
                 if (allowAutomaticSemicolonInsertion && this.canEatAutomaticSemicolon(/*allowWithoutNewline:*/ false)) {
-                    items.push(this.eatExplicitOrAutomaticSemicolon(/*allowWithoutNewline:*/ false));
+                    items.push(<any>this.eatExplicitOrAutomaticSemicolon(/*allowWithoutNewline:*/ false));
                     // Debug.assert(items.length % 2 === 0);
                     continue;
                 }
@@ -5305,7 +5305,7 @@ module TypeScript.Parser {
                 // This time mark that we're in error recovery mode though.
                 //
                 // Note: trying to eat this token will emit the appropriate diagnostic.
-                items.push(this.eatToken(separatorKind));
+                items.push(<any>this.eatToken(separatorKind));
 
                 // Now that we're in 'error recovery' mode we cantweak some parsing rules as 
                 // appropriate.  For example, if we have:

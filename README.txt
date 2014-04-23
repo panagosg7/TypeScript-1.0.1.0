@@ -2,6 +2,11 @@
 
 Scalable JavaScript development with types, classes and modules.
 
+
+## Version
+
+Commit SHA: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.codeplex.com/
+
 ## Install
 
   npm install -g typescript

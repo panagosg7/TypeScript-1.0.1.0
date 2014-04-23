@@ -24,7 +24,8 @@
 ///<reference path='syntaxNodeOrToken.ts' />
 // ///<reference path='syntaxNodes.generated.ts' />	// RefScript will be using a fixed version
 ///<reference path='syntaxNodes.ts' />
-///<reference path='syntaxRewriter.generated.ts' />
+// ///<reference path='syntaxRewriter.generated.ts' /> 	// RefScript will be using a fixed version
+///<reference path='syntaxRewriterGen.ts' />
 
 // SyntaxDedenter depends on SyntaxRewriter
 ///<reference path='syntaxDedenter.ts' />

@@ -94,7 +94,8 @@ var compilerSources = [
 	"syntax/syntaxNodeOrToken.ts",
 	// "syntax/syntaxNodes.generated.ts",		// RefScript will be using a fixed version
 	"syntax/syntaxNodes.ts",
-	"syntax/syntaxRewriter.generated.ts",
+	//"syntax/syntaxRewriter.generated.ts",         // RefScript will be using a fixed version
+	"syntax/syntaxRewriterGen.ts",
 	"syntax/syntaxTokenGen.ts",
 	"syntax/syntaxToken.ts",
 	"syntax/syntaxTokenReplacer.ts",

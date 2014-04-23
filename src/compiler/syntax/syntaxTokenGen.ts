@@ -17,18 +17,28 @@ module TypeScript.Syntax {
                     helper.getSourceSpan(token),
                     [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
                     <RsId>token.toRsAST(helper));
-            case SyntaxKind.NumericLiteral:
-                if (token.text().indexOf(".") === -1)
-                    //No decimal part
-                    return new RsIntLit(helper.getSourceSpan(token),
-                        [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-                        token.value());
-                else
-                    return new RsNumLit(helper.getSourceSpan(token),
-                        [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-                        token.value());
+
+			case SyntaxKind.NumericLiteral:
+				if (token.text().indexOf(".") === -1) {
+					//No decimal part
+					return new RsIntLit(helper.getSourceSpan(token),
+						[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+						token.value());
+				}
+				else {
+					return new RsNumLit(helper.getSourceSpan(token),
+						[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+						token.value());
+				}
+			
+			case SyntaxKind.FalseKeyword:
+			case SyntaxKind.TrueKeyword:
+				return new RsBoolLit(helper.getSourceSpan(token),
+					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+					token.value());
+
 	        default:
-                throw new Error("toRsExp not implemented for " + SyntaxKind[token.kind()]);
+                throw new Error("NEW: toRsExp not implemented for " + SyntaxKind[token.kind()]);
         }
 	}
 

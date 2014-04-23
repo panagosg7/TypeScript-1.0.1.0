@@ -1,6 +1,17 @@
 ///<reference path='references.ts' />
 
 module TypeScript {
+
+	/* Get the annotations that lead a token */
+	function tokenAnnots(token: ISyntaxToken): RsAnnotation[] {
+		return token.leadingTrivia().toArray()
+			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+			.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+			.filter(t => t !== null)
+			.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
+	}
+ 
+
     export class SourceUnitSyntax extends SyntaxNode {
         public _syntaxTree: SyntaxTree = null;
         constructor(public moduleElements: ISyntaxList<IModuleElementSyntax>,
@@ -646,6 +657,118 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+
+
+		//RefScript - begin
+		public toRsStmt(helper: RsHelper): RsStatement {
+
+			////Extends
+			//var parent: Identifier = null;
+			//if (this.extendsList && this.extendsList.members) {
+			//	if (this.extendsList.members.length == 1) {
+			//		parent = <Identifier>this.extendsList.members[0];
+			//	}
+			//	else {
+			//		throw new Error("UNIMPLEMENTED: InterfaceDeclaration.toRsStmt can only extend a single class.");
+			//	}
+			//}
+			////Implements
+			//var implementsInterfaces: Identifier[] = (this.implementsList && this.implementsList.members)
+			//	? <Identifier[]>this.implementsList.members : <Identifier[]>[];
+			//var implementsInterfacesIds = implementsInterfaces.map(i => <RsId>i.toRsAST(helper));
+
+			//Interface header annotations
+
+
+			var originalAnnots = tokenAnnots(this.interfaceKeyword);
+
+			//Is there an interface annotation given?
+			var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawType);
+			var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawType);
+
+			var headerAnnotStr = "";
+
+
+			//No class annotation given - generate one based on the existing interface header
+			if (headerAnnots.length === 0) {
+
+
+				if (this.typeParameterList) {
+					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = this.typeParameterList.typeParameters;
+				}
+				else {
+					var emp: TypeParameterSyntax[] = [];
+					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = Syntax.separatedList(emp);
+				}
+
+				var typeParamStr = (typeParams.toNonSeparatorArray().length > 0) ?
+					("<" + typeParams.toNonSeparatorArray().map(p => p.identifier.text()).join(", ") + ">"): "";
+
+
+				//HEREHERE
+				// Call to heritage...
+				this.heritageClauses.toArray().forEach(h => h.toRs());
+			}
+			//Otherwise - Use the given annotations
+			else if (headerAnnots.length === 1) {
+				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
+				//This might not be very straightforward because we might need to parse refinement types.
+				var headerAnnot = <RsExplicitNamedTypeAnnotation> headerAnnots[0];
+				headerAnnotStr = headerAnnot.getContent() + " ";
+			}
+			else {
+				console.log(helper.getSourceSpan(this).toString());
+				console.log("Interface '" + this.identifier.text() + "' has multiple interface annoatations.");
+				process.exit(1);
+			}
+
+			////Body of the interface declaration
+			//var members: string[] = this.members.members.map(m => {
+			//	if (m.nodeType() === NodeType.FunctionDeclaration) {
+			//		// Index signature case: 
+			//		// Add a field wit
+			//		var f = <FunctionDeclaration>m;
+			//		var decl = helper.getDeclForAST(m);
+			//		var symb = helper.getSymbolForAST(m);
+
+			//		if (symb instanceof PullSignatureSymbol) {
+			//			var ssymb = <PullSignatureSymbol>symb;
+			//			console.log(ssymb.parameters.toString());
+			//			console.log(ssymb.returnType.toString());
+			//		}
+
+			//	}
+			//	else if (m.nodeType() === NodeType.VariableDeclarator) {
+			//		var v = <VariableDeclarator> m;
+			//		//If there is no annotation
+			//		var anns = v.getRsAnnotations(AnnotContext.OtherContext);
+			//		if (anns.length === 0) {
+			//			var eltSymbol = helper.getSymbolForAST(v);
+			//			return eltSymbol.name + ": " + eltSymbol.type.toRsType().toString();
+			//		}
+			//		//Annotation provided by user
+			//		else {
+			//			v.interfaceEltSanityCheck(helper);
+			//			var ann = anns[0];
+			//			// XXX: String HACK
+			//			return ann.getContent().replace("::", ":");
+			//		}
+			//	}
+			//	else {
+			//		throw new Error("[UNIMPLEMENTED] InterfaceDeclaration member: " + NodeType[m.nodeType()]);
+			//	}
+			//});
+
+			//var membersStr = members.join(", ");
+			//var finalAnnotStr = headerAnnotStr + "{ " + membersStr + " }";
+			//restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, finalAnnotStr));
+			//return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
+
+			return null;
+		}
+		//RefScript- end
+
     }
 
     export class HeritageClauseSyntax extends SyntaxNode {
@@ -718,6 +841,43 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+
+		//RefScript - begin
+
+		public toRs() {
+
+			this.typeNames.toNonSeparatorArray().forEach(t => {
+				console.log(t);
+			});
+
+			//var extendsType: RsType = null;
+			//if (!this.extendsList || this.extendsList.members.length === 0) {
+			//	headerAnnotStr = this.name.text() + " " + typeParamStr + " ";
+			//}
+			//else if (this.extendsList && this.extendsList.members.length === 1) {
+			//	//This class extends another one.
+			//	var baseNameDecl = this.extendsList.members[0];
+			//	var baseName = baseNameDecl.nodeType() === NodeType.InvocationExpression ? (<InvocationExpression>baseNameDecl).target : baseNameDecl;
+			//	switch (baseName.nodeType()) {
+			//		case NodeType.Name:
+			//		case NodeType.GenericType:
+			//			var baseSymbol = helper.getSymbolForAST(baseNameDecl);
+			//			extendsType = baseSymbol.type.toRsType();
+			//			headerAnnotStr = this.name.text() + " " + typeParamStr + " extends " + extendsType.toString() + " ";
+			//			break;
+			//		default:
+			//			throw new Error("BUG: An interface cannot extend a " + NodeType[baseName.nodeType()]);
+			//	}
+			//}
+			//else if (this.extendsList && this.extendsList.members.length > 1) {
+			//	throw new Error("UNIMPLEMENTED: An interface cannot extend multiple interfaces.");
+			//}
+
+		}
+		//RefScript - end
+
+
     }
 
     export class ModuleDeclarationSyntax extends SyntaxNode implements IModuleElementSyntax {
@@ -1079,7 +1239,7 @@ module TypeScript {
                     .map(m => m.leadingTrivia().toArray()
                         .filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
                         .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-                        .filter(t => t ? true : false)
+						.filter(t => t !== null)
                         .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext))));
             // Pass over the annotations to the lower levels.
             return this.variableDeclaration.toRsStmt(helper, anns);
@@ -1155,27 +1315,32 @@ module TypeScript {
         }
 
 		//RefScript - begin
-		public toRsForInit(helper: RsHelper): RsForInit {
-			//Gather all annotations from the current node and all Bind annotations from the children nodes.
-			var anns = this.getAllRsAnnotations(AnnotContext.OtherContext);
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.kind() === AnnotKind.RawBind);
-			var sortedBinds = bindAnns.map(b => b.getBinderName()).sort();
-			var noBindAnns: RsAnnotation[] = <RsBindAnnotation[]>anns.filter(a => a.kind() !== AnnotKind.RawBind);
-			//Sanity checks
-			this.sanityCheck(helper, bindAnns);
-			//All variable declarators need to be translated to RsVarDecls
-			var decls = this.variableDeclarators.toRsVarDecl(helper, bindAnns);
-			if (!decls.members.every(d => d instanceof RsVarDecl)) {
-				throw new Error("toRsForInit: can only have non-ambient variable declarators here.")
+
+		/* The for init case has the annotations before the "for" keyword, so it inherits the annotations
+			from its parent. */
+		public toRsForInit(helper: RsHelper, parentAnns?: RsAnnotation[]): RsForInit {
+			if (parentAnns) {
+				var anns = parentAnns;
+			} else {
+				var anns: RsAnnotation[] = [];
 			}
-			return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
+            //All variable declarators need to be translated to either RsVarDecls or EmptyStatements
+            var bindAnns = anns.filter(a => a.kind() === AnnotKind.RawBind);
+			var noBindAnns = anns.filter(a => a.kind() !== AnnotKind.RawBind);
+
+			var decls = this.variableDeclarators.toRsVarDecl(helper, bindAnns);
+
+			if (decls.members.every(d => d instanceof RsVarDecl)) {
+				return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
+			}
+			throw new Error("toRsForInit: can only have non-ambient variable declarators here.")
 		}
 
 		public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
             var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
                 .filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
                 .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-                .filter(t => t ? true : false)
+				.filter(t => t !== null)
                 .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
 
             //All variable declarators need to be translated to either RsVarDecls or EmptyStatements
@@ -2948,7 +3113,19 @@ module TypeScript {
                     throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsLValue");
                 }
             }
-        }
+		}
+
+		public toRsExp(helper: RsHelper): RsExpression {
+			switch (this.name.kind()) {
+				case SyntaxKind.IdentifierName: {
+					return new RsDotRef(helper.getSourceSpan(this),
+						this.getRsAnnotations(AnnotContext.OtherContext),
+						this.expression.toRsExp(helper),
+						this.name.toRsId(helper));
+				}
+				default: throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp");
+			}
+		}
         //RefScript - end
     }
 
@@ -3031,6 +3208,20 @@ module TypeScript {
             if (this.operand.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//RefScript - begin
+		public toRsExp(helper: RsHelper): RsExpression {
+			switch (this.kind()) {
+				case SyntaxKind.PostIncrementExpression:
+					return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
+				case SyntaxKind.PostDecrementExpression:
+					return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
+				default:
+					throw new Error("PostfixUnaryExpression:toRsExp SyntaxKind not supported: " + SyntaxKind[this.kind()]);
+			}
+		}
+		//RefScript - end
+	
     }
 
     export class ElementAccessExpressionSyntax extends SyntaxNode implements IMemberExpressionSyntax, ICallExpressionSyntax {
@@ -3135,6 +3326,15 @@ module TypeScript {
             if (this.argumentExpression.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//Refscript - begin
+		public toRsExp(helper: RsHelper): RsExpression {
+			return new RsBracketRef(helper.getSourceSpan(this),
+				this.getRsAnnotations(AnnotContext.OtherContext),
+				this.expression.toRsExp(helper),
+				this.argumentExpression.toRsExp(helper));
+		}
+		//Refscript - end
     }
 
     export class InvocationExpressionSyntax extends SyntaxNode implements ICallExpressionSyntax, IExpressionWithArgumentListSyntax {
@@ -3408,6 +3608,7 @@ module TypeScript {
 
 
         //RefScript - begin
+
         //public toRsAST(helper: RsHelper): RsExpression {
         //    switch (this.SyntaxKind()) {
         //        case SyntaxKind.MemberAccessExpression: {
@@ -6029,6 +6230,45 @@ module TypeScript {
             if (this.statement.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+        //RefScript - begin
+        public toRsStmt(helper: RsHelper): RsStatement {
+
+			//For the moment force variable declarations to be null. We'll only support initializers.
+			if (this.initializer) {
+				console.log(helper.getSourceSpan(this).toString());
+				console.log("'" + this.initializer.fullText() + "'");
+				console.log("Please only use variable declarations in the first part of the loop.");
+				process.exit(1);
+			}
+
+			var anns = this.forKeyword.leadingTrivia().toArray()
+						   .filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+						   .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+						   .filter(t => t !== null)
+                           .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
+
+			//if (this.variableDeclaration) 
+			//	console.log("VD: " + this.variableDeclaration.fullText());
+			//if (this.initializer) 
+			//	console.log("IN: " + this.initializer.fullText());
+			//if (this.condition) 
+			//	console.log("CO: " + this.condition.fullText());
+			//if (this.incrementor)
+			//	console.log("INC:" + this.incrementor.fullText());
+			//if (this.statement) 
+			//	console.log("BD: " + this.statement.fullText());
+
+            return new RsForStmt(
+                helper.getSourceSpan(this),
+                this.getRsAnnotations(AnnotContext.OtherContext),
+                this.variableDeclaration.toRsForInit(helper, anns),
+                this.condition.toRsExp(helper),
+                this.incrementor.toRsExp(helper),
+                this.statement.toRsStmt(helper));
+        }
+        //RefScript - end
+
     }
 
     export class ForInStatementSyntax extends SyntaxNode implements IIterationStatementSyntax {

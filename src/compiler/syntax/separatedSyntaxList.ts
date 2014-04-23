@@ -6,7 +6,7 @@ module TypeScript {
         childAt(index: number): ISyntaxNodeOrToken;
 
         toArray(): ISyntaxNodeOrToken[];
-        toNonSeparatorArray(): ISyntaxNodeOrToken[];
+        toNonSeparatorArray(): T[];
 
         separatorCount(): number;
         separatorAt(index: number): ISyntaxToken;
@@ -606,11 +606,11 @@ module TypeScript.Syntax {
 		//RefScript - end
    }
 
-    export function separatedList<T extends ISyntaxNodeOrToken>(nodes: ISyntaxNodeOrToken[]): ISeparatedSyntaxList<T> {
+    export function separatedList<T extends ISyntaxNodeOrToken>(nodes: T[]): ISeparatedSyntaxList<T> {
         return separatedListAndValidate<T>(nodes, false);
     }
 
-    function separatedListAndValidate<T extends ISyntaxNodeOrToken>(nodes: ISyntaxNodeOrToken[], validate: boolean): ISeparatedSyntaxList<T> {
+    function separatedListAndValidate<T extends ISyntaxNodeOrToken>(nodes: T[], validate: boolean): ISeparatedSyntaxList<T> {
         if (nodes === undefined || nodes === null || nodes.length === 0) {
             return emptySeparatedList<T>();
         }
