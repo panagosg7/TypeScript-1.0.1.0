@@ -727,17 +727,27 @@ module TypeScript {
 						}
 						else {
 							//Annotation provided by user
-							//v.interfaceEltSanityCheck(helper);
 							var ann = anns[0];
 							// XXX: String HACK
 							return ann.getContent().replace("::", ":");
 						}
+					
+					case SyntaxKind.IndexSignature:
+						var is = <IndexSignatureSyntax> m;
+						var symb = helper.getSymbolForAST(is);
+						if (symb.isSignature()) {
+							var sign = <PullSignatureSymbol>symb;
+							//meh ... convert to string
+							if (sign.parameters.length === 1) {
+								return "[" + sign.parameters.toString() + "]: " + sign.returnType.toRsType().toString();
+							}
+						}
 					default:
-						throw new Error("[UNIMPLEMENTED] InterfaceDeclaration member: " + SyntaxKind[m.kind()]);
+						throw new Error("[UNIMPLEMENTED/BUG] InterfaceDeclaration member.");
 				}
 			});
 
-			annotStr += "{" + members.join(", ") + "}"
+			annotStr += "{" + members.join(", ") + "}";
 			restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
 			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
