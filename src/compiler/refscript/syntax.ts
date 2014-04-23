@@ -608,57 +608,45 @@ module TypeScript {
 
 	}
 
-        export class RsUnaryAssignExpr extends RsExpression {
-
+    export class RsUnaryAssignExpr extends RsExpression {
 		public toObject() {
 			return {
-				UnaryAssignExpr: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.op.toObject(),
-					this.lval.toObject()
-				]
+				UnaryAssignExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.op.toObject(),	this.lval.toObject() ]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public op: RsUnaryAssignOp, public lval: RsLValue) {
-			super(ann);
-		}
-
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public op: RsUnaryAssignOp,
+					public lval: RsLValue) { super(ann); }
 	}
 
 	export class RsPrefixExpr extends RsExpression {
-
 		public toObject() {
 			return {
-				PrefixExpr: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.op.toObject(),
-					this.exp.toObject()
-				]
+				PrefixExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.op.toObject(),	this.exp.toObject()]
 			};
 		}
 		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public op: RsPrefixOp, public exp: RsExpression) {
-			super(ann);
-		}
-
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public op: RsPrefixOp,
+					public exp: RsExpression) { super(ann); }
 	}
 
 	export class RsArrayLit extends RsExpression {
-
 		public toObject() {
 			return {
-				ArrayLit: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.members.toObject()
-				]
+				ArrayLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.members.toObject() ]
 			};
 		}
 		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public members: RsASTList<RsExpression>) {
-			super(ann);
-		}
-
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public members: RsASTList<RsExpression>) { super(ann); }
 	}
 
 

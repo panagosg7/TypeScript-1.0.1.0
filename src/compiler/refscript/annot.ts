@@ -132,8 +132,7 @@ module TypeScript {
 		private _binderName: string = null;
 
 		public getBinderName(): string {
-			if (this._binderName)
-				return this._binderName;
+			if (this._binderName) return this._binderName;
 			var content = this.getContent();
 			var bs = content.split("::");
 			if (bs && bs.length == 2) {
@@ -142,14 +141,9 @@ module TypeScript {
 					this._binderName = lhss[0];
 					return this._binderName;
 				}
-				else {
-					console.log("Invalid nano-js annotation:");
-					console.log(content);
-					process.exit(1);
-				}
 			}
-			console.log("Invalid nano-js annotation:");
-			console.log(content);
+			console.log("Invalid nano-js annotation: " + content);
+			console.log("Perhaps you need to replace ':' with '::'.");
 			process.exit(1);
 		}
 

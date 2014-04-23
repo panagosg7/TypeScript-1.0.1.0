@@ -1096,7 +1096,7 @@ module TypeScript {
 			return new RsFunctionStmt(
 				helper.getSourceSpan(this),
 				anns,
-				<RsId>this.identifier.toRsAST(helper),
+				this.identifier.toRsId(helper),
 				<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
 				new RsASTList([this.block.toRsStmt(helper)]));
 		}
@@ -1608,6 +1608,13 @@ module TypeScript {
 
 				case SyntaxKind.TypeOfExpression:
 					return new RsPrefixExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsPrefixOp(RsPrefixOpKind.PrefixTypeof), this.operand.toRsExp(helper));
+
+				case SyntaxKind.BitwiseNotExpression:
+					return new RsPrefixExpr(
+						helper.getSourceSpan(this),
+						this.getRsAnnotations(AnnotContext.OtherContext),
+						new RsPrefixOp(RsPrefixOpKind.PrefixBNot),
+						this.operand.toRsExp(helper));
 
 				// NOTE: For the moment cast expressions are ignored.
 				case SyntaxKind.CastExpression:
@@ -3292,6 +3299,13 @@ module TypeScript {
         }
 
 		//Refscript - begin
+		public toRsLValue(helper: RsHelper): RsLValue {
+			return new RsBracketRef(helper.getSourceSpan(this),
+				this.getRsAnnotations(AnnotContext.OtherContext),
+				this.expression.toRsExp(helper),
+				this.argumentExpression.toRsExp(helper));
+		}
+
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsBracketRef(helper.getSourceSpan(this),
 				this.getRsAnnotations(AnnotContext.OtherContext),
@@ -3646,13 +3660,16 @@ module TypeScript {
                 case SyntaxKind.LogicalOrExpression:
                 case SyntaxKind.LogicalAndExpression:
                 case SyntaxKind.NotEqualsWithTypeConversionExpression:
+				case SyntaxKind.LeftShiftExpression:
+				case SyntaxKind.SignedRightShiftExpression:
+				case SyntaxKind.UnsignedRightShiftExpression:
                     return new RsInfixExpr(
                         helper.getSourceSpan(this),
                         this.getRsAnnotations(AnnotContext.OtherContext),
                         new RsInfixOp(this.operatorToken.text()),
                         this.left.toRsExp(helper),
                         this.right.toRsExp(helper));
-
+				
                 case SyntaxKind.AddAssignmentExpression:
                 case SyntaxKind.SubtractAssignmentExpression:
                 case SyntaxKind.DivideAssignmentExpression:
@@ -3665,7 +3682,7 @@ module TypeScript {
                         this.right.toRsExp(helper));
 
                 default:
-                    throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for : " + SyntaxKind[this.kind()]);
+                    throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for: " + SyntaxKind[this.kind()]);
             }
         }
     	//RefScript - end
@@ -5585,6 +5602,16 @@ module TypeScript {
             if (this.argumentList !== null && this.argumentList.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//RefScript - begin
+		public toRsExp(helper: RsHelper): RsExpression {
+			return new RsNewExpr(helper.getSourceSpan(this),
+				this.getRsAnnotations(AnnotContext.OtherContext),
+				this.expression.toRsExp(helper),
+				this.argumentList.arguments.toRsExp(helper));
+		}
+		//Refscript - end
+
     }
 
     export class SwitchStatementSyntax extends SyntaxNode implements IStatementSyntax {
@@ -6463,6 +6490,17 @@ module TypeScript {
             if (this.statement.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//RefScript - begin
+		public toRsStmt(helper: RsHelper): RsStatement {
+			return new RsWhileStmt(
+				helper.getSourceSpan(this),
+				this.getRsAnnotations(AnnotContext.OtherContext),
+				this.condition.toRsExp(helper),
+				this.statement.toRsStmt(helper));
+		}
+		//RefScript - end
+ 
     }
 
     export class WithStatementSyntax extends SyntaxNode implements IStatementSyntax {

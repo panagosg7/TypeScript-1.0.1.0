@@ -37,6 +37,10 @@ module TypeScript.Syntax {
 					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
 					token.value());
 
+			case SyntaxKind.NullKeyword:
+				return new RsNullLit(helper.getSourceSpan(token),
+					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/);
+
 	        default:
                 throw new Error("NEW: toRsExp not implemented for " + SyntaxKind[token.kind()]);
         }
@@ -46,7 +50,7 @@ module TypeScript.Syntax {
 		throw new Error("toRsStmt not implemented for " + SyntaxKind[token.kind()]);
 	}
 
-	function toRsId(token: ISyntaxToken, helper: RsHelper): RsId {
+	export function toRsId(token: ISyntaxToken, helper: RsHelper): RsId {
         return new RsId(helper.getSourceSpan(token), [] /*token.getNanoAnnotations(AnnotContext.OtherContext)*/, token.text());
 	}
 
