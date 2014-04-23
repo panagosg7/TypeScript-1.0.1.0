@@ -11,6 +11,18 @@ module TypeScript {
 		public snd(): B { return this._snd;	}
 	}
 
+	export class Triple<A, B, C> {
+		constructor(private _fst: A, private _snd: B, private _thd: C) { }
+
+		public fst(): A { return this._fst; }
+
+		public snd(): B { return this._snd;	}
+
+		public thd(): C { return this._thd;	}
+	}
+
+
+
 	export enum AnnotKind {
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder

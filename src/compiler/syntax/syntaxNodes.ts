@@ -662,38 +662,18 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-
-			////Extends
-			//var parent: Identifier = null;
-			//if (this.extendsList && this.extendsList.members) {
-			//	if (this.extendsList.members.length == 1) {
-			//		parent = <Identifier>this.extendsList.members[0];
-			//	}
-			//	else {
-			//		throw new Error("UNIMPLEMENTED: InterfaceDeclaration.toRsStmt can only extend a single class.");
-			//	}
-			//}
-			////Implements
-			//var implementsInterfaces: Identifier[] = (this.implementsList && this.implementsList.members)
-			//	? <Identifier[]>this.implementsList.members : <Identifier[]>[];
-			//var implementsInterfacesIds = implementsInterfaces.map(i => <RsId>i.toRsAST(helper));
-
-			//Interface header annotations
-
-
 			var originalAnnots = tokenAnnots(this.interfaceKeyword);
-
 			//Is there an interface annotation given?
 			var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawType);
 			var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawType);
 
-			var headerAnnotStr = "";
-
+			var annotStr = "";
 
 			//No class annotation given - generate one based on the existing interface header
 			if (headerAnnots.length === 0) {
-
-
+				//Name
+				annotStr += "interface " + this.identifier.fullText() + " ";
+				//Type parameters
 				if (this.typeParameterList) {
 					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = this.typeParameterList.typeParameters;
 				}
@@ -701,21 +681,22 @@ module TypeScript {
 					var emp: TypeParameterSyntax[] = [];
 					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = Syntax.separatedList(emp);
 				}
+				annotStr += (typeParams.toNonSeparatorArray().length > 0) ?
+							("<" + typeParams.toNonSeparatorArray().map(p => p.identifier.text()).join(", ") + "> ") : " ";
 
-				var typeParamStr = (typeParams.toNonSeparatorArray().length > 0) ?
-					("<" + typeParams.toNonSeparatorArray().map(p => p.identifier.text()).join(", ") + ">"): "";
-
-
-				//HEREHERE
-				// Call to heritage...
-				this.heritageClauses.toArray().forEach(h => h.toRs());
+				//Heritage
+				var heritage = this.heritageClauses.toArray().map(t => t.toRsHeritage(helper));
+				var extendsClause = ArrayUtilities.firstOrDefault(heritage, h => h.fst() === SyntaxKind.ExtendsHeritageClause);
+				if (extendsClause) {					
+					annotStr += "extends " + extendsClause.snd().map(h => h.toString()).join(", ") + " ";
+				}
 			}
 			//Otherwise - Use the given annotations
 			else if (headerAnnots.length === 1) {
 				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
 				//This might not be very straightforward because we might need to parse refinement types.
 				var headerAnnot = <RsExplicitNamedTypeAnnotation> headerAnnots[0];
-				headerAnnotStr = headerAnnot.getContent() + " ";
+				annotStr = headerAnnot.getContent() + " ";
 			}
 			else {
 				console.log(helper.getSourceSpan(this).toString());
@@ -723,49 +704,42 @@ module TypeScript {
 				process.exit(1);
 			}
 
-			////Body of the interface declaration
-			//var members: string[] = this.members.members.map(m => {
-			//	if (m.nodeType() === NodeType.FunctionDeclaration) {
-			//		// Index signature case: 
-			//		// Add a field wit
-			//		var f = <FunctionDeclaration>m;
-			//		var decl = helper.getDeclForAST(m);
-			//		var symb = helper.getSymbolForAST(m);
+			//Body of the interface declaration
+			var members: string[] = this.body.typeMembers.toNonSeparatorArray().map(m => {
+				switch (m.kind()) {
+					case SyntaxKind.FunctionDeclaration:		// Index signature
+						var f = <FunctionDeclarationSyntax>m;
+						var decl = helper.getDeclForAST(m);
+						var symb = helper.getSymbolForAST(m);
+						if (symb instanceof PullSignatureSymbol) {
+							var ssymb = <PullSignatureSymbol>symb;
+							console.log(ssymb.parameters.toString());
+							console.log(ssymb.returnType.toString());
+						}
+						break;
+					case SyntaxKind.PropertySignature:
+						var v = <PropertySignatureSyntax> m;
+						var anns = tokenAnnots(v.propertyName);
+						if (anns.length === 0) {
+							//If there is no annotation
+							var eltSymbol = helper.getSymbolForAST(v);
+							return eltSymbol.name + ": " + eltSymbol.type.toRsType().toString();
+						}
+						else {
+							//Annotation provided by user
+							//v.interfaceEltSanityCheck(helper);
+							var ann = anns[0];
+							// XXX: String HACK
+							return ann.getContent().replace("::", ":");
+						}
+					default:
+						throw new Error("[UNIMPLEMENTED] InterfaceDeclaration member: " + SyntaxKind[m.kind()]);
+				}
+			});
 
-			//		if (symb instanceof PullSignatureSymbol) {
-			//			var ssymb = <PullSignatureSymbol>symb;
-			//			console.log(ssymb.parameters.toString());
-			//			console.log(ssymb.returnType.toString());
-			//		}
-
-			//	}
-			//	else if (m.nodeType() === NodeType.VariableDeclarator) {
-			//		var v = <VariableDeclarator> m;
-			//		//If there is no annotation
-			//		var anns = v.getRsAnnotations(AnnotContext.OtherContext);
-			//		if (anns.length === 0) {
-			//			var eltSymbol = helper.getSymbolForAST(v);
-			//			return eltSymbol.name + ": " + eltSymbol.type.toRsType().toString();
-			//		}
-			//		//Annotation provided by user
-			//		else {
-			//			v.interfaceEltSanityCheck(helper);
-			//			var ann = anns[0];
-			//			// XXX: String HACK
-			//			return ann.getContent().replace("::", ":");
-			//		}
-			//	}
-			//	else {
-			//		throw new Error("[UNIMPLEMENTED] InterfaceDeclaration member: " + NodeType[m.nodeType()]);
-			//	}
-			//});
-
-			//var membersStr = members.join(", ");
-			//var finalAnnotStr = headerAnnotStr + "{ " + membersStr + " }";
-			//restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, finalAnnotStr));
-			//return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
-
-			return null;
+			annotStr += "{" + members.join(", ") + "}"
+			restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
+			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
 		//RefScript- end
 
@@ -842,41 +816,21 @@ module TypeScript {
             return true;
         }
 
-
 		//RefScript - begin
-
-		public toRs() {
-
-			this.typeNames.toNonSeparatorArray().forEach(t => {
-				console.log(t);
-			});
-
-			//var extendsType: RsType = null;
-			//if (!this.extendsList || this.extendsList.members.length === 0) {
-			//	headerAnnotStr = this.name.text() + " " + typeParamStr + " ";
-			//}
-			//else if (this.extendsList && this.extendsList.members.length === 1) {
-			//	//This class extends another one.
-			//	var baseNameDecl = this.extendsList.members[0];
-			//	var baseName = baseNameDecl.nodeType() === NodeType.InvocationExpression ? (<InvocationExpression>baseNameDecl).target : baseNameDecl;
-			//	switch (baseName.nodeType()) {
-			//		case NodeType.Name:
-			//		case NodeType.GenericType:
-			//			var baseSymbol = helper.getSymbolForAST(baseNameDecl);
-			//			extendsType = baseSymbol.type.toRsType();
-			//			headerAnnotStr = this.name.text() + " " + typeParamStr + " extends " + extendsType.toString() + " ";
-			//			break;
-			//		default:
-			//			throw new Error("BUG: An interface cannot extend a " + NodeType[baseName.nodeType()]);
-			//	}
-			//}
-			//else if (this.extendsList && this.extendsList.members.length > 1) {
-			//	throw new Error("UNIMPLEMENTED: An interface cannot extend multiple interfaces.");
-			//}
-
+		public toRsHeritage(helper: RsHelper): Pair<SyntaxKind, Serializable[]> {
+			return new Pair(this.kind(),
+				this.typeNames.toNonSeparatorArray().map(t => {
+					switch (t.kind()) {
+						case SyntaxKind.IdentifierName:
+						case SyntaxKind.GenericType:
+							var baseSymbol = helper.getSymbolForAST(t);
+							return baseSymbol.type.toRsType();
+						default:
+							throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+					}
+				}));
 		}
 		//RefScript - end
-
 
     }
 

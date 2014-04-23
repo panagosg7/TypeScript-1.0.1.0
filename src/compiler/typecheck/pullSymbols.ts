@@ -1612,6 +1612,16 @@ module TypeScript {
 
             return false;
         }
+
+		//RefScript begin
+		public toTFunctionSigMember(): TFunctionSigMember {
+			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+			var retT = this.returnType.toRsType();
+			return new TFunctionSigMember(tParams, tArgs, retT);
+		}
+		//RefScript end
+
     }
 
     export class PullTypeSymbol extends PullSymbol implements InstantiableSymbol {
@@ -3095,6 +3105,83 @@ module TypeScript {
             }
             return this._widenedType;
         }
+
+		//RefScript - begin
+
+		/** toRsType: Convert a PullTypeSymbol to a NanoJS type */
+		public toRsType(): Serializable {
+
+			if (this.toString() === "any") {
+				return TAny;
+			}
+
+			if (this.isPrimitive()) {
+				if ((<PullPrimitiveTypeSymbol>this).isStringConstant()) {
+					throw new Error("StringConstants shouldn't occur");
+				}
+				if (this.toString() === "string") return TString;
+				if (this.toString() === "number") return TNumber;
+				if (this.toString() === "boolean") return TBoolean;
+				if (this.toString() === "void") return TVoid;
+				return new TError("toNJSType:primitive: " + this.toString());
+			}
+
+			if (this.isArrayNamedTypeReference()) {
+				return new TArray(this.getElementType().toRsType());
+			}
+
+			if (this.isEnum()) {
+				return TNumber;
+			}
+
+			if (this.isTypeParameter()) {
+				return (<PullTypeParameterSymbol>this).toRsTypeParameter();
+			}
+
+			if (this.isInterface() || this.isClass()) {
+				var tArgs: PullTypeSymbol[];
+				var typeArguments = this.getTypeArguments();
+				if (typeArguments) {
+					//If type arguments are not null, then use them (whether they are fixed or not)
+					tArgs = typeArguments;
+				} else {
+					//If type arguments are null, then use type parameters (this should be equivalent,
+					//since they are definitely not fixed).
+					tArgs = this.getTypeParameters();
+				}
+
+				var nJSParams = tArgs.map(p => p.toRsTypeParameter());
+				return new TTypeReference(this.fullName().split("<")[0], nJSParams);
+			}
+
+			if (this.isFunction()) {
+				var sigs = this.getCallSignatures();
+				//TODO: Overloads !!!
+				var filteredSigs = sigs.filter((sig: PullSignatureSymbol) => {
+					//sig.invalidate();
+					return !sig.isStringConstantOverloadSignature();
+				});
+
+				return new TFunctionSig(filteredSigs.map(s => s.toTFunctionSigMember()));
+			}
+
+			if (this.kind === PullElementKind.ObjectType) {
+				var methods = this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all);
+				var properties = this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all);
+				var fields = methods.concat(properties).map(s => new TField(s.name, s.type.toRsType()));
+				return new TObject(fields);
+			}
+
+			console.log("Not supported in toNJSType[" + PullElementKind[this.kind] + "]: " + this.toString().substring(0, 120));
+			return TAny;
+		}
+
+		public toRsTypeParameter(): TTypeParam {
+			return new TTypeParam(this.toString());
+		}
+
+		//RefScript - end
+
     }
 
     export class PullPrimitiveTypeSymbol extends PullTypeSymbol {
