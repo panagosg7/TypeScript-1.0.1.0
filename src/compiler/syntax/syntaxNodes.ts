@@ -672,7 +672,7 @@ module TypeScript {
 			//No class annotation given - generate one based on the existing interface header
 			if (headerAnnots.length === 0) {
 				//Name
-				annotStr += "interface " + this.identifier.fullText() + " ";
+				annotStr += this.identifier.fullText() + " ";
 				//Type parameters
 				if (this.typeParameterList) {
 					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = this.typeParameterList.typeParameters;
