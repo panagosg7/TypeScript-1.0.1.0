@@ -1,15 +1,16 @@
-# TypeScript
 
-Scalable JavaScript development with types, classes and modules.
+**This is a fork of the [TypeScript](https://typescript.codeplex.com/) compiler, a Scalable JavaScript variant with types, classes and modules.**
 
+It has been modified to work as a front-end to the [language-ecmascript](https://github.com/UCSD-PL/language-ecmascript) and [RefScript](https://github.com/UCSD-PL/RefScript).
+More information as to how to use it for this purpose can be found [here](https://github.com/UCSD-PL/RefScript).
 
-## Version
+This repo has as a root commit with SHA: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.codeplex.com/
 
-Commit SHA: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.codeplex.com/
 
 ## Install
 
   npm install -g typescript
+
 
 ## Usage
 
@@ -29,8 +30,8 @@ Commit SHA: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.code
     - jake runtests - This runs the tests, using the built compiler and built test infrastructure. 
         - You can also override the host or specify a test for this command. Use host=<hostName> or tests=<testPath>. 
     - jake baseline-accept - This replaces the baseline test results with the results obtained from jake runtests. 
+    - jake tsc - This only builds the compiler (no services).
     - jake -T lists the above commands. 
-
 
 
 ## Adding New Diagnostics
@@ -51,12 +52,6 @@ In the older version you would need to add diagnostic information in ALL the fol
     - diagnosticInformationMap.generated.ts
     - diagnosticMessages.json
     - diagnosticCode.generated.ts
-
-Keeping the original files diagnosticInformationMap.generated.ts and
-diagnosticCode.generated.ts for reference. Though they are not really
-compatible with JSON file. Somebody tampered with some of the entries...
-
-
 
 
 ## Projects that use TypeScript
