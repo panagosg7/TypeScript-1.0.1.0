@@ -3660,6 +3660,7 @@ module TypeScript {
                 case SyntaxKind.LogicalOrExpression:
                 case SyntaxKind.LogicalAndExpression:
                 case SyntaxKind.NotEqualsWithTypeConversionExpression:
+                case SyntaxKind.NotEqualsExpression:
 				case SyntaxKind.LeftShiftExpression:
 				case SyntaxKind.SignedRightShiftExpression:
 				case SyntaxKind.UnsignedRightShiftExpression:
