@@ -16,7 +16,7 @@ module TypeScript.Syntax {
                 return new RsVarRef(
                     helper.getSourceSpan(token),
                     [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-                    <RsId>token.toRsAST(helper));
+                    token.toRsId(helper));
 
 			case SyntaxKind.NumericLiteral:
 				if (token.text().indexOf(".") === -1) {

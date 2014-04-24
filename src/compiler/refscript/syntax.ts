@@ -204,7 +204,7 @@ module TypeScript {
 				case "==": return RsInfixOpKind.OpEq;
 				case "!=": return RsInfixOpKind.OpNEq;
 				case "===": return RsInfixOpKind.OpStrictEq;
-				case "!===": return RsInfixOpKind.OpStrictNEq;
+				case "!==": return RsInfixOpKind.OpStrictNEq;
 				case "&&": return RsInfixOpKind.OpLAnd;
 				case "||": return RsInfixOpKind.OpLOr;
 				case "*": return RsInfixOpKind.OpMul;
@@ -883,38 +883,32 @@ module TypeScript {
 	}
 
 	export class RsIfStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				IfStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.cond.toObject(),
-					this.s1.toObject(),
-					this.s2.toObject()
-				]
+				IfStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.cond.toObject(), this.s1.toObject(), this.s2.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public cond: RsExpression, public s1: RsStatement, public s2: RsStatement) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public cond: RsExpression,
+					public s1: RsStatement,
+					public s2: RsStatement) { super(ann); }
 	}
 
 	export class RsIfSingleStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				IfSingleStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.cond.toObject(),
-					this.s.toObject(),
-				]
+				IfSingleStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.cond.toObject(), this.s.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public cond: RsExpression, public s: RsStatement) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public cond: RsExpression,
+					public s: RsStatement) { super(ann); }
 	}
 
 }
