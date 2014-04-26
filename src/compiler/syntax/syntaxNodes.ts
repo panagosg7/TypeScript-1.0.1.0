@@ -747,7 +747,7 @@ module TypeScript {
 				}
 			});
 
-			annotStr += "{" + members.join(", ") + "}";
+			annotStr += "{" + members.join("; ") + "}";
 			restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
 			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
