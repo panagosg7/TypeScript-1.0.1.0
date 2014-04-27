@@ -1,10 +1,10 @@
-
 **This is a fork of the [TypeScript](https://typescript.codeplex.com/) compiler, a Scalable JavaScript variant with types, classes and modules.**
 
 It has been modified to work as a front-end to the [language-ecmascript](https://github.com/UCSD-PL/language-ecmascript) and [RefScript](https://github.com/UCSD-PL/RefScript).
 More information as to how to use it for this purpose can be found [here](https://github.com/UCSD-PL/RefScript).
 
-This repo has as a root commit with SHA: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.codeplex.com/
+This repo was forked off commit: a5ffa4c199a13936a312b7fa86f787863ecbed73 from http://typescript.codeplex.com/.
+The rest of the history has not been included in this repo.
 
 
 ## Install
