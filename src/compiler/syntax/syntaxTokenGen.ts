@@ -30,6 +30,11 @@ module TypeScript.Syntax {
 						[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
 						token.value());
 				}
+
+			case SyntaxKind.StringLiteral:
+				return new RsStringLit(helper.getSourceSpan(token),
+					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+					token.value());
 			
 			case SyntaxKind.FalseKeyword:
 			case SyntaxKind.TrueKeyword:

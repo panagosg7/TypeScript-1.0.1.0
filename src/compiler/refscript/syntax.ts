@@ -591,21 +591,17 @@ module TypeScript {
 	}
 
 	export class RsNewExpr extends RsExpression {
-
 		public toObject() {
 			return {
-				NewExpr: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.e.toObject(),
-					this.es.toObject()
-				]
+				NewExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.e.toObject(), this.es.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public e: RsExpression, public es: RsASTList<RsExpression>) {
-			super(ann);
-		}
-
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public e: RsExpression,
+					public es: RsASTList<RsExpression>) { super(ann); }
 	}
 
     export class RsUnaryAssignExpr extends RsExpression {
@@ -725,14 +721,12 @@ module TypeScript {
 	 * ****************************************************************************/
 
 	export class RsStatement extends RsAnnotatedAST {
-
 		public toObject(): any {
 			throw new Error("RsStatement: child class should implement toJSON");
 		}
-
 	}
-	export class RsEmptyStmt extends RsStatement implements IRsVarDeclLike {
 
+	export class RsEmptyStmt extends RsStatement implements IRsVarDeclLike {
 		public toObject(): any {
 			return { EmptyStmt: [this.span.toObject(), this.mapAnn(a => a.toObject())] };
 		}
@@ -742,38 +736,30 @@ module TypeScript {
 		}
 	}
 
-
-
 	export class RsExprStmt extends RsStatement {
-
 		public toObject(): any {
 			return {
-				ExprStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject()
-				]
+				ExprStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.exp.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public exp: RsExpression) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public exp: RsExpression) { super(ann); }
 	}
 
 	export class RsVarDeclStmt extends RsStatement {
-
 		public toObject(): any {
 			return {
-				VarDeclStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.varDecls.toObject()
-				]
+				VarDeclStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.varDecls.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public varDecls: RsASTList<RsVarDecl>) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],	
+					public varDecls: RsASTList<RsVarDecl>) { super(ann); }
 	}
 
 	export class RsFunctionStmt extends RsStatement {
@@ -792,75 +778,63 @@ module TypeScript {
 	}
 
 	export class RsReturnStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				ReturnStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					(this.expression) ? this.expression.toObject() : null
-				]
+				ReturnStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					(this.expression) ? this.expression.toObject() : null]
 			};
 		}
 		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public expression: RsExpression) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public expression: RsExpression) {  super(ann);	}
 	}
 
 	export class RsBlockStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				BlockStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.body.toObject() 
-				]
+				BlockStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.body.toObject()]
 			};
 		}
 		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public body: RsASTList<RsStatement>) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
 	export class RsClassStmt extends RsStatement {
 
 		public toObject() {
 			return {
-				ClassStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
+				ClassStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
 					this.id.toObject(),
 					(this.extendsClass) ? this.extendsClass.toObject() : null,
 					this.implementsInterfaces.toObject(),
-					this.body.toObject() 
-				]
+					this.body.toObject()]
 			};
 		}
-		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], 
+
+		constructor(public span: RsSourceSpan,
+			public ann: RsAnnotation[],
 			public id: RsId,
 			public extendsClass/* Maybe */: RsId,
 			public implementsInterfaces: RsASTList<RsId>,
-			public body: RsASTList<RsClassElt>) {
-			super(ann);
-		}
+			public body: RsASTList<RsClassElt>) { super(ann); }
 	}
 
 	export class RsWhileStmt extends RsStatement {
-
 		public toObject() {
 			return {
-				WhileStmt: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject(),
-					this.body.toObject()
-				]
+				WhileStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.exp.toObject(),this.body.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public exp: RsExpression, public body: RsStatement) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public exp: RsExpression,
+					public body: RsStatement) { super(ann); }
 	}
 
 	export class RsForStmt extends RsStatement {
@@ -909,6 +883,19 @@ module TypeScript {
 					public ann: RsAnnotation[],
 					public cond: RsExpression,
 					public s: RsStatement) { super(ann); }
+	}
+
+	export class RsThrowStatement extends RsStatement {
+		public toObject() {
+			return {
+				ThrowStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.expression.toObject()]
+			};
+		}
+		
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public expression: RsExpression) {  super(ann);	}
 	}
 
 }

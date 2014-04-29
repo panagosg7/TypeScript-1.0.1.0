@@ -5410,6 +5410,14 @@ module TypeScript {
             if (this.expression.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//RefScript - begin
+		public toRsStmt(helper: RsHelper): RsStatement {
+			var ret = this.expression.toRsExp(helper);
+			return new RsThrowStatement(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), ret);
+		}
+		//RefScript - end
+		
     }
 
     export class ReturnStatementSyntax extends SyntaxNode implements IStatementSyntax {
