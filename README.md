@@ -36,22 +36,22 @@ The rest of the history has not been included in this repo.
 
 ## Adding New Diagnostics
 
-1.	Just add them in the JSON file: `src/compiler/resources/diagnosticMessages.json`
+1. Just add them in the JSON file: `src/compiler/resources/diagnosticMessages.json`
+2. And then run the `generate.sh` script in the same folder. This will create these files:
+	- `diagnosticInformationMap.generated.ts`
+	- `diagnosticCode.generated.ts`
 
-2.	And then run the `generate.sh` script in the same folder. This will create these files:
-	    - `diagnosticInformationMap.generated.ts`
-	    - `diagnosticCode.generated.ts`
-
-3.	Check the renaming of the string you added as a diagnostic to access the 
+3. Check the renaming of the string you added as a diagnostic to access the 
 		relevant entry.
 
 
 
 
 In the older version you would need to add diagnostic information in ALL the following:
-    - diagnosticInformationMap.generated.ts
-    - diagnosticMessages.json
-    - diagnosticCode.generated.ts
+
+* diagnosticInformationMap.generated.ts
+* diagnosticMessages.json
+* diagnosticCode.generated.ts
 
 
 ## Projects that use TypeScript
