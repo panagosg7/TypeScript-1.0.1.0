@@ -3300,7 +3300,7 @@ module TypeScript {
 
 		//Refscript - begin
 		public toRsLValue(helper: RsHelper): RsLValue {
-			return new RsBracketRef(helper.getSourceSpan(this),
+			return new RsLBracket(helper.getSourceSpan(this),
 				this.getRsAnnotations(AnnotContext.OtherContext),
 				this.expression.toRsExp(helper),
 				this.argumentExpression.toRsExp(helper));
