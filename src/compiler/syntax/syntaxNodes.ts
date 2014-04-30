@@ -5045,7 +5045,8 @@ module TypeScript {
 			}
 
 			return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
-				null, this.propertyName.toRsId(helper),
+				ArrayUtilities.firstOrDefault(this.modifiers.toArray(), (t,i) => t.kind() === SyntaxKind.StaticKeyword) !== null,
+				this.propertyName.toRsId(helper),
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
 				new RsASTList([this.block.toRsStmt(helper)]));
 		}
