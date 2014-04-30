@@ -1158,24 +1158,19 @@ module TypeScript {
 				throw new Error("UNIMPLEMENTED:FunctionDeclaration.toRsStmt:No Block");
 			}
 
-			function arrays_equal(a: string[], b: string[]): boolean {
-				return !(a < b || b < a);
-			}
-
 			var name = this.identifier.text();
-			var anns = this.getRsAnnotations(AnnotContext.OtherContext);
+			var anns = tokenAnnots(this.firstToken());
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 
-			if (bindAnnNames.length > 0 || !arrays_equal(bindAnnNames, [name])) {
+			if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 				console.log(helper.getSourceSpan(this).toString());
 				console.log("Function '" + name + "' should have a single annotation.");
 				process.exit(1);
 			}
 			//FIXME: get rid of casts ...
 			return new RsFunctionStmt(
-				helper.getSourceSpan(this),
-				anns,
+				helper.getSourceSpan(this), anns,
 				this.identifier.toRsId(helper),
 				<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
 				new RsASTList([this.block.toRsStmt(helper)]));
