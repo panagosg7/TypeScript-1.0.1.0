@@ -49,7 +49,7 @@ module TypeScript.Syntax {
 	}
 
 	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> {
-		throw new Error("toRsClassElt not implemented for " + SyntaxKind[list.kind()]);
+		return new RsASTList(list.toArray().map(m => m.toRsClassElt(helper)));
 	}
 
 	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> {

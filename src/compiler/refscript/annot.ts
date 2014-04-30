@@ -156,14 +156,8 @@ module TypeScript {
 		public getContent(): string { return this._content;	}
 	}
 
-	////FIXME: Fill these up with the right toObject
-	//export class RsMethodAnnotation extends RsBindAnnotation { }
-	//export class RsFieldAnnotation extends RsBindAnnotation { }
-	//export class RsConstructorAnnotation extends RsBindAnnotation { }
-
-
 	export class RsClassAnnotation extends RsAnnotation { }
-
+	
 
 	/** A class annotation that is inferred bassed on TypeScript information. */
 	export class RsInferredClassAnnotation extends RsClassAnnotation {
@@ -180,9 +174,13 @@ module TypeScript {
 				r += this._typeParams.map(t => t.identifier.text()).join(", ");
 				r += ">";
 			}
-			if (this._parent) {
+			if (this._extends) {
 				r += " extends ";
-				r += this._parent.toString();
+				r += this._extends.toString();
+			}
+			if (this._implements && this._implements.length > 0) {
+				r += " implements ";
+				r += this._implements.map(t => t.toString()).join(", ");
 			}
 			return r;
 		}
@@ -190,14 +188,13 @@ module TypeScript {
 		public toObject() {
 			var obj: any = {};
 			obj[AnnotKind[this._tag]] = this.toString();
-			return obj;
-		
+			return obj;		
 		}
 
-		//FIXME: is _className right?
-		constructor(private _className: ISyntaxToken, private _typeParams: TypeParameterSyntax[], private _parent: RsType) {
-			super(AnnotKind.RawClass);
-		}
+		constructor(private _className: ISyntaxToken,
+					private _typeParams: TypeParameterSyntax[],
+					private _extends: Serializable,
+					private _implements: Serializable[]) { super(AnnotKind.RawClass); }
 
 		public getContent(): string {
 			if (!this._content) {

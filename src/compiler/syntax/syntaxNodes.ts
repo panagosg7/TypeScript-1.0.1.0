@@ -548,6 +548,68 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+
+		//RefScript - begin
+		private headerAnnotation(helper: RsHelper, anns: RsAnnotation[]): RsAnnotation {
+			//No class annotation given - generate one based on class information from TypeScript.
+			if (anns.length === 0) {
+				//Type parameters
+				var typeParams: TypeParameterSyntax[] = this.typeParameterList? this.typeParameterList.typeParameters.toNonSeparatorArray() : []
+				//Extends Heritage
+				var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
+					.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword))
+					.filter(t => t !== null));
+				if (extendsHeritage) {
+					switch (extendsHeritage.length) {
+						case 0: var extendsSerial: Serializable = null; break;
+						case 1: var extendsSerial = extendsHeritage[0]; break;
+						default:
+							console.log(extendsHeritage.toString());
+							throw new Error("BUG: class '" + this.identifier.fullText() + "' can only extend a single class.");
+					}
+				}
+				else {
+					var extendsSerial: Serializable = null;
+				}
+				//Implements Heritage
+				var implementsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
+					.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword))
+					.filter(t => t !== null));
+				return new RsInferredClassAnnotation(this.identifier, typeParams, extendsSerial, implementsHeritage);
+			}
+			else if (anns.length === 1) {
+				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
+				//This might not be very straightforward because we might need to parse refinement types.
+				return <RsExplicitNamedTypeAnnotation> anns[0];
+			}
+			else {
+				console.log(helper.getSourceSpan(this).toString());
+				console.log("Class '" + this.identifier.fullText() + "' has multiple class annoatations.");
+				process.exit(1);
+			}
+		}
+
+		public toRsStmt(helper: RsHelper): RsStatement {
+			//Class header annotations
+			var originalAnnots = tokenAnnots(this.firstToken());
+			//Remove all class annotations and keep the rest
+			var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawClass);
+			//Is there a class annotation given?
+			var classAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawClass);
+			//Add the type annotation to the rest
+			restAnnots.push(this.headerAnnotation(helper, classAnnots));
+
+			var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
+			var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
+
+			return new RsClassStmt(helper.getSourceSpan(this),
+				restAnnots, this.identifier.toRsId(helper),				
+				(ext && ext.length > 0) ? ext[0] : null, imp,				
+				this.classElements.toRsClassElt(helper));
+		}
+		//RefScript - end
+
     }
 
     export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleElementSyntax {
@@ -662,7 +724,7 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			var originalAnnots = tokenAnnots(this.interfaceKeyword);
+			var originalAnnots = tokenAnnots(this.firstToken());
 			//Is there an interface annotation given?
 			var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawType);
 			var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawType);
@@ -684,11 +746,12 @@ module TypeScript {
 				annotStr += (typeParams.toNonSeparatorArray().length > 0) ?
 							("<" + typeParams.toNonSeparatorArray().map(p => p.identifier.text()).join(", ") + "> ") : " ";
 
-				//Heritage
-				var heritage = this.heritageClauses.toArray().map(t => t.toRsHeritage(helper));
-				var extendsClause = ArrayUtilities.firstOrDefault(heritage, h => h.fst() === SyntaxKind.ExtendsHeritageClause);
-				if (extendsClause) {					
-					annotStr += "extends " + extendsClause.snd().map(h => h.toString()).join(", ") + " ";
+				// Extends Heritage
+				var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
+					.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword))
+					.filter(t => t !== null));
+				if (extendsHeritage && extendsHeritage.length > 0) {
+					annotStr += "extends " + extendsHeritage.map(h => h.toString()).join(", ") + " ";
 				}
 			}
 			//Otherwise - Use the given annotations
@@ -827,18 +890,35 @@ module TypeScript {
         }
 
 		//RefScript - begin
-		public toRsHeritage(helper: RsHelper): Pair<SyntaxKind, Serializable[]> {
-			return new Pair(this.kind(),
-				this.typeNames.toNonSeparatorArray().map(t => {
-					switch (t.kind()) {
-						case SyntaxKind.IdentifierName:
-						case SyntaxKind.GenericType:
-							var baseSymbol = helper.getSymbolForAST(t);
-							return baseSymbol.type.toRsType();
-						default:
-							throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
-					}
-				}));
+		public toRsHeritage(helper: RsHelper, extendsOrImplements: SyntaxKind): Serializable[] {
+			if (this.extendsOrImplementsKeyword.kind() === extendsOrImplements) {
+				return this.typeNames.toNonSeparatorArray().map(t => {
+						switch (t.kind()) {
+							case SyntaxKind.IdentifierName:
+							case SyntaxKind.GenericType:
+								var baseSymbol = helper.getSymbolForAST(t);
+								return baseSymbol.type.toRsType();
+							default:
+								throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+						}
+					});
+			}
+			return null;
+		}
+
+		public toRsHeritageIds(helper: RsHelper, extendsOrImplements: SyntaxKind): RsId[] {
+			if (this.extendsOrImplementsKeyword.kind() === extendsOrImplements) {
+				return this.typeNames.toNonSeparatorArray().map(t => {
+						switch (t.kind()) {
+							case SyntaxKind.IdentifierName:
+							case SyntaxKind.GenericType:
+								return t.toRsId(helper);
+							default:
+								throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+						}
+					});
+			}
+			return [];	
 		}
 		//RefScript - end
 
@@ -1087,7 +1167,7 @@ module TypeScript {
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 
-			if (bindAnnNames.length > 0 && !arrays_equal(bindAnnNames, [name])) {
+			if (bindAnnNames.length > 0 || !arrays_equal(bindAnnNames, [name])) {
 				console.log(helper.getSourceSpan(this).toString());
 				console.log("Function '" + name + "' should have a single annotation.");
 				process.exit(1);
@@ -2970,6 +3050,10 @@ module TypeScript {
 		public toRsAST(helper: RsHelper): RsAST {
 			return this.identifier.toRsAST(helper);
 		}		
+
+		public toRsId(helper: RsHelper): RsId {
+			return this.identifier.toRsId(helper);
+		}		
 		//RefScript - end
 
     }
@@ -4254,6 +4338,7 @@ module TypeScript {
             if (this.parameters.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
     }
 
     export class TypeParameterListSyntax extends SyntaxNode {
@@ -4835,6 +4920,22 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+		//RefScript - begin
+		public toRsClassElt(helper: RsHelper): RsClassElt {
+			var annKind = AnnotContext.ClassContructorContext;
+			var anns = tokenAnnots(this.firstToken());
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
+			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+			if (bindAnnNames.length !== 1 && bindAnnNames[0] !== name) {
+				throw new Error("Constructors should have a single annotation.");
+			}
+			return new RsConstructor(helper.getSourceSpan(this), anns,
+				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+				new RsASTList([this.block.toRsStmt(helper)]));
+		}
+		//RefScript - end
+
     }
 
     export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemberDeclarationSyntax {
@@ -4936,6 +5037,25 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+		//RefScript - begin
+		public toRsClassElt(helper: RsHelper): RsClassElt {
+			var name = this.propertyName.fullText();
+			var anns = tokenAnnots(this.firstToken());
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
+			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+
+			if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
+				throw new Error("Method '" + name + "' should have a single annotation.");
+			}
+
+			return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
+				null, this.propertyName.toRsId(helper),
+				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+				new RsASTList([this.block.toRsStmt(helper)]));
+		}
+		//RefScript - end
+
     }
 
     export class GetAccessorSyntax extends SyntaxNode implements IMemberDeclarationSyntax, IPropertyAssignmentSyntax {

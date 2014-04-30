@@ -655,45 +655,37 @@ module TypeScript {
 	 * ****************************************************************************/
 
 	export class RsClassElt extends RsAnnotatedAST {
-
 		public toObject(): any {
 			throw new Error("RsClassElt: child class should implement toJSON");
 		}
-
 	}
 
 	export class RsConstructor extends RsClassElt {
-
 		public toObject(): any {
 			return {
-				Constructor: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					(this.args) ? this.args.toObject() : null,
-					this.body.toObject()
-				]
+				Constructor: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					(this.args) ? this.args.toObject() : null, this.body.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public /*Maybe*/ args: RsASTList<RsId>, public body: RsASTList<RsStatement>) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public /*Maybe*/ args: RsASTList<RsId>,
+					public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
 	export class RsMemberVarDecl extends RsClassElt {
-
 		public toObject(): any {
 			return {
-				MemberVarDecl: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.sta,
-					this.vardecl.toObject()
-				]
+				MemberVarDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.sta,this.vardecl.toObject()]
 			};
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public sta: boolean, public vardecl: RsVarDecl) {
-			super(ann);
-		}
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public sta: boolean,
+					public vardecl: RsVarDecl) { super(ann); }
 	}
 
 	export class RsMemberMethDecl extends RsClassElt {
