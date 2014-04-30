@@ -3,12 +3,13 @@
 module TypeScript {
 
 	/* Get the annotations that lead a token */
-	function tokenAnnots(token: ISyntaxToken): RsAnnotation[] {
+	function tokenAnnots(token: ISyntaxToken, context?: AnnotContext): RsAnnotation[] {
+        var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
 		return token.leadingTrivia().toArray()
 			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
 			.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
 			.filter(t => t !== null)
-			.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
+			.map(t => RsAnnotation.createAnnotation(t,ctx));
 	}
  
 
@@ -4919,7 +4920,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
 			var annKind = AnnotContext.ClassContructorContext;
-			var anns = tokenAnnots(this.firstToken());
+			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 			if (bindAnnNames.length !== 1 && bindAnnNames[0] !== name) {
@@ -5036,8 +5037,8 @@ module TypeScript {
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
 			var name = this.propertyName.fullText();
-			var anns = tokenAnnots(this.firstToken());
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
+			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 
 			if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {

@@ -63,7 +63,7 @@ module TypeScript {
 						case AnnotContext.OtherContext:
 							return new RsBindAnnotation(pair.fst(), pair.snd());
 						default:
-							throw new Error("BUG: there is not default context");
+							throw new Error("BUG: there is no default context");
 					}
 				}
 				case AnnotKind.RawClass:
