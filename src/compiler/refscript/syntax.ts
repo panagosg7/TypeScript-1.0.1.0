@@ -685,7 +685,7 @@ module TypeScript {
 		constructor(public span: RsSourceSpan,
 					public ann: RsAnnotation[],
 					public sta: boolean,
-					public vardecl: RsVarDecl) { super(ann); }
+					public vardecl: IRsVarDeclLike) { super(ann); }
 	}
 
 	export class RsMemberMethDecl extends RsClassElt {

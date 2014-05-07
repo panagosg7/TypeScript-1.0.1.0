@@ -46,6 +46,14 @@ module TypeScript.Syntax {
 				return new RsNullLit(helper.getSourceSpan(token),
 					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/);
 
+			case SyntaxKind.ThisKeyword:
+				return new RsThisRef(helper.getSourceSpan(token),
+					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/);
+
+			case SyntaxKind.LastFutureReservedKeyword:
+				return new RsSuperRef(helper.getSourceSpan(token),
+					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/);
+
 	        default:
                 throw new Error("NEW: toRsExp not implemented for " + SyntaxKind[token.kind()]);
         }

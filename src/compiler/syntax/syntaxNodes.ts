@@ -1,5 +1,12 @@
 ///<reference path='references.ts' />
 
+
+
+// TODO:
+// 
+// - Deprecate getRsAnnotations
+//
+
 module TypeScript {
 
 	/* Get the annotations that lead a token */
@@ -567,7 +574,7 @@ module TypeScript {
 						case 1: var extendsSerial = extendsHeritage[0]; break;
 						default:
 							console.log(extendsHeritage.toString());
-							throw new Error("BUG: class '" + this.identifier.fullText() + "' can only extend a single class.");
+							throw new Error("BUG: class '" + this.identifier.text() + "' can only extend a single class.");
 					}
 				}
 				else {
@@ -586,7 +593,7 @@ module TypeScript {
 			}
 			else {
 				console.log(helper.getSourceSpan(this).toString());
-				console.log("Class '" + this.identifier.fullText() + "' has multiple class annoatations.");
+				console.log("Class '" + this.identifier.text() + "' has multiple class annoatations.");
 				process.exit(1);
 			}
 		}
@@ -735,7 +742,7 @@ module TypeScript {
 			//No class annotation given - generate one based on the existing interface header
 			if (headerAnnots.length === 0) {
 				//Name
-				annotStr += this.identifier.fullText() + " ";
+				annotStr += this.identifier.text() + " ";
 				//Type parameters
 				if (this.typeParameterList) {
 					var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = this.typeParameterList.typeParameters;
@@ -777,8 +784,6 @@ module TypeScript {
 						var symb = helper.getSymbolForAST(m);
 						if (symb instanceof PullSignatureSymbol) {
 							var ssymb = <PullSignatureSymbol>symb;
-							console.log(ssymb.parameters.toString());
-							console.log(ssymb.returnType.toString());
 						}
 						break;
 					case SyntaxKind.PropertySignature:
@@ -2711,7 +2716,15 @@ module TypeScript {
 
         public isTypeScriptSpecific(): boolean {
             return true;
-        }
+		}
+
+		//RefScript - begin
+		public toRsId(helper: RsHelper): RsId {
+			return new RsId(helper.getSourceSpan(this),
+				this.getRsAnnotations(AnnotContext.OtherContext),
+				this.name.fullText());
+		}
+		//RefScript - end
     }
 
     export class TypeQuerySyntax extends SyntaxNode implements ITypeSyntax {
@@ -4919,12 +4932,10 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
-			var annKind = AnnotContext.ClassContructorContext;
 			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
-			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
-			if (bindAnnNames.length !== 1 && bindAnnNames[0] !== name) {
-				throw new Error("Constructors should have a single annotation.");
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawConstr);
+			if (bindAnns.length !== 1) {
+				throw new Error("Constructors should have exactly one annotation.");
 			}
 			return new RsConstructor(helper.getSourceSpan(this), anns,
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
@@ -5036,15 +5047,13 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
-			var name = this.propertyName.fullText();
+			var methodName = this.propertyName.text();
 			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 			var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
-
-			if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
-				throw new Error("Method '" + name + "' should have a single annotation.");
+			if (bindAnnNames.length !== 1 || bindAnnNames[0] !== methodName) {
+				throw new Error("Method '" + methodName + "' should have a single annotation.");
 			}
-
 			return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
 				ArrayUtilities.firstOrDefault(this.modifiers.toArray(), (t,i) => t.kind() === SyntaxKind.StaticKeyword) !== null,
 				this.propertyName.toRsId(helper),
@@ -5365,6 +5374,18 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+		//RefScript - begin
+		public toRsClassElt(helper: RsHelper): RsClassElt {
+			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassFieldContext);
+			var binderNames = <RsBindAnnotation[]>anns.filter(b => b.kind() === AnnotKind.RawField);
+			// Adding the annotations in the enclosing RsVarDecl instead of the top-level.
+			return new RsMemberVarDecl(helper.getSourceSpan(this), [],
+				this.modifiers.toArray().some(m => m.kind() === SyntaxKind.StaticKeyword),
+				this.variableDeclarator.toRsVarDecl(helper, binderNames));
+		}
+		//RefScript - end
+
     }
 
     export class IndexMemberDeclarationSyntax extends SyntaxNode implements IClassElementSyntax {
@@ -6364,18 +6385,6 @@ module TypeScript {
 						   .map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
 						   .filter(t => t !== null)
                            .map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
-
-			//if (this.variableDeclaration) 
-			//	console.log("VD: " + this.variableDeclaration.fullText());
-			//if (this.initializer) 
-			//	console.log("IN: " + this.initializer.fullText());
-			//if (this.condition) 
-			//	console.log("CO: " + this.condition.fullText());
-			//if (this.incrementor)
-			//	console.log("INC:" + this.incrementor.fullText());
-			//if (this.statement) 
-			//	console.log("BD: " + this.statement.fullText());
-
             return new RsForStmt(
                 helper.getSourceSpan(this),
                 this.getRsAnnotations(AnnotContext.OtherContext),
