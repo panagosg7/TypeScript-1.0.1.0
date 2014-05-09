@@ -7190,9 +7190,8 @@ module TypeScript {
         public toRsMemList(helper: RsHelper) {
             var pName = this.propertyName;
             return new RsASTList(
-                [new RsPropId(helper.getSourceSpan(pName),
-                    [] /*pName.getRsAnnotations(AnnotContext.OtherContext)*/,
-                    this.propertyName.toRsId(helper))]);
+				[new RsPropId(helper.getSourceSpan(pName), [], this.propertyName.toRsId(helper)),
+				this.expression.toRsExp(helper)]);
         }
         //RefScript - end
     }

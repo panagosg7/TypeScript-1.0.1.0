@@ -23,7 +23,7 @@ module TypeScript {
 		toRsLValue(helper: RsHelper): RsASTList<RsLValue>;
 		toRsClassElt(helper: RsHelper): RsASTList<RsClassElt>;
 		toRsForInit(helper: RsHelper): RsASTList<RsForInit>;
-		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>
+		toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>;
 		toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<IRsVarDeclLike>;	// Needs to be this way to capture ambient declarations.
 		//RefScript - end
 
