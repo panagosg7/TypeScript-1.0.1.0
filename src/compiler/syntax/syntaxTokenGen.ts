@@ -5,7 +5,8 @@ module TypeScript.Syntax {
 	//RefScript - begin
 	function toRsAST(token: ISyntaxToken, helper: RsHelper): RsAST {
 		if (token.kind() === SyntaxKind.IdentifierName) {
-			return new RsId(helper.getSourceSpan(token), [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/, token.fullText());
+			return new RsId(helper.getSourceSpan(token), []
+          /*token.getRsAnnotations(AnnotContext.OtherContext)*/, token.text());
 		}
 		throw new Error("toRsAST not implemented for " +  SyntaxKind[token.kind()]);
 	}
