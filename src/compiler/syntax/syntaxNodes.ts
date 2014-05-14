@@ -7966,6 +7966,15 @@ module TypeScript {
             if (this.expression.isTypeScriptSpecific()) { return true; }
             return false;
         }
+
+		//RefScript - begin
+		public toRsExp(helper: RsHelper): RsExpression {
+			return new RsPrefixExpr(helper.getSourceSpan(this),
+				tokenAnnots(this.firstToken()),
+				new RsPrefixOp(RsPrefixOpKind.PrefixTypeof),
+				this.expression.toRsExp(helper));
+		} 
+		//RefScript - end
     }
 
     export class DeleteExpressionSyntax extends SyntaxNode implements IUnaryExpressionSyntax {
