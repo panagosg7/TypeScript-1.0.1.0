@@ -6995,6 +6995,12 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return true;
         }
+
+        //RefScript - begin
+        public toRsExp(helper: RsHelper): RsExpression {
+          return this.expression.toRsExp(helper); 
+        }
+        //RefScript - end
     }
 
     export class ObjectLiteralExpressionSyntax extends SyntaxNode implements IPrimaryExpressionSyntax {
