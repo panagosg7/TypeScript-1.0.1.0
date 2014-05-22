@@ -2,9 +2,9 @@
 
 
 
-// TODO:
+// MUST TODO:
 // 
-// - Deprecate getRsAnnotations
+// - Deprecate getRsAnnotations in favor of tokenAnnots
 //
 
 module TypeScript {
@@ -2946,7 +2946,9 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			return new RsBlockStmt(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.statements.toRsStmt(helper));
+			return new RsBlockStmt(helper.getSourceSpan(this), 
+          this.getRsAnnotations(AnnotContext.OtherContext), 
+          this.statements.toRsStmt(helper));
 		}
 		//RefScript - end
 
@@ -7449,6 +7451,14 @@ module TypeScript {
         public isTypeScriptSpecific(): boolean {
             return false;
         }
+
+        //RefScript - begin
+		    public toRsStmt(helper: RsHelper): RsStatement {
+			      return new RsEmptyStmt(helper.getSourceSpan(this),
+                tokenAnnots(this.semicolonToken));
+        }
+        //RefScript - end
+
     }
 
     export class TryStatementSyntax extends SyntaxNode implements IStatementSyntax {
