@@ -21,6 +21,11 @@ module TypeScript {
 		public thd(): C { return this._thd;	}
 	}
 
+	export enum MutabilityModifiers {
+		ReadOnly,
+		Mutable,
+		Immutable
+	}
 
 
 	export enum AnnotKind {
@@ -137,8 +142,13 @@ module TypeScript {
 			var bs = content.split("::");
 			if (bs && bs.length == 2) {
 				var lhss = bs[0].split(" ").filter(s => s.length > 0);
-				if (lhss && lhss.length == 1) {
+				if (lhss && lhss.length === 1) {
 					this._binderName = lhss[0];
+					return this._binderName;
+				}
+				// The first argument may be a mutability modifier.
+				if (lhss && lhss.length === 2) {
+					this._binderName = lhss[1];
 					return this._binderName;
 				}
 			}
@@ -171,7 +181,7 @@ module TypeScript {
 			r += this._className.text();
 			if (this._typeParams && this._typeParams.length > 0) {
 				r += " <";
-				r += this._typeParams.map(t => t.identifier.text()).join(", ");
+				r += this._typeParams.join(", ");
 				r += ">";
 			}
 			if (this._extends) {
@@ -192,7 +202,7 @@ module TypeScript {
 		}
 
 		constructor(private _className: ISyntaxToken,
-					private _typeParams: TypeParameterSyntax[],
+					private _typeParams: string[],
 					private _extends: Serializable,
 					private _implements: Serializable[]) { super(AnnotKind.RawClass); }
 
