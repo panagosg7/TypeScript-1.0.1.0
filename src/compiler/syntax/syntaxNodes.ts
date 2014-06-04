@@ -761,20 +761,25 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
 		var annotStr = "";
 
-		//No class annotation given - generate one based on the existing interface header
+		//No interface annotation given - generate one based on the existing interface header
 		if (headerAnnots.length === 0) {
 			//Name
 			annotStr += this.identifier.text() + " ";
 			//Type parameters
+			var typeParams: string[] = [];
 			if (this.typeParameterList) {
-				var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = this.typeParameterList.typeParameters;
+				typeParams = this.typeParameterList.typeParameters.toNonSeparatorArray().map(p=>p.identifier.text());
 			}
-			else {
-				var emp: TypeParameterSyntax[] = [];
-				var typeParams: ISeparatedSyntaxList<TypeParameterSyntax> = Syntax.separatedList(emp);
+			
+			//Mutability parameter
+			var mutParam = 'M';
+			while (typeParams.indexOf(mutParam) !== -1) {
+				var possible = "0123456789";
+				mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 			}
-			annotStr += (typeParams.toNonSeparatorArray().length > 0) ?
-			("<" + typeParams.toNonSeparatorArray().map(p => p.identifier.text()).join(", ") + "> ") : " ";
+			typeParams.unshift(mutParam);
+			
+			annotStr += (typeParams.length > 0) ? ("<" + typeParams.join(", ") + "> ") : " ";
 
 			// Extends Heritage
 			var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
