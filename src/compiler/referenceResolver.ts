@@ -87,7 +87,7 @@ module TypeScript {
                 return normalizedPath;
             }
 
-            if (!isTSFile(normalizedPath) && !isDTSFile(normalizedPath)) {
+            if (!isTSFile(normalizedPath) && !isDTSFile(normalizedPath) && !isJSFile(normalizedPath)) {
                 var dtsFile = normalizedPath + ".d.ts";
                 var tsFile = normalizedPath + ".ts";
 

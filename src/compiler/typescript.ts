@@ -386,6 +386,12 @@ module TypeScript {
             return TypeScriptCompiler.mapToFileNameExtension(".js", fileName, wholeFileNameReplaced);
         }
 
+		static mapToSeparateJSFileName(fileName: string, wholeFileNameReplaced: boolean) {
+            return TypeScriptCompiler.mapToFileNameExtension(".out.js", fileName, wholeFileNameReplaced);
+        }
+
+
+
         static mapToJSONFileName(fileName: string, wholeFileNameReplaced: boolean) {
             return TypeScriptCompiler.mapToFileNameExtension(".json", fileName, wholeFileNameReplaced);
         }
@@ -398,7 +404,7 @@ module TypeScript {
 
             var typeScriptFileName = document.fileName;
             if (!emitter) {
-                var javaScriptFileName = this.mapOutputFileName(document, emitOptions, TypeScriptCompiler.mapToJSFileName);
+                var javaScriptFileName = this.mapOutputFileName(document, emitOptions, TypeScriptCompiler.mapToSeparateJSFileName);
                 var outFile = new TextWriter(javaScriptFileName, this.writeByteOrderMarkForDocument(document), OutputFileType.JavaScript);
 
                 emitter = new Emitter(javaScriptFileName, outFile, emitOptions, this.semanticInfoChain);
@@ -457,10 +463,12 @@ module TypeScript {
             document: Document,
             emitOptions: EmitOptions,
             onSingleFileEmitComplete: (files: OutputFile[]) => void,
-            sharedEmitter: Emitter): Emitter {
+			sharedEmitter: Emitter): Emitter {
+
 
             // Emitting module or multiple files, always goes to single file
                 if (this._shouldEmit(document)) {
+
                 if (document.emitToOwnOutputFile()) {
                     // We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
                     var singleEmitter = this.emitDocumentWorker(document, emitOptions);

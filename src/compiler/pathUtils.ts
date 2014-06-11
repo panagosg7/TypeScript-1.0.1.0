@@ -77,6 +77,10 @@ module TypeScript {
         return isFileOfExtension(fname, ".ts");
     }
 
+	export function isJSFile(fname: string) {
+        return isFileOfExtension(fname, ".js");
+    }
+
     export function isDTSFile(fname: string) {
         return isFileOfExtension(fname, ".d.ts");
     }
