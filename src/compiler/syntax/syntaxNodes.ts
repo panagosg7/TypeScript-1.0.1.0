@@ -585,10 +585,11 @@ module TypeScript {
 				mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 			}
 			typeParams.unshift(mutParam);
+			var mutType = new TTypeReference(mutParam, []);
 
 			//Extends Heritage
 			var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
-				.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword))
+				.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword, mutType))
 				.filter(t => t !== null));
 			if (extendsHeritage) {
 				switch (extendsHeritage.length) {
@@ -604,7 +605,7 @@ module TypeScript {
 			}
 			//Implements Heritage
 			var implementsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
-				.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword))
+				.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword, mutType))
 				.filter(t => t !== null));
 			return new RsInferredClassAnnotation(this.identifier, typeParams, extendsSerial, implementsHeritage);
 		}
@@ -783,7 +784,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
 			// Extends Heritage
 			var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
-				.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword))
+				.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword, mutParam))
 				.filter(t => t !== null));
 			if (extendsHeritage && extendsHeritage.length > 0) {
 				annotStr += "extends " + extendsHeritage.map(h => h.toString()).join(", ") + " ";
@@ -923,18 +924,20 @@ export class HeritageClauseSyntax extends SyntaxNode {
 	}
 
 	//RefScript - begin
-	public toRsHeritage(helper: RsHelper, extendsOrImplements: SyntaxKind): Serializable[] {
+	public toRsHeritage(helper: RsHelper, extendsOrImplements: SyntaxKind, mutParam: RsType): Serializable[] {
 		if (this.extendsOrImplementsKeyword.kind() === extendsOrImplements) {
-			return this.typeNames.toNonSeparatorArray().map(t => {
-				switch (t.kind()) {
-					case SyntaxKind.IdentifierName:
-					case SyntaxKind.GenericType:
-						var baseSymbol = helper.getSymbolForAST(t);
-						return baseSymbol.type.toRsType();
-					default:
-						throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
-				}
-			});
+			var r = [mutParam].concat(
+				this.typeNames.toNonSeparatorArray().map(t => {
+					switch (t.kind()) {
+						case SyntaxKind.IdentifierName:
+						case SyntaxKind.GenericType:
+							var baseSymbol = helper.getSymbolForAST(t);
+							return baseSymbol.type.toRsType();
+						default:
+							throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+					}
+				}));
+			return r;
 		}
 		return null;
 	}
