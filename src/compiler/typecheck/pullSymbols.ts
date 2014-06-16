@@ -3109,7 +3109,7 @@ module TypeScript {
 		//RefScript - begin
 
 		/** toRsType: Convert a PullTypeSymbol to a NanoJS type */
-		public toRsType(): Serializable {
+		public toRsType(mut?: RsType): Serializable {
 
 			if (this.toString() === "any") {
 				return TAny;
@@ -3150,8 +3150,12 @@ module TypeScript {
 					tArgs = this.getTypeParameters();
 				}
 
-				var nJSParams = tArgs.map(p => p.toRsTypeParameter());
-				return new TTypeReference(this.fullName().split("<")[0], nJSParams);
+				//var nJSParams = tArgs.map(p => p.toRsTypeParameter());
+				var rsTParams = tArgs.map(p => p.toRsType());
+        if (mut !== undefined) {
+          rsTParams = [mut].concat(rsTParams);
+        }
+				return new TTypeReference(this.fullName().split("<")[0], rsTParams);
 			}
 
 			if (this.isFunction()) {

@@ -106,7 +106,7 @@ module TypeScript {
 	}
 
 	export class TTypeReference extends RsType {
-		constructor(private name: string, private params: TTypeParam[]) { super(); }
+		constructor(private name: string, private params: RsType[]) { super(); }
 
 		public toString(): string {
 			var s = "";
