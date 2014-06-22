@@ -804,7 +804,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 		}
 
 		//Body of the interface declaration
-		var members: string[] = this.body.typeMembers.toNonSeparatorArray().map(m => {
+		var members: string[][] = this.body.typeMembers.toNonSeparatorArray().map(m => {
 			switch (m.kind()) {
 				case SyntaxKind.FunctionDeclaration:		// Index signature
 					var f = <FunctionDeclarationSyntax>m;
@@ -820,13 +820,14 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return eltSymbol.name + ": " + eltSymbol.type.toRsType().toString();
+						return [eltSymbol.name + ": " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
 						//Annotation provided by user
-						var ann = anns[0];
+						//var ann = anns[0];
+            //console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
-						return ann.getContent().replace("::", ":");
+						return anns.map(m => m.getContent().replace("::", ":"));
 					}
 
 				case SyntaxKind.IndexSignature:
@@ -836,7 +837,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						var sign = <PullSignatureSymbol>symb;
 						//meh ... convert to string
 						if (sign.parameters.length === 1) {
-							return "[" + sign.parameters.toString() + "]: " + sign.returnType.toRsType().toString();
+							return ["[" + sign.parameters.toString() + "]: " + sign.returnType.toRsType().toString()];
 						}
 					}
 				default:
@@ -844,7 +845,12 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			}
 		});
 
-		annotStr += "{" + members.join("; ") + "}";
+    var r : string[] = [];
+    for (var i = 0; i < members.length; i++) {
+      r = r.concat(members[i]);
+    }
+    
+		annotStr += "{" + r.join("; ") + "}";
 		restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
 			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
