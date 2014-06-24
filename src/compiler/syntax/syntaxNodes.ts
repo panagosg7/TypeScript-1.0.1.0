@@ -804,7 +804,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 		}
 
 		//Body of the interface declaration
-		var members: string[] = this.body.typeMembers.toNonSeparatorArray().map(m => {
+		var members: string[][] = this.body.typeMembers.toNonSeparatorArray().map(m => {
 			switch (m.kind()) {
 				case SyntaxKind.FunctionDeclaration:		// Index signature
 					var f = <FunctionDeclarationSyntax>m;
@@ -820,13 +820,14 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return eltSymbol.name + ": " + eltSymbol.type.toRsType().toString();
+						return [eltSymbol.name + " :: " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
 						//Annotation provided by user
-						var ann = anns[0];
+						//var ann = anns[0];
+            //console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
-						return ann.getContent().replace("::", ":");
+						return anns.map(m => m.getContent());
 					}
 
 				case SyntaxKind.IndexSignature:
@@ -836,7 +837,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						var sign = <PullSignatureSymbol>symb;
 						//meh ... convert to string
 						if (sign.parameters.length === 1) {
-							return "[" + sign.parameters.toString() + "]: " + sign.returnType.toRsType().toString();
+							return ["[" + sign.parameters.toString() + "]: " + sign.returnType.toRsType().toString()];
 						}
 					}
 				default:
@@ -844,7 +845,12 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			}
 		});
 
-		annotStr += "{" + members.join("; ") + "}";
+    var r : string[] = [];
+    for (var i = 0; i < members.length; i++) {
+      r = r.concat(members[i]);
+    }
+    
+		annotStr += "{" + r.join("; ") + "}";
 		restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
 			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
@@ -926,17 +932,16 @@ export class HeritageClauseSyntax extends SyntaxNode {
 	//RefScript - begin
 	public toRsHeritage(helper: RsHelper, extendsOrImplements: SyntaxKind, mutParam: RsType): Serializable[] {
 		if (this.extendsOrImplementsKeyword.kind() === extendsOrImplements) {
-			var r = [mutParam].concat(
-				this.typeNames.toNonSeparatorArray().map(t => {
+			var r = this.typeNames.toNonSeparatorArray().map(t => {
 					switch (t.kind()) {
 						case SyntaxKind.IdentifierName:
 						case SyntaxKind.GenericType:
 							var baseSymbol = helper.getSymbolForAST(t);
-							return baseSymbol.type.toRsType();
+							return baseSymbol.type.toRsType(mutParam);
 						default:
 							throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
 					}
-				}));
+				});
 			return r;
 		}
 		return null;
@@ -5083,8 +5088,8 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
-		if (bindAnnNames.length !== 1 || bindAnnNames[0] !== methodName) {
-			throw new Error("Method '" + methodName + "' should have a single annotation.");
+		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
+			throw new Error("Method '" + methodName + "' should have at least one annotation.");
 		}
 		return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
 			ArrayUtilities.firstOrDefault(this.modifiers.toArray(), (t, i) => t.kind() === SyntaxKind.StaticKeyword) !== null,

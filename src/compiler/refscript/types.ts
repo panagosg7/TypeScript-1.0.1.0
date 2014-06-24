@@ -62,7 +62,7 @@ module TypeScript {
 		public toString(): string {
 			var s = "";
 			s += "{ ";
-			s += this.fields.map(f => (f.symbol + ": " + f.type.toString())).join(", ");
+			s += this.fields.map(f => (f.symbol + " :: " + f.type.toString())).join(", ");
 			s += " }";
 			return s;
 		}
@@ -106,7 +106,7 @@ module TypeScript {
 	}
 
 	export class TTypeReference extends RsType {
-		constructor(private name: string, private params: TTypeParam[]) { super(); }
+		constructor(private name: string, private params: RsType[]) { super(); }
 
 		public toString(): string {
 			var s = "";
@@ -172,7 +172,7 @@ module TypeScript {
 		//NOTE: mutability: by default interface fields are mutable.
 
 		public toString(): string {
-			return this.name + ": "	+ this.type.toString();
+			return this.name + " :: "	+ this.type.toString();
 		}
 	}
 
