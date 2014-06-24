@@ -62,7 +62,7 @@ module TypeScript {
 		public toString(): string {
 			var s = "";
 			s += "{ ";
-			s += this.fields.map(f => (f.symbol + ": " + f.type.toString())).join(", ");
+			s += this.fields.map(f => (f.symbol + " :: " + f.type.toString())).join(", ");
 			s += " }";
 			return s;
 		}
@@ -172,7 +172,7 @@ module TypeScript {
 		//NOTE: mutability: by default interface fields are mutable.
 
 		public toString(): string {
-			return this.name + ": "	+ this.type.toString();
+			return this.name + " :: "	+ this.type.toString();
 		}
 	}
 

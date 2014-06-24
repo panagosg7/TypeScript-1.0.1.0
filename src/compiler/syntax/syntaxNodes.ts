@@ -820,14 +820,14 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + ": " + eltSymbol.type.toRsType().toString()];
+						return [eltSymbol.name + " :: " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
 						//Annotation provided by user
 						//var ann = anns[0];
             //console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
-						return anns.map(m => m.getContent().replace("::", ":"));
+						return anns.map(m => m.getContent());
 					}
 
 				case SyntaxKind.IndexSignature:
@@ -5088,8 +5088,8 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
-		if (bindAnnNames.length !== 1 || bindAnnNames[0] !== methodName) {
-			throw new Error("Method '" + methodName + "' should have a single annotation.");
+		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
+			throw new Error("Method '" + methodName + "' should have at least one annotation.");
 		}
 		return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
 			ArrayUtilities.firstOrDefault(this.modifiers.toArray(), (t, i) => t.kind() === SyntaxKind.StaticKeyword) !== null,
