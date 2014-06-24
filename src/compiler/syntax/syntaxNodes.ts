@@ -5097,6 +5097,7 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
     else {
   		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
     }
+
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
 			throw new Error("Method '" + methodName + "' should have at least one annotation.");
@@ -5423,11 +5424,29 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
 
 	//RefScript - begin
 	public toRsClassElt(helper: RsHelper): RsClassElt {
-		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassFieldContext);
-		var binderNames = <RsBindAnnotation[]>anns.filter(b => b.kind() === AnnotKind.RawField);
+
+		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
+    var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassFieldContext;
+
+		var anns = tokenAnnots(this.firstToken(), ctx);
+
+    if (isStatic) {
+  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
+    }
+    else {
+  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
+    }
+
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+		if (bindAnnNames.length == 0) {
+			throw new Error("Field should have at least one annotation.");
+		}
+   
+		var binderNames = <RsBindAnnotation[]>anns.filter(
+        b => b.kind() === AnnotKind.RawField || b.kind() === AnnotKind.RawStatic);
+
 		// Adding the annotations in the enclosing RsVarDecl instead of the top-level.
-		return new RsMemberVarDecl(helper.getSourceSpan(this), [],
-			this.modifiers.toArray().some(m => m.kind() === SyntaxKind.StaticKeyword),
+		return new RsMemberVarDecl(helper.getSourceSpan(this), [], isStatic,
 			this.variableDeclarator.toRsVarDecl(helper, binderNames));
 	}
 	//RefScript - end
