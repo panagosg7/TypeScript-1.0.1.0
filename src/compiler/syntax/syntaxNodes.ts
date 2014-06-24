@@ -820,7 +820,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + " :: " + eltSymbol.type.toRsType().toString()];
+						return [eltSymbol.name + " : " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
 						//Annotation provided by user
@@ -5086,9 +5086,17 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 	public toRsClassElt(helper: RsHelper): RsClassElt {
 		var methodName = this.propertyName.text();
 		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
+   
+    var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassMethodContext;
 
-		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
-		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
+		var anns = tokenAnnots(this.firstToken(), ctx);
+
+    if (isStatic) {
+  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
+    }
+    else {
+  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
+    }
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
 			throw new Error("Method '" + methodName + "' should have at least one annotation.");

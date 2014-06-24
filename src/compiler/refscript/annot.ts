@@ -36,7 +36,8 @@ module TypeScript {
 		RawClass,		// Class annotations
 		RawField,		// Field annotations
 		RawMethod,   	// Method annotations
-		RawConstr,		// Method annotations
+		RawConstr,		// Constructor annotations
+    RawStatic,    // Static fields/methods
 		RawTAlias,   	// Type alias
 		RawPAlias,   	// Predicate alias
 		RawQual,     	// Qualifier
@@ -44,10 +45,11 @@ module TypeScript {
 	}
 
 	export enum AnnotContext {
-		ClassMethodContext,		// Class method
-		ClassFieldContext,		// Class field
-		ClassContructorContext,	// Class constructor
-		OtherContext			// Rest
+		ClassMethodContext,		    // Class method
+		ClassStaticContext,		    // Class static field/method
+		ClassFieldContext,		    // Class field
+		ClassContructorContext,	  // Class constructor
+		OtherContext			        // Rest
 	}
 
 	export class RsAnnotation {
@@ -61,6 +63,8 @@ module TypeScript {
 					switch (ctx) {
 						case AnnotContext.ClassMethodContext:
 							return new RsBindAnnotation(AnnotKind.RawMethod, pair.snd());
+						case AnnotContext.ClassStaticContext:
+							return new RsBindAnnotation(AnnotKind.RawStatic, pair.snd());
 						case AnnotContext.ClassFieldContext:
 							return new RsBindAnnotation(AnnotKind.RawField, pair.snd());
 						case AnnotContext.ClassContructorContext:
@@ -139,20 +143,36 @@ module TypeScript {
 		public getBinderName(): string {
 			if (this._binderName) return this._binderName;
 			var content = this.getContent();
+      // variable annotation
 			var bs = content.split("::");
-			if (bs && bs.length == 2) {
+			if (bs && bs.length > 1) {
 				var lhss = bs[0].split(" ").filter(s => s.length > 0);
 				if (lhss && lhss.length === 1) {
 					this._binderName = lhss[0];
 					return this._binderName;
 				}
-				// The first argument may be a mutability modifier.
-				if (lhss && lhss.length === 2) {
-					this._binderName = lhss[1];
+				//// The first argument may be a mutability modifier.
+				//if (lhss && lhss.length === 2) {
+				//  this._binderName = lhss[1];
+				//  return this._binderName;
+				//}
+			}
+			// field annotation
+      bs = content.split(":");
+			if (bs && bs.length > 1) {
+				var lhss = bs[0].split(" ").filter(s => s.length > 0);
+				if (lhss && lhss.length === 1) {
+					this._binderName = lhss[0];
 					return this._binderName;
 				}
+				// The first argument may be the static modifier.
+				if (lhss && lhss.length === 2) {
+				  this._binderName = lhss[1];
+				  return this._binderName;
+				}
 			}
-			console.log("Invalid nano-js annotation: " + content);
+
+			console.log("Invalid RefScript annotation: " + content);
 			console.log("Perhaps you need to replace ':' with '::'.");
 			process.exit(1);
 		}
