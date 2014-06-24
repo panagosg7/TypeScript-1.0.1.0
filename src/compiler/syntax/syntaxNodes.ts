@@ -5085,14 +5085,15 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 	//RefScript - begin
 	public toRsClassElt(helper: RsHelper): RsClassElt {
 		var methodName = this.propertyName.text();
+		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
+
 		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassMethodContext);
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
 			throw new Error("Method '" + methodName + "' should have at least one annotation.");
 		}
-		return new RsMemberMethDecl(helper.getSourceSpan(this), anns,
-			ArrayUtilities.firstOrDefault(this.modifiers.toArray(), (t, i) => t.kind() === SyntaxKind.StaticKeyword) !== null,
+		return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
 			this.propertyName.toRsId(helper),
 			new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
 			new RsASTList([this.block.toRsStmt(helper)]));
