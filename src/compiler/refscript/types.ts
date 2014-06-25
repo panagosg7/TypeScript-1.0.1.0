@@ -127,7 +127,7 @@ module TypeScript {
 	export class TTVar extends RsType {
 		constructor(private name: string) { super(); }
 
-		public toString() { return name; }
+		public toString() { return this.name; }
 	}
 
 

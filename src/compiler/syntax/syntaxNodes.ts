@@ -585,7 +585,7 @@ module TypeScript {
 				mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 			}
 			typeParams.unshift(mutParam);
-			var mutType = new TTypeReference(mutParam, []);
+			var mutType = new TTVar(mutParam);
 
 			//Extends Heritage
 			var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
