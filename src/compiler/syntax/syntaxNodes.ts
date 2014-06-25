@@ -3812,6 +3812,13 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 					this.left.toRsLValue(helper),
 					this.right.toRsExp(helper));
 
+			case SyntaxKind.InstanceOfExpression:
+				return new RsInfixExpr(helper.getSourceSpan(this),
+					this.getRsAnnotations(AnnotContext.OtherContext),
+					new RsInfixOp("instanceof"),
+					this.left.toRsExp(helper),
+					this.right.toRsExp(helper));
+
 			default:
 				throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for: " + SyntaxKind[this.kind()]);
 		}
