@@ -1196,7 +1196,8 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 	public toRsStmt(helper: RsHelper): RsStatement {
 
 		if (!this.block) {
-			throw new Error("UNIMPLEMENTED:FunctionDeclaration.toRsStmt:No Block");
+			//throw new Error("UNIMPLEMENTED:FunctionDeclaration.toRsStmt:No Block");
+			return null;
 		}
 
 		var name = this.identifier.text();

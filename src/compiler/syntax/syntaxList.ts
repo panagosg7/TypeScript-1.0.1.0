@@ -37,7 +37,7 @@ module TypeScript.Syntax {
 	}
 
 	function toRsStmt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> {
-		return new RsASTList(list.toArray().map(m => m.toRsStmt(helper)));
+		return new RsASTList(list.toArray().map(m => m.toRsStmt(helper)).filter(e => e !== null));
 	}
 
 	function toRsMemList<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> {
