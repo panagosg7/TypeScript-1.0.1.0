@@ -3108,7 +3108,7 @@ module TypeScript {
 
 		//RefScript - begin
 
-		/** toRsType: Convert a PullTypeSymbol to a NanoJS type */
+		/** toRsType: Convert a PullTypeSymbol to a RefScript type */
 		public toRsType(mut?: RsType): Serializable {
 
 			if (this.toString() === "any") {
@@ -3152,9 +3152,9 @@ module TypeScript {
 
 				//var nJSParams = tArgs.map(p => p.toRsTypeParameter());
 				var rsTParams = tArgs.map(p => p.toRsType());
-        if (mut !== undefined) {
-          rsTParams = [mut].concat(rsTParams);
-        }
+				if (mut !== undefined) {
+					rsTParams = [mut].concat(rsTParams);
+				}
 				return new TTypeReference(this.fullName().split("<")[0], rsTParams);
 			}
 
@@ -3184,6 +3184,13 @@ module TypeScript {
 			return new TTypeParam(this.toString());
 		}
 
+
+		//public toRsMethod(): TMeth {
+		//	console.log(this.type.toString());
+		//	console.log(this.type.getCallSignatures().map(s=> s.toString()));
+		//	return null;
+		//}
+		
 		//RefScript - end
 
     }

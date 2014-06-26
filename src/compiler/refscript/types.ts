@@ -51,18 +51,13 @@ module TypeScript {
 
 	export var TVoid = new TVoidC();
 
-	export class TField {
-		constructor(public symbol: string, public type: Serializable) { }
-	}
-
-
 	export class TObject extends RsType {
-		constructor(public fields: TField[]) { super();	}
+		constructor(public fields: TElt[]) { super();	}
 
 		public toString(): string {
 			var s = "";
 			s += "{ ";
-			s += this.fields.map(f => (f.symbol + " : " + f.type.toString())).join(", ");
+			s += this.fields.map(f => f.toString()).join("; ");
 			s += " }";
 			return s;
 		}
@@ -164,15 +159,38 @@ module TypeScript {
 	}
 
 	export class TElt implements Serializable {
-		constructor(private name: string,
-			private access: boolean,			// private / public
-			private mutability: boolean,		// mutability modifier
-			private type: RsType) { }
 
-		//NOTE: mutability: by default interface fields are mutable.
+		public static createTElt(t: PullTypeSymbol): TElt {
+			if (t.isMethod()) {
+				console.log("TypeParameters: " + t.getTypeParameters().map(t => t.toString()));
+			}
+			return null;
+		}
 
-		public toString(): string {
-			return this.name + " : "	+ this.type.toString();
+		//constructor(private name: string, private type: RsType) { }
+
+		//public toString(): string {
+		//	return this.name + " : "	+ this.type.toString();
+		//}
+	}
+
+	export class TMeth extends TElt {
+		constructor(private name: string, private args: RsType[], private rt: RsType) {
+			super();
+		}			
+
+		public toString() {
+			return this.name + ": (" + this.args.map(t=> t.toString()).join(", ") + "): " + this.rt.toString();
+		}
+	}
+
+	export class TField extends TElt {
+		constructor(private name: string, private type: RsType) {
+			super();
+		}			
+
+		public toString() {
+			return this.name + ": " + this.type.toString();
 		}
 	}
 

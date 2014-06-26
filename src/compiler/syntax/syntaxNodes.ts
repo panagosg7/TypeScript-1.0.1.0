@@ -814,7 +814,36 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						var ssymb = <PullSignatureSymbol>symb;
 					}
 					break;
-				case SyntaxKind.PropertySignature:
+				
+				case SyntaxKind.MethodSignature:
+					var v = <PropertySignatureSyntax> m;
+					var anns = tokenAnnots(v.propertyName);
+					if (anns.length === 0) {
+						//If there is no annotation
+
+						// FIXME: Keeping the PullSignatureSymbol toString method for RefScript types
+						// It would be nice if we could keep the TS printing facilities for our types 
+						// well -- what could go wrong? 
+						// * any type (can be treated as top) 
+						// * anything else ?
+
+						var eltSymbol = helper.getSymbolForAST(v);
+						return [eltSymbol.name + " : " + eltSymbol.toString()];
+					}
+					else {
+						//Annotation provided by user
+						//var ann = anns[0];
+						//console.log(anns.map(m => m.getContent()));
+						// XXX: String HACK
+						return anns.map(m => m.getContent());
+					}
+
+
+
+					break;
+
+
+				case SyntaxKind.PropertySignature:			// Field signature
 					var v = <PropertySignatureSyntax> m;
 					var anns = tokenAnnots(v.propertyName);
 					if (anns.length === 0) {
@@ -845,10 +874,10 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			}
 		});
 
-    var r : string[] = [];
-    for (var i = 0; i < members.length; i++) {
-      r = r.concat(members[i]);
-    }
+		var r : string[] = [];
+		for (var i = 0; i < members.length; i++) {
+			r = r.concat(members[i]);
+		}
     
 		annotStr += "{" + r.join("; ") + "}";
 		restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
