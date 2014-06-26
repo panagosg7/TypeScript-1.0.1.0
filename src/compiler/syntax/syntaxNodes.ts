@@ -825,7 +825,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					else {
 						//Annotation provided by user
 						//var ann = anns[0];
-            //console.log(anns.map(m => m.getContent()));
+						//console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
 						return anns.map(m => m.getContent());
 					}
@@ -1733,9 +1733,8 @@ export class PrefixUnaryExpressionSyntax extends SyntaxNode implements IUnaryExp
 					new RsPrefixOp(RsPrefixOpKind.PrefixBNot),
 					this.operand.toRsExp(helper));
 
-			// NOTE: For the moment cast expressions are ignored.
 			case SyntaxKind.CastExpression:
-				return this.operand.toRsExp(helper);
+				return this.toRsExp(helper);
 			default:
 				throw new Error("UnaryExpression:toRsExp SyntaxKind not supported: " + SyntaxKind[this.kind()]);
 		}
@@ -7071,7 +7070,13 @@ export class CastExpressionSyntax extends SyntaxNode implements IUnaryExpression
 
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
-		return this.expression.toRsExp(helper);
+		//If there is no annotation
+		var eltSymbol = helper.getSymbolForAST(this.type);
+		var castType = eltSymbol.type.toRsType();
+		
+		return new RsCast(helper.getSourceSpan(this),
+			[RsAnnotation.createAnnotation("cast " + castType.toString(), AnnotContext.OtherContext)],
+			this.expression.toRsExp(helper));
 	}
 	//RefScript - end
 }

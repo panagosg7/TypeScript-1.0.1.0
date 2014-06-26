@@ -645,6 +645,20 @@ module TypeScript {
 					public members: RsASTList<RsExpression>) { super(ann); }
 	}
 
+	export class RsCast extends RsExpression {
+		public toObject() {
+			return {
+				Cast: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.expression.toObject()]
+			};
+		}
+
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public expression: RsExpression) { super(ann); }
+	}
+
+
 
 
 

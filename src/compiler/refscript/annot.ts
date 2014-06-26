@@ -37,19 +37,20 @@ module TypeScript {
 		RawField,		// Field annotations
 		RawMethod,   	// Method annotations
 		RawConstr,		// Constructor annotations
-    RawStatic,    // Static fields/methods
+		RawStatic,		// Static fields/methods
 		RawTAlias,   	// Type alias
 		RawPAlias,   	// Predicate alias
 		RawQual,     	// Qualifier
-		RawInvt      	// Invariant
+		RawInvt,      	// Invariant
+		RawCast			// Cast
 	}
 
 	export enum AnnotContext {
 		ClassMethodContext,		    // Class method
 		ClassStaticContext,		    // Class static field/method
 		ClassFieldContext,		    // Class field
-		ClassContructorContext,	  // Class constructor
-		OtherContext			        // Rest
+		ClassContructorContext,		// Class constructor
+		OtherContext			    // Rest
 	}
 
 	export class RsAnnotation {
@@ -126,6 +127,7 @@ module TypeScript {
 				case "class": return AnnotKind.RawClass;
 				case "predicate": return AnnotKind.RawPAlias;
 				case "invariant": return AnnotKind.RawInvt;
+				case "cast": return AnnotKind.RawCast;
 				case "extern": return AnnotKind.RawExtern;
 				default: return AnnotKind.RawBind;
 			}
