@@ -467,33 +467,33 @@ module TypeScript {
 			return helper.getSourceSpan(this);
 		}
 
-		/** Returns annotations of the current ISyntaxElement node */
-        // FIXME: preComments does not work
-		public getRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
-			var annStrings: string[] = [];
-			var pre = ASTHelpers.preComments(this);
-			if (pre) {
-				pre.forEach((p: Comment) => {
-					var t = p.fullText().match("/\*@(([^])*)\\*/");
-					if (t && t[1]) { annStrings = annStrings.concat([t[1]]); }
-				});
-			}
-			//TODO: possibly add check for multiple annotations on a single FunctionStmt etc.
-			return annStrings.map(s => RsAnnotation.createAnnotation(s, ctx));
-		}
+		///** Returns annotations of the current ISyntaxElement node */
+        //// FIXME: preComments does not work
+		//public getRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
+		//	var annStrings: string[] = [];
+		//	var pre = ASTHelpers.preComments(this);
+		//	if (pre) {
+		//		pre.forEach((p: Comment) => {
+		//			var t = p.fullText().match("/\*@(([^])*)\\*/");
+		//			if (t && t[1]) { annStrings = annStrings.concat([t[1]]); }
+		//		});
+		//	}
+		//	//TODO: possibly add check for multiple annotations on a single FunctionStmt etc.
+		//	return annStrings.map(s => RsAnnotation.createAnnotation(s, ctx));
+		//}
 
-		/** Returns all annotations (recursively) of the ISyntaxElement rooted at the current node */
-		public getAllRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
-			var annots: RsAnnotation[] = [];
-			TypeScript.getAstWalkerFactory().walk(this, function (cur: SyntaxNode, walker: IAstWalker) {
-				//Careful - only SyntaxNodes have a getRsAnnotations method
-				if(cur.isNode()) {
-					annots = annots.concat(cur.getRsAnnotations(ctx));
-				}
-				return cur;
-			});
-			return annots;
-		}
+		///** Returns all annotations (recursively) of the ISyntaxElement rooted at the current node */
+		//public getAllRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
+		//	var annots: RsAnnotation[] = [];
+		//	TypeScript.getAstWalkerFactory().walk(this, function (cur: SyntaxNode, walker: IAstWalker) {
+		//		//Careful - only SyntaxNodes have a getRsAnnotations method
+		//		if(cur.isNode()) {
+		//			annots = annots.concat(cur.getRsAnnotations(ctx));
+		//		}
+		//		return cur;
+		//	});
+		//	return annots;
+		//}
 
 
 		/** Names defined in this ISyntaxElement - This makes sense for nodes like VariableDeclaration
@@ -512,16 +512,16 @@ module TypeScript {
 			// 1. All binders match with exactly one variable being declared
 			bindAnns.forEach((b: RsBindAnnotation) => {
 				//console.log("BinderName: " + b.getBinderName());
-				if (definedNames.indexOf(b.getBinderName()) < 0) {
+				if (definedNames.indexOf(b.binderName()) < 0) {
 					console.log(helper.getSourceSpan(this).toString());
-					console.log("Variable annotation binder for '" + b.getBinderName() +
+					console.log("Variable annotation binder for '" + b.binderName() +
 						"' does not correspond to any nearby variable declaration.");
 					process.exit(1);
 				}
 			});
 
 			// 2. No duplicate binders
-			var sortedBinds = bindAnns.map(b => b.getBinderName()).sort();
+			var sortedBinds = bindAnns.map(b => b.binderName()).sort();
 			var results: string[] = [];
 			for (var i = 0; i < sortedBinds.length - 1; i++) {
 				if (sortedBinds[i + 1] == sortedBinds[i]) {

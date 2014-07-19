@@ -1,7 +1,5 @@
 ///<reference path='references.ts' />
 
-
-
 // MUST TODO:
 // 
 // - Deprecate getRsAnnotations in favor of tokenAnnots
@@ -10,13 +8,32 @@
 module TypeScript {
 
 	/* Get the annotations that lead a token */
-	function tokenAnnots(token: ISyntaxToken, context?: AnnotContext): RsAnnotation[] {
+	function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
-		return token.leadingTrivia().toArray()
-			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
-			.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-			.filter(t => t !== null)
-			.map(t => RsAnnotation.createAnnotation(t, ctx));
+
+		//console.log(token.fullText());
+		//console.log("fullstart: " + token.fullStart() + " line: " + token.syntaxTree().lineMap().getLineNumberFromPosition(token.fullStart()));
+		//console.log("fullend  : " + token.fullEnd());
+		//console.log("fullwidth: " + token.fullWidth());
+		//console.log();
+
+		var commentTrivia = token.leadingTrivia().toArray()
+			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
+
+		var match = commentTrivia.map(ct => {
+			var cstart = ct.fullStart(); // + r;
+			var matchStr = ct.fullText().match("/\*@(([^])*)\\*/");
+			if (matchStr && matchStr[1]) {
+				var cstring = matchStr[1];
+				var startLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
+				var endLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart + cstring.length);
+				var ss = new RsSourceSpan(ct.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
+				return new Pair(ss, cstring);
+			}
+			return null;
+		});
+		return match.filter(t => t !== null)
+					.map(t => RsAnnotation.createAnnotation(t.snd(), ctx, t.fst()));
 	}
 
 
@@ -607,7 +624,8 @@ module TypeScript {
 			var implementsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
 				.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword, mutType))
 				.filter(t => t !== null));
-			return new RsInferredClassAnnotation(this.identifier, typeParams, extendsSerial, implementsHeritage);
+			var sourceSpan = helper.getSourceSpan(this); 
+			return new RsInferredClassAnnotation(sourceSpan, this.identifier, typeParams, extendsSerial, implementsHeritage);
 		}
 		else if (anns.length === 1) {
 			//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
@@ -795,7 +813,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
 			//This might not be very straightforward because we might need to parse refinement types.
 			var headerAnnot = <RsExplicitNamedTypeAnnotation> headerAnnots[0];
-			annotStr = headerAnnot.getContent() + " ";
+			annotStr = headerAnnot.content() + " ";
 		}
 		else {
 			console.log(helper.getSourceSpan(this).toString());
@@ -835,7 +853,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						//var ann = anns[0];
 						//console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
-						return anns.map(m => m.getContent());
+						return anns.map(m => m.content());
 					}
 
 
@@ -856,7 +874,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						//var ann = anns[0];
 						//console.log(anns.map(m => m.getContent()));
 						// XXX: String HACK
-						return anns.map(m => m.getContent());
+						return anns.map(m => m.content());
 					}
 
 				case SyntaxKind.IndexSignature:
@@ -880,7 +898,10 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 		}
     
 		annotStr += "{" + r.join("; ") + "}";
-		restAnnots.push(new RsBindAnnotation(AnnotKind.RawType, annotStr));
+
+		var sourceSpan = helper.getSourceSpan(this);
+
+		restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawType, annotStr));
 			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
 		}
 	//RefScript- end
@@ -1232,7 +1253,7 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		var name = this.identifier.text();
 		var anns = tokenAnnots(this.firstToken());
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
 
 		if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 			console.log(helper.getSourceSpan(this).toString());
@@ -1344,13 +1365,15 @@ export class VariableStatementSyntax extends SyntaxNode implements IStatementSyn
 	}
 
 	public toRsStmt(helper: RsHelper): RsStatement {
-		var anns: RsAnnotation[] =
-			ArrayUtilities.concat(this.modifiers.toArray()
-				.map(m => m.leadingTrivia().toArray()
-					.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
-					.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-					.filter(t => t !== null)
-					.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext))));
+		var anns: RsAnnotation[] = ArrayUtilities.concat(
+			this.modifiers.toArray().map(m => tokenAnnots(m)));
+
+		//m.leadingTrivia().toArray()
+		//.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+		//.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+		//.filter(t => t !== null)
+		//.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext))));
+
 		// Pass over the annotations to the lower levels.
 		return this.variableDeclaration.toRsStmt(helper, anns);
 	}
@@ -1447,11 +1470,14 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 		}
 
 	public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
-		var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
-			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
-			.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-			.filter(t => t !== null)
-			.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
+
+		var anns = tokenAnnots(this.varKeyword, AnnotContext.OtherContext);
+
+		//var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
+		//	.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
+		//	.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
+		//	.filter(t => t !== null)
+		//	.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
 
 		//All variable declarators need to be translated to either RsVarDecls or EmptyStatements
 		var bindAnns = parentAnns.concat(anns).filter(a => a.kind() === AnnotKind.RawBind);
@@ -1467,7 +1493,7 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 			//Here we are dealing with Ambient definitions, so keep all the no-binder annotations as they are,
 			//and translate the binder ones to extern annotations.
 			var declAnnots: RsAnnotation[] =
-				noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(AnnotKind.RawExtern, b.getContent())));
+				noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(b.sourceSpan(), AnnotKind.RawExtern, b.content())));
 			return new RsEmptyStmt(helper.getSourceSpan(this), declAnnots);
 		} else {
 			throw new Error("VariableDeclaration:toRsStmt: This shouldn't happen.");
@@ -1555,7 +1581,7 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 	public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
 		//Invariant: anns are of kind RawBind
 		if (anns) {
-			var anns1 = anns.filter(a => a.getBinderName() === this.propertyName.text());
+			var anns1 = anns.filter(a => a.binderName() === this.propertyName.text());
 			//If this is an ambient variable, force it to have a type annotation.
 			var pullDecl = helper.getDeclForAST(this);
 			if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
@@ -1734,31 +1760,32 @@ export class PrefixUnaryExpressionSyntax extends SyntaxNode implements IUnaryExp
 
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
+		var anns = tokenAnnots(this.operatorToken);
 		switch (this.kind()) {
 			case SyntaxKind.ObjectLiteralExpression:
-				return new RsObjectLit(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.operand.toRsMemList(helper));
+				return new RsObjectLit(helper.getSourceSpan(this), anns, this.operand.toRsMemList(helper));
 			case SyntaxKind.PostIncrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), anns, new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
 			case SyntaxKind.PreIncrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PrefixInc), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), anns, new RsUnaryAssignOp(RsUnaryAssignOpKind.PrefixInc), this.operand.toRsLValue(helper));
 			case SyntaxKind.PostDecrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), anns, new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
 			case SyntaxKind.PreDecrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PrefixDec), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), anns, new RsUnaryAssignOp(RsUnaryAssignOpKind.PrefixDec), this.operand.toRsLValue(helper));
 
 			case SyntaxKind.NegateExpression:
-				return new RsPrefixExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsPrefixOp(RsPrefixOpKind.PrefixMinus), this.operand.toRsExp(helper));
+				return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixMinus), this.operand.toRsExp(helper));
 
 			case SyntaxKind.LogicalNotExpression:
-				return new RsPrefixExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsPrefixOp(RsPrefixOpKind.PrefixLNot), this.operand.toRsExp(helper));
+				return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixLNot), this.operand.toRsExp(helper));
 
 			case SyntaxKind.TypeOfExpression:
-				return new RsPrefixExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsPrefixOp(RsPrefixOpKind.PrefixTypeof), this.operand.toRsExp(helper));
+				return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixTypeof), this.operand.toRsExp(helper));
 
 			case SyntaxKind.BitwiseNotExpression:
 				return new RsPrefixExpr(
 					helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this.operatorToken),
 					new RsPrefixOp(RsPrefixOpKind.PrefixBNot),
 					this.operand.toRsExp(helper));
 
@@ -1877,7 +1904,7 @@ export class ArrayLiteralExpressionSyntax extends SyntaxNode implements IPrimary
 	//RefScript - begin
 
 	public toRsExp(helper: RsHelper): RsExpression {
-		return new RsArrayLit(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.expressions.toRsExp(helper));
+		return new RsArrayLit(helper.getSourceSpan(this), tokenAnnots(this.openBracketToken), this.expressions.toRsExp(helper));
 	}
 	//RefScript - end
 }
@@ -2785,7 +2812,7 @@ export class GenericTypeSyntax extends SyntaxNode implements ITypeSyntax {
 	//RefScript - begin
 	public toRsId(helper: RsHelper): RsId {
 		return new RsId(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this.name.firstToken()),
 			this.name.fullText());
 	}
 	//RefScript - end
@@ -3011,7 +3038,7 @@ export class BlockSyntax extends SyntaxNode implements IStatementSyntax {
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
 		return new RsBlockStmt(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this.openBraceToken),
 			this.statements.toRsStmt(helper));
 	}
 	//RefScript - end
@@ -3233,7 +3260,7 @@ export class MemberAccessExpressionSyntax extends SyntaxNode implements IMemberE
 		switch (this.kind()) {
 			case SyntaxKind.MemberAccessExpression: {
 				return new RsLDot(helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					this.expression.toRsExp(helper),
 					this.name.text());
 			}
@@ -3249,7 +3276,7 @@ export class MemberAccessExpressionSyntax extends SyntaxNode implements IMemberE
 		switch (this.name.kind()) {
 			case SyntaxKind.IdentifierName: {
 				return new RsDotRef(helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					this.expression.toRsExp(helper),
 					this.name.toRsId(helper));
 			}
@@ -3343,9 +3370,9 @@ export class PostfixUnaryExpressionSyntax extends SyntaxNode implements IPostfix
 	public toRsExp(helper: RsHelper): RsExpression {
 		switch (this.kind()) {
 			case SyntaxKind.PostIncrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), tokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
 			case SyntaxKind.PostDecrementExpression:
-				return new RsUnaryAssignExpr(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
+				return new RsUnaryAssignExpr(helper.getSourceSpan(this), tokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
 			default:
 				throw new Error("PostfixUnaryExpression:toRsExp SyntaxKind not supported: " + SyntaxKind[this.kind()]);
 		}
@@ -3460,14 +3487,14 @@ export class ElementAccessExpressionSyntax extends SyntaxNode implements IMember
 	//Refscript - begin
 	public toRsLValue(helper: RsHelper): RsLValue {
 		return new RsLBracket(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this),
 			this.expression.toRsExp(helper),
 			this.argumentExpression.toRsExp(helper));
 	}
 
 	public toRsExp(helper: RsHelper): RsExpression {
 		return new RsBracketRef(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this),
 			this.expression.toRsExp(helper),
 			this.argumentExpression.toRsExp(helper));
 	}
@@ -3565,7 +3592,7 @@ export class InvocationExpressionSyntax extends SyntaxNode implements ICallExpre
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
 		return new RsCallExpr(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this),
 			this.expression.toRsExp(helper),
 			this.argumentList.arguments.toRsExp(helper));
 	}
@@ -3784,7 +3811,7 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 					case SyntaxKind.IdentifierName:
 						return new RsDotRef(
 							helper.getSourceSpan(this),
-							this.getRsAnnotations(AnnotContext.OtherContext),
+							tokenAnnots(this),
 							this.left.toRsExp(helper),
 							<RsId>this.right.toRsAST(helper));
 				}
@@ -3794,7 +3821,7 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 			case SyntaxKind.AssignmentExpression:
 				return new RsAssignExpr(
 					helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					new RsAssignOp(this.operatorToken.text()),
 					this.left.toRsLValue(helper),
 					this.right.toRsExp(helper));
@@ -3802,7 +3829,7 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 			case SyntaxKind.ElementAccessExpression:
 				return new RsBracketRef(
 					helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					this.left.toRsExp(helper),
 					this.right.toRsExp(helper));
 
@@ -3825,7 +3852,7 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 			case SyntaxKind.UnsignedRightShiftExpression:
 				return new RsInfixExpr(
 					helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					new RsInfixOp(this.operatorToken.text()),
 					this.left.toRsExp(helper),
 					this.right.toRsExp(helper));
@@ -3836,14 +3863,14 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 			case SyntaxKind.MultiplyAssignmentExpression:
 				return new RsAssignExpr(
 					helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					new RsAssignOp(this.operatorToken.text()),
 					this.left.toRsLValue(helper),
 					this.right.toRsExp(helper));
 
 			case SyntaxKind.InstanceOfExpression:
 				return new RsInfixExpr(helper.getSourceSpan(this),
-					this.getRsAnnotations(AnnotContext.OtherContext),
+					tokenAnnots(this),
 					new RsInfixOp("instanceof"),
 					this.left.toRsExp(helper),
 					this.right.toRsExp(helper));
@@ -4816,11 +4843,11 @@ export class IfStatementSyntax extends SyntaxNode implements IStatementSyntax {
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
 		if (this.elseClause) {
-			return new RsIfStmt(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext),
+			return new RsIfStmt(helper.getSourceSpan(this), tokenAnnots(this),
 				this.condition.toRsExp(helper), this.statement.toRsStmt(helper), this.elseClause.toRsStmt(helper));
 		}
 		else {
-			return new RsIfSingleStmt(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext),
+			return new RsIfSingleStmt(helper.getSourceSpan(this), tokenAnnots(this.ifKeyword), // tokenAnnots(this),
 				this.condition.toRsExp(helper), this.statement.toRsStmt(helper));
 		}
 	}
@@ -4901,7 +4928,7 @@ export class ExpressionStatementSyntax extends SyntaxNode implements IStatementS
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsExprStmt {
-		return new RsExprStmt(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.expression.toRsExp(helper));
+		return new RsExprStmt(helper.getSourceSpan(this), tokenAnnots(this), this.expression.toRsExp(helper));
 	}
 	//RefScript - end
 
@@ -5134,7 +5161,7 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
   		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
     }
 
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
 			throw new Error("Method '" + methodName + "' should have at least one annotation.");
 		}
@@ -5473,7 +5500,7 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
   		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
     }
 
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).getBinderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
 		if (bindAnnNames.length == 0) {
 			throw new Error("Field should have at least one annotation.");
 		}
@@ -5653,7 +5680,7 @@ export class ThrowStatementSyntax extends SyntaxNode implements IStatementSyntax
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
 		var ret = this.expression.toRsExp(helper);
-		return new RsThrowStatement(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), ret);
+		return new RsThrowStatement(helper.getSourceSpan(this), tokenAnnots(this), ret);
 	}
 	//RefScript - end
 
@@ -5745,7 +5772,7 @@ export class ReturnStatementSyntax extends SyntaxNode implements IStatementSynta
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
 		var ret = this.expression ? this.expression.toRsExp(helper) : null;
-		return new RsReturnStmt(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), ret);
+		return new RsReturnStmt(helper.getSourceSpan(this), tokenAnnots(this), ret);
 	}
 	//RefScript - end
 
@@ -5854,7 +5881,7 @@ export class ObjectCreationExpressionSyntax extends SyntaxNode implements IMembe
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
 		return new RsNewExpr(helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this), 
 			this.expression.toRsExp(helper),
 			this.argumentList.arguments.toRsExp(helper));
 	}
@@ -6481,14 +6508,11 @@ export class ForStatementSyntax extends SyntaxNode implements IIterationStatemen
 			process.exit(1);
 		}
 
-		var anns = this.forKeyword.leadingTrivia().toArray()
-			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
-			.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-			.filter(t => t !== null)
-			.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext));
+		var anns = tokenAnnots(this.forKeyword);
+
 		return new RsForStmt(
 			helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this), 
 			this.variableDeclaration.toRsForInit(helper, anns),
 			this.condition.toRsExp(helper),
 			this.incrementor.toRsExp(helper),
@@ -6731,7 +6755,7 @@ export class WhileStatementSyntax extends SyntaxNode implements IIterationStatem
 	public toRsStmt(helper: RsHelper): RsStatement {
 		return new RsWhileStmt(
 			helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this), 
 			this.condition.toRsExp(helper),
 			this.statement.toRsStmt(helper));
 	}
@@ -7099,13 +7123,11 @@ export class CastExpressionSyntax extends SyntaxNode implements IUnaryExpression
 
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
-		//If there is no annotation
 		var eltSymbol = helper.getSymbolForAST(this.type);
 		var castType = eltSymbol.type.toRsType();
-		
-		return new RsCast(helper.getSourceSpan(this),
-			[RsAnnotation.createAnnotation("cast " + castType.toString(), AnnotContext.OtherContext)],
-			this.expression.toRsExp(helper));
+		var sourceSpan = helper.getSourceSpan(this); 
+		var castAnn = new RsBindAnnotation(sourceSpan, AnnotKind.RawCast, castType.toString()); 
+		return new RsCast(helper.getSourceSpan(this), [castAnn], this.expression.toRsExp(helper));
 	}
 	//RefScript - end
 }
@@ -7217,7 +7239,7 @@ export class ObjectLiteralExpressionSyntax extends SyntaxNode implements IPrimar
 	public toRsExp(helper: RsHelper): RsExpression {
 		return new RsObjectLit(
 			helper.getSourceSpan(this),
-			this.getRsAnnotations(AnnotContext.OtherContext),
+			tokenAnnots(this), 
 			this.propertyAssignments.toRsMemList(helper));
 	}
 	//RefScript - end
@@ -7559,8 +7581,7 @@ export class EmptyStatementSyntax extends SyntaxNode implements IStatementSyntax
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-		return new RsEmptyStmt(helper.getSourceSpan(this),
-			tokenAnnots(this.semicolonToken));
+		return new RsEmptyStmt(helper.getSourceSpan(this), tokenAnnots(this.semicolonToken));
 	}
 	//RefScript - end
 

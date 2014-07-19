@@ -54,48 +54,53 @@ module TypeScript {
 	}
 
 	export class RsAnnotation {
+
+		constructor(private _sourceSpan: RsSourceSpan, private _kind: AnnotKind, private _content: string) { }
+
 		public isGlob(): boolean { throw new Error("ABSTRACT: RsAnnotation.isGlob."); }
 
 		/** This will create a RsAnnoation object based on user annotations */
-		public static createAnnotation(s: string, ctx: AnnotContext): RsAnnotation {
+		public static createAnnotation(s: string, ctx: AnnotContext, ss: RsSourceSpan): RsAnnotation {
 			var pair = RsAnnotation.stringTag(s);
 			switch (pair.fst()) {
 				case AnnotKind.RawBind: {
 					switch (ctx) {
 						case AnnotContext.ClassMethodContext:
-							return new RsBindAnnotation(AnnotKind.RawMethod, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawMethod, pair.snd());
 						case AnnotContext.ClassStaticContext:
-							return new RsBindAnnotation(AnnotKind.RawStatic, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawStatic, pair.snd());
 						case AnnotContext.ClassFieldContext:
-							return new RsBindAnnotation(AnnotKind.RawField, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawField, pair.snd());
 						case AnnotContext.ClassContructorContext:
-							return new RsBindAnnotation(AnnotKind.RawConstr, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawConstr, pair.snd());
 						case AnnotContext.OtherContext:
-							return new RsBindAnnotation(pair.fst(), pair.snd());
+							return new RsBindAnnotation(ss, pair.fst(), pair.snd());
 						default:
 							throw new Error("BUG: there is no default context");
 					}
 				}
 				case AnnotKind.RawClass:
-					return new RsExplicitNamedTypeAnnotation(pair.snd());
+					return new RsExplicitNamedTypeAnnotation(ss, pair.snd());
 				default:
-					return new RsGlobalAnnotation(pair.fst(), pair.snd()); 
+					return new RsGlobalAnnotation(ss, pair.fst(), pair.snd()); 
 			}
 		} 
 
-		//These would have been protected ...
-		public _tag: AnnotKind;
-		public _content: string;
+		public sourceSpan(): RsSourceSpan {
+			return this._sourceSpan;
+		}
 
-		constructor(tag: AnnotKind) { this._tag = tag; }
+		public content(): string {
+			return this._content;
+		}
 
-		public getContent(): string { throw new Error("ABSTRACT: RsAnnotation.getContent"); }
-
-		public kind(): AnnotKind { return this._tag;	}
+		public kind(): AnnotKind {
+			return this._kind;
+		}
 
 		public toObject(): any {
 			var obj: any = {};
-			obj[AnnotKind[this._tag]] = this.getContent();
+			obj[AnnotKind[this.kind()]] = [this.sourceSpan().toObject(), this.content()];
 			return obj;
 		}
 
@@ -135,6 +140,11 @@ module TypeScript {
 	}
 
 	export class RsBindAnnotation extends RsAnnotation {
+
+		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, content: string) {
+			super(sourceSpan, kind, content);
+		}
+
 		/** Returns true if this is a global annotation (can float to top-level). 
 			Compared to function / variable binders that need to be local to 
 			particular AST nodes. */
@@ -142,10 +152,10 @@ module TypeScript {
 
 		private _binderName: string = null;
 
-		public getBinderName(): string {
+		public binderName(): string {
 			if (this._binderName) return this._binderName;
-			var content = this.getContent();
-      // variable annotation
+			var content = this.content();
+			// variable annotation
 			var bs = content.split("::");
 			if (bs && bs.length > 1) {
 				var lhss = bs[0].split(" ").filter(s => s.length > 0);
@@ -160,7 +170,7 @@ module TypeScript {
 				//}
 			}
 			// field annotation
-      bs = content.split(":");
+			bs = content.split(":");
 			if (bs && bs.length > 1) {
 				var lhss = bs[0].split(" ").filter(s => s.length > 0);
 				if (lhss && lhss.length === 1) {
@@ -179,13 +189,9 @@ module TypeScript {
 			process.exit(1);
 		}
 
-		//constructor(t: AnnotKind, s: string) {
-		constructor(tag: AnnotKind, content: string) {
-			super(tag);
-			this._content = content;
+		public content(): string {
+			return super.content();
 		}
-
-		public getContent(): string { return this._content;	}
 	}
 
 	export class RsClassAnnotation extends RsAnnotation { }
@@ -193,46 +199,39 @@ module TypeScript {
 
 	/** A class annotation that is inferred bassed on TypeScript information. */
 	export class RsInferredClassAnnotation extends RsClassAnnotation {
+
+		constructor(
+			sourceSpan: RsSourceSpan,
+			private _className: ISyntaxToken,
+			private _typeParams: string[],
+			private _extends: Serializable,
+			private _implements: Serializable[]) {
+			super(sourceSpan, AnnotKind.RawClass, RsInferredClassAnnotation.toString(_className, _typeParams, _extends, _implements));
+		}
+
+
 		/** This is not a global annotation (cannot float to top-level). 
 			Needs to stick around a class declaration. */
 		public isGlob(): boolean { return false; }
 
-		private toString(): string {
+		private static toString(_className: ISyntaxToken, _typeParams: string[], _extends: Serializable, _implements: Serializable[]): string {
 			var r = "";
 			r += "class ";
-			r += this._className.text();
-			if (this._typeParams && this._typeParams.length > 0) {
+			r += _className.text();
+			if (_typeParams && _typeParams.length > 0) {
 				r += " <";
-				r += this._typeParams.join(", ");
+				r += _typeParams.join(", ");
 				r += ">";
 			}
-			if (this._extends) {
+			if (_extends) {
 				r += " extends ";
-				r += this._extends.toString();
+				r += _extends.toString();
 			}
-			if (this._implements && this._implements.length > 0) {
+			if (_implements && _implements.length > 0) {
 				r += " implements ";
-				r += this._implements.map(t => t.toString()).join(", ");
+				r += _implements.map(t => t.toString()).join(", ");
 			}
 			return r;
-		}
-
-		public toObject() {
-			var obj: any = {};
-			obj[AnnotKind[this._tag]] = this.toString();
-			return obj;		
-		}
-
-		constructor(private _className: ISyntaxToken,
-					private _typeParams: string[],
-					private _extends: Serializable,
-					private _implements: Serializable[]) { super(AnnotKind.RawClass); }
-
-		public getContent(): string {
-			if (!this._content) {
-				this._content = this.toString();
-			}
-			return this._content;
 		}
 	}
 
@@ -242,24 +241,23 @@ module TypeScript {
 			Needs to stick around a class declaration. */
 		public isGlob(): boolean { return false; }
 
-		constructor(content: string) {
-			super(AnnotKind.RawClass);
-			this._content = content;
+		constructor(sourceSpan: RsSourceSpan, content: string) {
+			super(sourceSpan, AnnotKind.RawClass, content);
 		}
 
-		public getContent(): string { return "class " + this._content; }
+		public content(): string {
+			return "class " + super.content();
+		}
 	}
 
 
 	export class RsGlobalAnnotation extends RsAnnotation {
 		public isGlob(): boolean { return true; }
 
-		constructor(tag: AnnotKind, content: string) {
-			super(tag);
-			this._content = content;
+		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, content: string) {
+			super(sourceSpan, kind, content);
 		}
 
-		public getContent(): string { return this._content;	}
 	}
 
 }
