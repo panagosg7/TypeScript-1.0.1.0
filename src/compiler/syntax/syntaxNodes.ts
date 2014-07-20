@@ -1,10 +1,5 @@
 ///<reference path='references.ts' />
 
-// MUST TODO:
-// 
-// - Deprecate getRsAnnotations in favor of tokenAnnots
-//
-
 module TypeScript {
 
 	/* Get the annotations that lead a token */
@@ -3974,6 +3969,17 @@ export class ConditionalExpressionSyntax extends SyntaxNode implements IExpressi
 		if (this.whenFalse.isTypeScriptSpecific()) { return true; }
 		return false;
 	}
+
+	//RefScript - begin
+	public toRsExp(helper: RsHelper): RsExpression {
+		return new RsCondExpr(helper.getSourceSpan(this),
+			tokenAnnots(this),
+			this.condition.toRsExp(helper),
+			this.whenTrue.toRsExp(helper),
+			this.whenFalse.toRsExp(helper));
+	}
+	//Refscript - end
+
 }
 
 export class ConstructSignatureSyntax extends SyntaxNode implements ITypeMemberSyntax {

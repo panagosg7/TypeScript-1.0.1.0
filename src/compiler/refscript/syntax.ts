@@ -386,6 +386,25 @@ module TypeScript {
 					public operand2: RsExpression) { super(ann); }
 	}
 
+	export class RsCondExpr extends RsExpression {
+		public toObject() {
+			return {
+				CondExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.cond.toObject(),
+					this.exp1.toObject(),
+					this.exp2.toObject()]
+			};
+		}
+
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public cond: RsExpression,
+					public exp1: RsExpression,
+					public exp2: RsExpression) { super(ann); }
+	}
+
+
+
 	export class RsNumLit extends RsExpression {
 		public toObject() {
 			return {
