@@ -56,16 +56,16 @@ In the older version you would need to add diagnostic information in ALL the fol
 
 ## Projects that use TypeScript
 
-0.	TypeScript Compiler
+0.	[TypeScript] (http://typescript.codeplex.com/)
 
-1.	TouchDevelop (link: https://www.touchdevelop.com/)
+1.	[TouchDevelop] (https://www.touchdevelop.com/)
 
-2.	jRIAppTS (link: https://github.com/BBGONE/jRIAppTS)
+2.	[jRIAppTS] (https://github.com/BBGONE/jRIAppTS)
 
-3.	LeapMotionTS (link: https://github.com/logotype/LeapMotionTS)
+3.	[LeapMotionTS] (https://github.com/logotype/LeapMotionTS)
 
-4.	Turbulenz (link: https://github.com/turbulenz/turbulenz_engine)
+4.	[Turbulenz] (https://github.com/turbulenz/turbulenz_engine)
 
-5.	GrindFest (link: https://github.com/GrindFest/GrindFest)
+5.	[GrindFest] (https://github.com/GrindFest/GrindFest)
 
-
+6. 	[doppio] (https://github.com/plasma-umass/doppio)
