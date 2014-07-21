@@ -6,7 +6,6 @@ module TypeScript {
 	function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
 
-		//console.log(token.fullText());
 		//console.log("fullstart: " + token.fullStart() + " line: " + token.syntaxTree().lineMap().getLineNumberFromPosition(token.fullStart()));
 		//console.log("fullend  : " + token.fullEnd());
 		//console.log("fullwidth: " + token.fullWidth());
@@ -16,7 +15,7 @@ module TypeScript {
 			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
 
 		var match = commentTrivia.map(ct => {
-			var cstart = ct.fullStart(); // + r;
+			var cstart = ct.fullStart();
 			var matchStr = ct.fullText().match("/\*@(([^])*)\\*/");
 			if (matchStr && matchStr[1]) {
 				var cstring = matchStr[1];
@@ -570,17 +569,12 @@ module TypeScript {
 		}
 
 
-
-
 		//RefScript - begin
 		private makeid(length: number) {
 			var text = "";
 			var possible = "0123456789";
-
-
 			return text;
 		}
-
 
 		private headerAnnotation(helper: RsHelper, anns: RsAnnotation[]): RsAnnotation {
 
@@ -7520,6 +7514,17 @@ export class FunctionExpressionSyntax extends SyntaxNode implements IPrimaryExpr
 		if (this.block.isTypeScriptSpecific()) { return true; }
 		return false;
 	}
+
+	//RefScript - begin
+	public toRsExp(helper: RsHelper): RsExpression {
+		return new RsFuncExpr(helper.getSourceSpan(this),
+			tokenAnnots(this.block),
+			this.identifier ? this.identifier.toRsId(helper) : null,
+			new RsASTList<RsId>(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(p => p.toRsId(helper))),
+			new RsASTList<RsStatement>(this.block.statements.toArray().map(s => s.toRsStmt(helper))));
+	}
+	//RefScript - end
+
 }
 
 export class EmptyStatementSyntax extends SyntaxNode implements IStatementSyntax {

@@ -403,8 +403,6 @@ module TypeScript {
 					public exp2: RsExpression) { super(ann); }
 	}
 
-
-
 	export class RsNumLit extends RsExpression {
 		public toObject() {
 			return {
@@ -453,12 +451,15 @@ module TypeScript {
 	export class RsFuncExpr extends RsExpression {
 		public toObject() {
 			return { FuncExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-						(this.id) ? this.id.toObject() : null, this.args.toObject(), this.body.toObject()] };
+				(this.id) ? this.id.toObject() : null,
+				this.args.toObject(),
+				this.body.toObject()]
+			};
 		}
 
 		constructor(public span: RsSourceSpan,
 			public ann: RsAnnotation[],
-			public id: RsId,
+			public id: RsId,		// could be null
 			public args: RsASTList<RsId>,
 			public body: RsASTList<RsStatement>) { super(ann); }
 	}
