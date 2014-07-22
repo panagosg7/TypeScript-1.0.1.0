@@ -157,6 +157,31 @@ module TypeScript {
 	}
 
 
+	/* ****************************************************************************
+	 *
+	 *				ForInInit
+	 * 
+	 * ****************************************************************************/
+
+
+	export class RsForInInit extends RsAST { }
+
+	export class RsForInVar extends RsForInInit {
+		public toObject(): any {
+			return { ForInVar: this.id.toObject() };
+		}
+
+		constructor(private id: RsId) { super(); }
+	}
+
+	export class RsForInLVal extends RsForInInit {
+		public toObject(): any {
+			return { ForInLVal: this.lval.toObject() };
+		}
+
+		constructor(public lval: RsLValue) { super(); }
+	}
+
 
 	/* ****************************************************************************
 	 *
@@ -863,6 +888,23 @@ module TypeScript {
 					public body: RsStatement) { super(ann); }
 	}
 
+	export class RsForInStmt extends RsStatement {
+		public toObject() {
+			return {
+                ForInStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+                    this.init.toObject(),
+					this.exp.toObject(),
+					this.body.toObject()]
+			};
+		}
+
+        constructor(    public span: RsSourceSpan,
+                        public ann : RsAnnotation[],
+                        public init: RsForInInit,
+						public exp : RsExpression,
+                        public body: RsStatement) {	super(ann);	}
+	}
+
 	export class RsForStmt extends RsStatement {
 		public toObject() {
 			return {
@@ -875,10 +917,10 @@ module TypeScript {
 		}
 
         constructor(    public span: RsSourceSpan,
-                        public ann: RsAnnotation[],
+                        public ann : RsAnnotation[],
                         public init: RsForInit,
               /*Maybe*/ public test: RsExpression,
-              /*Maybe*/ public inc: RsExpression,
+              /*Maybe*/ public inc : RsExpression,
                         public body: RsStatement) {	super(ann);	}
 	}
 

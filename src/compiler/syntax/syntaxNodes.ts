@@ -6651,6 +6651,32 @@ export class ForInStatementSyntax extends SyntaxNode implements IIterationStatem
 		if (this.statement.isTypeScriptSpecific()) { return true; }
 		return false;
 	}
+
+	//RefScript - begin
+	public toRsStmt(helper: RsHelper): RsStatement {
+		if (this.left) {
+			var rsForInInit: RsForInInit = new RsForInLVal(this.left.toRsLValue(helper));
+		}
+		else {
+
+			var vars = this.variableDeclaration.variableDeclarators.toNonSeparatorArray();
+
+			if (vars.length === 1) {
+				var _var = vars[0];
+				var varId = _var.propertyName.toRsId(helper);
+				var rsForInInit: RsForInInit = new RsForInVar(varId);
+			}
+			else {
+				throw new Error("[UNIMPLEMENTED/BUG] ForInStatementSyntax - toRsStmt");
+			}
+		}
+		return new RsForInStmt(helper.getSourceSpan(this), tokenAnnots(this),
+					rsForInInit,
+					this.expression.toRsExp(helper),
+					this.statement.toRsStmt(helper));		
+	}
+	//RefScript - end
+
 }
 
 export class WhileStatementSyntax extends SyntaxNode implements IIterationStatementSyntax {
