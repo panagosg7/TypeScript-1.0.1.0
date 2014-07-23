@@ -2359,13 +2359,11 @@ module TypeScript {
         }
 
 		//RefScript - begin
-		public emitJSON(ast: ISyntaxElement, startLine: boolean) {
+		public emitJSON(ast: RsAST, startLine: boolean) {
             if (ast === null) {
                 return;
             }
-			var helper = new RsHelper(this.semanticInfoChain);
-			var json = JSON.stringify(ast.toRsAST(helper).toObject(), undefined, 2);
-			this.writeToOutput(json);
+			this.writeToOutput(JSON.stringify(ast.toObject(), undefined, 2));
         }
 		//RefScript - end
 

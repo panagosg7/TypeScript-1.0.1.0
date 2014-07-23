@@ -152,7 +152,7 @@ module TypeScript {
 
 		private _binderName: string = null;
 
-		public binderName(): string {
+		public binderName(ast: ISyntaxElement, helper: RsHelper): string {
 			if (this._binderName) return this._binderName;
 			var content = this.content();
 			// variable annotation
@@ -184,9 +184,8 @@ module TypeScript {
 				}
 			}
 
-			console.log("Invalid RefScript annotation: " + content);
-			console.log("Perhaps you need to replace ':' with '::'.");
-			process.exit(1);
+			helper.postDiagnostic(ast, DiagnosticCode.Invalid_RefScript_annotation_0_Perhaps_you_need_to_replace_with, [content]);
+			return "";
 		}
 
 		public content(): string {

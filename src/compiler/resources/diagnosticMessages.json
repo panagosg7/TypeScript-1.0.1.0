@@ -1724,8 +1724,75 @@
         "code": 7018
     },
 
+
+
     "Translate to RefScript (JSON format)":{
         "category": "Message",
         "code": 8000
+    },
+    "Ambient variable declarator for '{0}' needs to have exactly one type annotation.":{
+        "category": "Error",
+        "code": 8001
+    },
+    "Variable declarator for '{0}' needs to have at most one type annotation.":{
+        "category": "Error",
+        "code": 8002
+    },
+    "Class '{0}' has multiple class annoatations.":{
+        "category": "Error",
+        "code": 8003
+    },
+    "Interface '{0}' has multiple interface annoatations.":{
+        "category": "Error",
+        "code": 8004
+    },
+    "Function '{0}' should have a single annotation.":{
+        "category": "Error",
+        "code": 8005
+    },
+    "Variable declarations are only supported in the first part of the loop in '{0}'.":{
+        "category": "Error",
+        "code": 8006
+    },
+    "Variable annotation binder for '{0}' does not correspond to any nearby variable declaration.":{
+        "category": "Error",
+        "code": 8007
+    },
+    "Duplicate type annotation for variable(s): '{0}'":{
+        "category": "Error",
+        "code": 8008
+    },
+    "Invalid RefScript annotation '{0}'. Perhaps you need to replace ':' with '::'.":{
+        "category": "Error",
+        "code": 8009
+    },
+    "Fields should have at least one annotation.":{
+        "category": "Error",
+        "code": 8010
+    },
+    "For-in: only non-ambient variable declarators are allowed here.":{
+        "category": "Error",
+        "code": 8011
+    },
+    "All variable declarators need to be translated to either RsVarDecls or RsEmptyStmts":{
+        "category": "Bug",
+        "code": 8012
+    },
+    "BinaryExpression toRsLValue":{
+        "category": "Unimplemented",
+        "code": 8013    
+    },
+    "InterfaceDeclaration member":{
+        "category": "Unimplemented",
+        "code": 8014  
+    },
+    "HeritageClauses to RefScript":{
+        "category": "Unimplemented",
+        "code": 8015
+    },
+    "ForInStatementSyntax to RsStatement":{
+        "category": "Unimplemented",
+        "code": 8016
     }
+
 }

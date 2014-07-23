@@ -511,17 +511,13 @@ module TypeScript {
 			//console.log("DefinedNames: " + definedNames);
 			// 1. All binders match with exactly one variable being declared
 			bindAnns.forEach((b: RsBindAnnotation) => {
-				//console.log("BinderName: " + b.getBinderName());
-				if (definedNames.indexOf(b.binderName()) < 0) {
-					console.log(helper.getSourceSpan(this).toString());
-					console.log("Variable annotation binder for '" + b.binderName() +
-						"' does not correspond to any nearby variable declaration.");
-					process.exit(1);
+				if (definedNames.indexOf(b.binderName(this, helper)) < 0) {
+					helper.postDiagnostic(this, DiagnosticCode.Variable_annotation_binder_for_0_does_not_correspond_to_any_nearby_variable_declaration, [b.binderName(this, helper)]);
 				}
 			});
 
 			// 2. No duplicate binders
-			var sortedBinds = bindAnns.map(b => b.binderName()).sort();
+			var sortedBinds = bindAnns.map(b => b.binderName(this, helper)).sort();
 			var results: string[] = [];
 			for (var i = 0; i < sortedBinds.length - 1; i++) {
 				if (sortedBinds[i + 1] == sortedBinds[i]) {
@@ -529,9 +525,7 @@ module TypeScript {
 				}
 			}
 			if (results.length > 0) {
-				console.log(helper.getSourceSpan(this).toString());
-				console.log("Duplicate type annotation for variable(s): " + results.join(", "));
-				process.exit(1);
+				helper.postDiagnostic(this, DiagnosticCode.Duplicate_type_annotation_for_variable_s_0, [results.join(", ")]);
 			}
 		}
 		//RefScript - end

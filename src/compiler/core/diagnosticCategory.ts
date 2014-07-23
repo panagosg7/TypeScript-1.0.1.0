@@ -6,5 +6,8 @@ module TypeScript {
         Error,
         Message,
         NoPrefix,
+        // RefScript translation
+        Bug,
+        Unimplemented
     }
 }

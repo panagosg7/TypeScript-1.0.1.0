@@ -864,5 +864,37 @@ module TypeScript {
   { "code": 7018, "category": DiagnosticCategory.Error },
 "Translate to RefScript (JSON format)" : 
   { "code": 8000, "category": DiagnosticCategory.Message },
+"Ambient variable declarator for '{0}' needs to have exactly one type annotation." : 
+  { "code": 8001, "category": DiagnosticCategory.Error },
+"Variable declarator for '{0}' needs to have at most one type annotation." : 
+  { "code": 8002, "category": DiagnosticCategory.Error },
+"Class '{0}' has multiple class annoatations." : 
+  { "code": 8003, "category": DiagnosticCategory.Error },
+"Interface '{0}' has multiple interface annoatations." : 
+  { "code": 8004, "category": DiagnosticCategory.Error },
+"Function '{0}' should have a single annotation." : 
+  { "code": 8005, "category": DiagnosticCategory.Error },
+"Variable declarations are only supported in the first part of the loop in '{0}'." : 
+  { "code": 8006, "category": DiagnosticCategory.Error },
+"Variable annotation binder for '{0}' does not correspond to any nearby variable declaration." : 
+  { "code": 8007, "category": DiagnosticCategory.Error },
+"Duplicate type annotation for variable(s): '{0}'" : 
+  { "code": 8008, "category": DiagnosticCategory.Error },
+"Invalid RefScript annotation '{0}'. Perhaps you need to replace ':' with '::'." : 
+  { "code": 8009, "category": DiagnosticCategory.Error },
+"Fields should have at least one annotation." : 
+  { "code": 8010, "category": DiagnosticCategory.Error },
+"For-in: only non-ambient variable declarators are allowed here." : 
+  { "code": 8011, "category": DiagnosticCategory.Error },
+"All variable declarators need to be translated to either RsVarDecls or RsEmptyStmts" : 
+  { "code": 8012, "category": DiagnosticCategory.Bug },
+"BinaryExpression toRsLValue" : 
+  { "code": 8013, "category": DiagnosticCategory.Unimplemented },
+"InterfaceDeclaration member" : 
+  { "code": 8014, "category": DiagnosticCategory.Unimplemented },
+"HeritageClauses to RefScript" : 
+  { "code": 8015, "category": DiagnosticCategory.Unimplemented },
+"ForInStatementSyntax to RsStatement" : 
+  { "code": 8016, "category": DiagnosticCategory.Unimplemented },
 }
 }

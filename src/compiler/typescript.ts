@@ -128,7 +128,9 @@ module TypeScript {
     }
 
     export class TypeScriptCompiler {
-        private semanticInfoChain: SemanticInfoChain = null;
+		// XXXXXXXXXXXXXXXXx
+        //private semanticInfoChain: SemanticInfoChain = null;
+        public semanticInfoChain: SemanticInfoChain = null;
 
         constructor(public logger: ILogger = new NullLogger(),
                     private _settings: ImmutableCompilationSettings = ImmutableCompilationSettings.defaultSettings()) {
@@ -427,7 +429,7 @@ module TypeScript {
             return emitter;
         }
 
-		private emitJSONWorker(document: Document, emitOptions: EmitOptions, emitter?: Emitter): Emitter {
+		private emitJSONWorker(document: Document, rsAST: RsAST, emitOptions: EmitOptions, emitter?: Emitter): Emitter {
             var sourceUnit = document.sourceUnit();
             Debug.assert(this._shouldEmit(document));
 
@@ -451,7 +453,7 @@ module TypeScript {
 
             // Set location info
             emitter.setDocument(document);
-            emitter.emitJSON(sourceUnit, /*startLine:*/false);
+            emitter.emitJSON(rsAST, /*startLine:*/false);
 
             return emitter;
         }
@@ -465,54 +467,46 @@ module TypeScript {
             onSingleFileEmitComplete: (files: OutputFile[]) => void,
 			sharedEmitter: Emitter): Emitter {
 
+			// Emitting module or multiple files, always goes to single file
+			if (this._shouldEmit(document)) {
 
-            // Emitting module or multiple files, always goes to single file
-                if (this._shouldEmit(document)) {
-
-                if (document.emitToOwnOutputFile()) {
-                    // We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
-                    var singleEmitter = this.emitDocumentWorker(document, emitOptions);
-                    if (singleEmitter) {
-                        onSingleFileEmitComplete(singleEmitter.getOutputFiles());
-                    }
-                }
-                else {
-                    // We're not outputting to multiple files.  Keep using the same emitter and don't
-                    // close until below.
-                    sharedEmitter = this.emitDocumentWorker(document, emitOptions, sharedEmitter);
-                }
-            }
+				if (document.emitToOwnOutputFile()) {
+					// We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
+					var singleEmitter = this.emitDocumentWorker(document, emitOptions);
+					if (singleEmitter) {
+						onSingleFileEmitComplete(singleEmitter.getOutputFiles());
+					}
+				}
+				else {
+					// We're not outputting to multiple files.  Keep using the same emitter and don't
+					// close until below.
+					sharedEmitter = this.emitDocumentWorker(document, emitOptions, sharedEmitter);
+				}
+			}
 
             return sharedEmitter;
         }
 
-		public _emitJSON(
-            document: Document,
-            emitOptions: EmitOptions,
+		public _emitJSON(document: Document, rsAST: RsAST, emitOptions: EmitOptions,
             onSingleFileEmitComplete: (files: OutputFile[]) => void,
-            sharedEmitter: Emitter): Emitter {
+			sharedEmitter: Emitter): Emitter {
 
-            // Emitting module or multiple files, always goes to single file
-                if (this._shouldEmit(document)) {
-                if (document.emitToOwnOutputFile()) {
-                    // We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
-                    var singleEmitter = this.emitJSONWorker(document, emitOptions);
-                    if (singleEmitter) {
-                        onSingleFileEmitComplete(singleEmitter.getOutputFiles());
-                    }
-                }
-                else {
-                    // We're not outputting to multiple files.  Keep using the same emitter and don't
-                    // close until below.
-                    sharedEmitter = this.emitJSONWorker(document, emitOptions, sharedEmitter);
-                }
-            }
+			// Emitting module or multiple files, always goes to single file
+			if (this._shouldEmit(document)) {
 
-            return sharedEmitter;
-        }
+
+				// We're outputting to a single file. Keep using the same emitter and don't
+				// close until below.
+				sharedEmitter = this.emitJSONWorker(document, rsAST, emitOptions, sharedEmitter);
+				onSingleFileEmitComplete(sharedEmitter.getOutputFiles());
+
+			}
+			return sharedEmitter;
+		}
 
 
 
+		// Used by compiler services - not RefScript
         // Will not throw exceptions.
         public emitAll(resolvePath: (path: string) => string): EmitOutput {
             var start = new Date().getTime();
@@ -538,15 +532,7 @@ module TypeScript {
                 sharedEmitter = this._emitDocument(document, emitOptions,
                     files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
                     sharedEmitter);
-
-				//RefScript - begin
-				if (this.compilationSettings().refScript()) {
-					sharedJSONEmitter = this._emitJSON(document, emitOptions,
-						files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
-						sharedJSONEmitter);
-				}
-				//RefScript - end
-            }
+           }
 
             if (sharedEmitter) {
                 emitOutput.outputFiles.push.apply(emitOutput.outputFiles, sharedEmitter.getOutputFiles());
@@ -573,15 +559,7 @@ module TypeScript {
             if (document.emitToOwnOutputFile()) {
                 this._emitDocument(document, emitOptions,
                     files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files), /*sharedEmitter:*/ null);
-
-				//RefScript - begin
-				if (this.compilationSettings().refScript()) {
-					this._emitJSON(document, emitOptions,
-						files => emitOutput.outputFiles.push.apply(emitOutput.outputFiles, files),
-						null);
-				}
-				//RefScript - end
-                return emitOutput;
+               return emitOutput;
             }
             else {
                 // In output Single file mode, emit everything
@@ -1199,6 +1177,7 @@ module TypeScript {
         Syntax,
         Semantics,
         EmitOptionsValidation,
+		//RefScriptTranslation,
         Emit,
         DeclarationEmit,
     }
@@ -1267,6 +1246,8 @@ module TypeScript {
                     return this.moveNextSemanticsPhase();
                 case CompilerPhase.EmitOptionsValidation:
                     return this.moveNextEmitOptionsValidationPhase();
+				//case CompilerPhase.RefScriptTranslation:
+				//	return this.moveNextRefScriptTranslation();
                 case CompilerPhase.Emit:
                     return this.moveNextEmitPhase();
                 case CompilerPhase.DeclarationEmit:
@@ -1362,31 +1343,46 @@ module TypeScript {
                 var fileName = this.fileNames[this.index];
                 var document = this.compiler.getDocument(fileName);
 
-                // Try to emit this single document.  It will either get emitted to its own file
-                // (in which case we'll have our call back triggered), or it will get added to the
-                // shared emitter (and we'll take care of it after all the files are done.
-                this._sharedEmitter = this.compiler._emitDocument(
-                    document, this._emitOptions,
-                    outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
-                    this._sharedEmitter);
-
 				//RefScript - begin
 				if (this.compiler.compilationSettings().refScript()) {
-					this._sharedJSONEmitter = this.compiler._emitJSON(document, this._emitOptions,
-						outputFiles =>  { this._current = CompileResult.fromOutputFiles(outputFiles) },
-						this._sharedJSONEmitter);
+					// Omit declaration files
+					if (this.compiler._shouldEmit(document)) {
+						//public emitJSON(ast: ISyntaxElement, startLine: boolean) {
+						var ast = document.sourceUnit();
+						var helper = new RsHelper(this.compiler.semanticInfoChain, document);
+						var rsAST = ast.toRsAST(helper);
+						var diagnostics = helper.diagnostics();
+						this._current = CompileResult.fromDiagnostics(diagnostics);
+						if (diagnostics.length === 0) {
+							this._sharedJSONEmitter = this.compiler._emitJSON(document, rsAST, this._emitOptions,
+							outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
+							this._sharedJSONEmitter);
+						}
+					}
 				}
 				//RefScript - end
-                return true;
+				else {
+
+					// Try to emit this single document.  It will either get emitted to its own file
+					// (in which case we'll have our call back triggered), or it will get added to the
+					// shared emitter (and we'll take care of it after all the files are done.
+					this._sharedEmitter = this.compiler._emitDocument(
+						document, this._emitOptions,
+						outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
+						this._sharedEmitter);
+				}
+				return true;
             }
 
-            // If we've moved past all the files, and we have a multi-input->single-output
-            // emitter set up.  Then add the outputs of that emitter to the results.
-            if (this.index === this.fileNames.length && this._sharedEmitter) {
-                // Collect shared emit result.
-                this._current = CompileResult.fromOutputFiles(this._sharedEmitter.getOutputFiles());
-            }
+			if (!this.compiler.compilationSettings().refScript()) {
+				// If we've moved past all the files, and we have a multi-input->single-output
+				// emitter set up.  Then add the outputs of that emitter to the results.
+				if (this.index === this.fileNames.length && this._sharedEmitter) {
+					// Collect shared emit result.
+					this._current = CompileResult.fromOutputFiles(this._sharedEmitter.getOutputFiles());
+				}
 
+			}
             return true;
         }
 

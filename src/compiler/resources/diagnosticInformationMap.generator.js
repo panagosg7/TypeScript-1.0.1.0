@@ -517,6 +517,9 @@ fs.readFile('diagnosticMessages.json', 'utf8', function (err, data) {
     else if (obj[key].category === 'Warning') console.log('  { "code": ' + obj[key].code + ', "category": DiagnosticCategory.Warning },')
     else if (obj[key].category === 'Message') console.log('  { "code": ' + obj[key].code + ', "category": DiagnosticCategory.Message },')
     else if (obj[key].category === 'NoPrefix') console.log('  { "code": ' + obj[key].code + ', "category": DiagnosticCategory.NoPrefix },')
+    // RefScript translation
+    else if (obj[key].category === 'Bug') console.log('  { "code": ' + obj[key].code + ', "category": DiagnosticCategory.Bug },')
+    else if (obj[key].category === 'Unimplemented') console.log('  { "code": ' + obj[key].code + ', "category": DiagnosticCategory.Unimplemented },')
     else throw "Non matched category " + obj[key].category;
 
 

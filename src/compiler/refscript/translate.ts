@@ -3,24 +3,22 @@
 module TypeScript {
 
 	export class RsHelper {
-		constructor(private _semanticInfoChain: SemanticInfoChain) { }
+
+		//constructor(private _compiler: TypeScriptCompiler, private _document: Document) { }
+		constructor(private _semanticInfoChain: SemanticInfoChain, private _document: Document) { }
+
+		private _diagnostics: Diagnostic[] = [];
 
 		public getDeclForAST(ast: ISyntaxElement): PullDecl {
-			if (this._semanticInfoChain) {
-				return this._semanticInfoChain.getDeclForAST(ast);
-			}
-			throw new Error("ASTHelper: SeminfoChain has not been initialized.");
+			return this._document._getDeclForAST(ast);
 		}
 
 		public getSymbolForAST(ast: ISyntaxElement): PullSymbol {
-			if (this._semanticInfoChain) {
-				return this._semanticInfoChain.getSymbolForAST(ast);
-			}
-			throw new Error("ASTHelper: SeminfoChain has not been initialized.");
+			return this._semanticInfoChain.getSymbolForAST(ast);
 		}
 
 		public getSourceSpan(ast: ISyntaxElement): RsSourceSpan {
-			var lineMap = this._semanticInfoChain.lineMap(ast.fileName());
+			var lineMap = this._document.lineMap();
 			var startLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.start());
 			var stopLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.end());
 			return new RsSourceSpan(ast.fileName(), startLineAndChar, stopLineAndChar);
@@ -29,6 +27,16 @@ module TypeScript {
 		public isLibrary(ast: ISyntaxElement): boolean {
 			return ast.fileName().indexOf("lib.d.ts") === -1;
 		}
+
+		public postDiagnostic(ast: ISyntaxElement, diagnosticKey: string, _arguments: any[] = null, additionalLocations: Location[] = null) {
+			var diagnostic = new Diagnostic(ast.fileName(), this._document.lineMap(), ast.start(), ast.width(), diagnosticKey, _arguments, additionalLocations);
+			this._diagnostics.push(diagnostic);
+		}
+
+		public diagnostics(): Diagnostic[] {
+			return this._diagnostics;
+		}
+
 	}
 
 }

@@ -5,12 +5,6 @@ module TypeScript {
 	/* Get the annotations that lead a token */
 	function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
-
-		//console.log("fullstart: " + token.fullStart() + " line: " + token.syntaxTree().lineMap().getLineNumberFromPosition(token.fullStart()));
-		//console.log("fullend  : " + token.fullEnd());
-		//console.log("fullwidth: " + token.fullWidth());
-		//console.log();
-
 		var commentTrivia = token.leadingTrivia().toArray()
 			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
 
@@ -578,54 +572,50 @@ module TypeScript {
 
 		private headerAnnotation(helper: RsHelper, anns: RsAnnotation[]): RsAnnotation {
 
-		//No class annotation given - generate one based on class information from TypeScript.
-		if (anns.length === 0) {
-			//Type parameters
-			var typeParams = (this.typeParameterList ? this.typeParameterList.typeParameters.toNonSeparatorArray() : []).
-				map(t => t.identifier.text());				
+			//No class annotation given - generate one based on class information from TypeScript.
+			if (anns.length === 0) {
+				//Type parameters
+				var typeParams = (this.typeParameterList ? this.typeParameterList.typeParameters.toNonSeparatorArray() : []).
+					map(t => t.identifier.text());
 
-			//Mutability parameter
-			var mutParam = 'M';
-			while (typeParams.indexOf(mutParam) !== -1) {
-				var possible = "0123456789";
-				mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
-			}
-			typeParams.unshift(mutParam);
-			var mutType = new TTVar(mutParam);
-
-			//Extends Heritage
-			var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
-				.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword, mutType))
-				.filter(t => t !== null));
-			if (extendsHeritage) {
-				switch (extendsHeritage.length) {
-					case 0: var extendsSerial: Serializable = null; break;
-					case 1: var extendsSerial = extendsHeritage[0]; break;
-					default:
-						console.log(extendsHeritage.toString());
-						throw new Error("BUG: class '" + this.identifier.text() + "' can only extend a single class.");
+				//Mutability parameter
+				var mutParam = 'M';
+				while (typeParams.indexOf(mutParam) !== -1) {
+					var possible = "0123456789";
+					mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 				}
+				typeParams.unshift(mutParam);
+				var mutType = new TTVar(mutParam);
+
+				//Extends Heritage
+				var extendsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
+					.map(t => t.toRsHeritage(helper, SyntaxKind.ExtendsKeyword, mutType))
+					.filter(t => t !== null));
+				if (extendsHeritage) {
+					switch (extendsHeritage.length) {
+						case 0: var extendsSerial: Serializable = null; break;
+						case 1: var extendsSerial = extendsHeritage[0]; break;
+						default: helper.postDiagnostic(this, DiagnosticCode.Classes_can_only_extend_a_single_class);
+					}
+				}
+				else {
+					var extendsSerial: Serializable = null;
+				}
+				//Implements Heritage
+				var implementsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
+					.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword, mutType))
+					.filter(t => t !== null));
+				var sourceSpan = helper.getSourceSpan(this);
+				return new RsInferredClassAnnotation(sourceSpan, this.identifier, typeParams, extendsSerial, implementsHeritage);
+			}
+			else if (anns.length === 1) {
+				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
+				//This might not be very straightforward because we might need to parse refinement types.
+				return <RsExplicitNamedTypeAnnotation> anns[0];
 			}
 			else {
-				var extendsSerial: Serializable = null;
+				helper.postDiagnostic(this, this.identifier.text());
 			}
-			//Implements Heritage
-			var implementsHeritage = ArrayUtilities.concat(this.heritageClauses.toArray()
-				.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword, mutType))
-				.filter(t => t !== null));
-			var sourceSpan = helper.getSourceSpan(this); 
-			return new RsInferredClassAnnotation(sourceSpan, this.identifier, typeParams, extendsSerial, implementsHeritage);
-		}
-		else if (anns.length === 1) {
-			//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
-			//This might not be very straightforward because we might need to parse refinement types.
-			return <RsExplicitNamedTypeAnnotation> anns[0];
-		}
-		else {
-			console.log(helper.getSourceSpan(this).toString());
-			console.log("Class '" + this.identifier.text() + "' has multiple class annoatations.");
-			process.exit(1);
-		}
 		}
 
 		public toRsStmt(helper: RsHelper): RsStatement {
@@ -805,9 +795,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			annotStr = headerAnnot.content() + " ";
 		}
 		else {
-			console.log(helper.getSourceSpan(this).toString());
-			console.log("Interface '" + this.identifier.text() + "' has multiple interface annoatations.");
-			process.exit(1);
+			helper.postDiagnostic(this, DiagnosticCode.Interface_0_has_multiple_interface_annoatations, [this.identifier.text()]);
 		}
 
 		//Body of the interface declaration
@@ -839,16 +827,9 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					}
 					else {
 						//Annotation provided by user
-						//var ann = anns[0];
-						//console.log(anns.map(m => m.getContent()));
-						// XXX: String HACK
 						return anns.map(m => m.content());
 					}
-
-
-
 					break;
-
 
 				case SyntaxKind.PropertySignature:			// Field signature
 					var v = <PropertySignatureSyntax> m;
@@ -859,10 +840,6 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						return [eltSymbol.name + " : " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
-						//Annotation provided by user
-						//var ann = anns[0];
-						//console.log(anns.map(m => m.getContent()));
-						// XXX: String HACK
 						return anns.map(m => m.content());
 					}
 
@@ -877,7 +854,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 						}
 					}
 				default:
-					throw new Error("[UNIMPLEMENTED/BUG] InterfaceDeclaration member.");
+					helper.postDiagnostic(this, DiagnosticCode.InterfaceDeclaration_member);
 			}
 		});
 
@@ -975,10 +952,9 @@ export class HeritageClauseSyntax extends SyntaxNode {
 					switch (t.kind()) {
 						case SyntaxKind.IdentifierName:
 						case SyntaxKind.GenericType:
-							var baseSymbol = helper.getSymbolForAST(t);
-							return baseSymbol.type.toRsType(mutParam);
+							return helper.getSymbolForAST(t).type.toRsType(mutParam);
 						default:
-							throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+							helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
 					}
 				});
 			return r;
@@ -991,10 +967,10 @@ export class HeritageClauseSyntax extends SyntaxNode {
 			return this.typeNames.toNonSeparatorArray().map(t => {
 				switch (t.kind()) {
 					case SyntaxKind.IdentifierName:
-					case SyntaxKind.GenericType:
+					case SyntaxKind.GenericType: 
 						return t.toRsId(helper);
 					default:
-						throw new Error("UNIMPLEMENTED: heritageClauses toRs " + SyntaxKind[t.kind()]);
+						helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
 				}
 			});
 		}
@@ -1235,19 +1211,16 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 	public toRsStmt(helper: RsHelper): RsStatement {
 
 		if (!this.block) {
-			//throw new Error("UNIMPLEMENTED:FunctionDeclaration.toRsStmt:No Block");
 			return null;
 		}
 
 		var name = this.identifier.text();
 		var anns = tokenAnnots(this.firstToken());
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
 		if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
-			console.log(helper.getSourceSpan(this).toString());
-			console.log("Function '" + name + "' should have a single annotation.");
-			process.exit(1);
+			helper.postDiagnostic(this, DiagnosticCode.Function_0_should_have_a_single_annotation, [name]);
 		}
 		//FIXME: get rid of casts ...
 		return new RsFunctionStmt(
@@ -1455,8 +1428,8 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 		if (decls.members.every(d => d instanceof RsVarDecl)) {
 			return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
 		}
-			throw new Error("toRsForInit: can only have non-ambient variable declarators here.")
-		}
+		helper.postDiagnostic(this, DiagnosticCode.For_in_only_non_ambient_variable_declarators_are_allowed_here);
+	}
 
 	public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
 
@@ -1485,7 +1458,7 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 				noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(b.sourceSpan(), AnnotKind.RawExtern, b.content())));
 			return new RsEmptyStmt(helper.getSourceSpan(this), declAnnots);
 		} else {
-			throw new Error("VariableDeclaration:toRsStmt: This shouldn't happen.");
+			helper.postDiagnostic(this, DiagnosticCode.All_variable_declarators_need_to_be_translated_to_either_RsVarDecls_or_RsEmptyStmts);
 		}
 	}
 	//RefScript - end
@@ -1570,7 +1543,7 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 	public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
 		//Invariant: anns are of kind RawBind
 		if (anns) {
-			var anns1 = anns.filter(a => a.binderName() === this.propertyName.text());
+			var anns1 = anns.filter(a => a.binderName(this, helper) === this.propertyName.text());
 			//If this is an ambient variable, force it to have a type annotation.
 			var pullDecl = helper.getDeclForAST(this);
 			if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
@@ -1580,10 +1553,8 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 					//The actual annotations are handled by VariableDeclaration, so we don't have to populate them here.
 					return new RsEmptyStmt(helper.getSourceSpan(this), anns1);
 				}
-				console.log(helper.getSourceSpan(this).toString());
-				console.log("Ambient variable declarator for '" + this.propertyName.text() +
-					"' needs to have exactly one type annotation.");
-				process.exit(1);
+				helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_exactly_one_type_annotation,
+					[this.propertyName.text()]);
 			}
 			//This is a normal declaration
 
@@ -1592,10 +1563,9 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 				return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper),
 					(this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
 			}
-			console.log(helper.getSourceSpan(this).toString());
-			console.log("Variable declarator for '" + this.propertyName.text() +
-				"' needs to have at most one type annotation.");
-			process.exit(1);
+
+			helper.postDiagnostic(this, DiagnosticCode.Variable_declarator_for_0_needs_to_have_at_most_one_type_annotation,
+					[this.propertyName.text()]);
 		}
 	}
 	////RefScript - end
@@ -3256,6 +3226,7 @@ export class MemberAccessExpressionSyntax extends SyntaxNode implements IMemberE
 			//case SyntaxKind.ElementAccessExpression:
 			//    return new RsLBracket(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.operand1.toRsExp(helper), this.operand2.toRsExp(helper));
 			default: {
+				//helper(this, DiagnosticCode
 				throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsLValue");
 			}
 		}
@@ -5161,7 +5132,7 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
   		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
     }
 
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
 			throw new Error("Method '" + methodName + "' should have at least one annotation.");
 		}
@@ -5500,9 +5471,9 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
   		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
     }
 
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName());
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 		if (bindAnnNames.length == 0) {
-			throw new Error("Field should have at least one annotation.");
+			helper.postDiagnostic(this, DiagnosticCode.Fields_should_have_at_least_one_annotation);
 		}
    
 		var binderNames = <RsBindAnnotation[]>anns.filter(
@@ -6499,17 +6470,11 @@ export class ForStatementSyntax extends SyntaxNode implements IIterationStatemen
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-
 		//For the moment force variable declarations to be null. We'll only support initializers.
 		if (this.initializer) {
-			console.log(helper.getSourceSpan(this).toString());
-			console.log("'" + this.initializer.fullText() + "'");
-			console.log("Please only use variable declarations in the first part of the loop.");
-			process.exit(1);
+			helper.postDiagnostic(this, DiagnosticCode.Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0, [this.initializer.fullText()]);
 		}
-
 		var anns = tokenAnnots(this.forKeyword);
-
 		return new RsForStmt(
 			helper.getSourceSpan(this),
 			tokenAnnots(this), 
@@ -6667,7 +6632,7 @@ export class ForInStatementSyntax extends SyntaxNode implements IIterationStatem
 				var rsForInInit: RsForInInit = new RsForInVar(varId);
 			}
 			else {
-				throw new Error("[UNIMPLEMENTED/BUG] ForInStatementSyntax - toRsStmt");
+				helper.postDiagnostic(this, DiagnosticCode.ForInStatementSyntax_to_RsStatement);
 			}
 		}
 		return new RsForInStmt(helper.getSourceSpan(this), tokenAnnots(this),
