@@ -872,7 +872,7 @@ module TypeScript {
   { "code": 8003, "category": DiagnosticCategory.Error },
 "Interface '{0}' has multiple interface annoatations." : 
   { "code": 8004, "category": DiagnosticCategory.Error },
-"Function '{0}' should have a single annotation." : 
+"Function '{0}' can have at most one type annotation." : 
   { "code": 8005, "category": DiagnosticCategory.Error },
 "Variable declarations are only supported in the first part of the loop in '{0}'." : 
   { "code": 8006, "category": DiagnosticCategory.Error },
@@ -896,5 +896,9 @@ module TypeScript {
   { "code": 8015, "category": DiagnosticCategory.Unimplemented },
 "ForInStatementSyntax to RsStatement" : 
   { "code": 8016, "category": DiagnosticCategory.Unimplemented },
+"Cannot translate type '{0}' into RefScript type." : 
+  { "code": 8017, "category": DiagnosticCategory.Unimplemented },
+"Anonymous function cannot have more than one type annotations." : 
+  { "code": 8018, "category": DiagnosticCategory.Error },
 }
 }

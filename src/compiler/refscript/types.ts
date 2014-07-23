@@ -19,13 +19,15 @@ module TypeScript {
 		constructor(private msg: string) {	super(); }
 
 		public toString(): string { return "Error type: " + this.msg; }
+
+		public message(): string { return this.msg;	}
 	}
 
-	export class TAnyC extends RsType {
+	export class TTopC extends RsType {
 		public toString(): string {	return "top"; }
 	}
 
-	export var TAny = new TAnyC();
+	export var TTop = new TTopC();
 
 	export class TNumberC extends RsType {
 		public toString(): string { return "number"; }

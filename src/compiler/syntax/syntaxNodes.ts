@@ -1219,13 +1219,21 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
-		if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
-			helper.postDiagnostic(this, DiagnosticCode.Function_0_should_have_a_single_annotation, [name]);
+		if (bindAnnNames.length === 0) {
+			var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
+			if (type instanceof TError) {
+				var tError = <TError>type;
+				helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
+			}
+			var typeStr = type.toString();
+			console.log(this.identifier.text() + " :: " + typeStr);
+			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.identifier.text() + " :: " + typeStr));
 		}
-		//FIXME: get rid of casts ...
+		else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
+			helper.postDiagnostic(this, DiagnosticCode.Function_0_can_have_at_most_one_type_annotation, [name]);
+		}
 		return new RsFunctionStmt(
-			helper.getSourceSpan(this), anns,
-			this.identifier.toRsId(helper),
+			helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
 			<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
 			new RsASTList([this.block.toRsStmt(helper)]));
 	}
@@ -7508,8 +7516,26 @@ export class FunctionExpressionSyntax extends SyntaxNode implements IPrimaryExpr
 
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
+
+		var anns = tokenAnnots(this.block);
+		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
+		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
+
+		if (bindAnnNames.length === 0) {
+			var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
+			if (type instanceof TError) {
+				var tError = <TError>type;
+				helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
+			}
+			var typeStr = type.toString();
+			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, "<anonymous> :: " + typeStr));
+		}
+		else if (bindAnnNames.length !== 1) {
+			helper.postDiagnostic(this, DiagnosticCode.Anonymous_function_cannot_have_more_than_one_type_annotations);
+		}
+		
 		return new RsFuncExpr(helper.getSourceSpan(this),
-			tokenAnnots(this.block),
+			anns,
 			this.identifier ? this.identifier.toRsId(helper) : null,
 			new RsASTList<RsId>(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(p => p.toRsId(helper))),
 			new RsASTList<RsStatement>(this.block.statements.toArray().map(s => s.toRsStmt(helper))));

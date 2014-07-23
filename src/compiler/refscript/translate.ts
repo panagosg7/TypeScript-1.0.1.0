@@ -17,6 +17,10 @@ module TypeScript {
 			return this._semanticInfoChain.getSymbolForAST(ast);
 		}
 
+		public getSymbolForDecl(decl: PullDecl): PullSymbol {
+			return this._semanticInfoChain.getSymbolForDecl(decl);
+		}
+
 		public getSourceSpan(ast: ISyntaxElement): RsSourceSpan {
 			var lineMap = this._document.lineMap();
 			var startLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.start());

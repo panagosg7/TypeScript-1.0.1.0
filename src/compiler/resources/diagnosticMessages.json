@@ -1746,7 +1746,7 @@
         "category": "Error",
         "code": 8004
     },
-    "Function '{0}' should have a single annotation.":{
+    "Function '{0}' can have at most one type annotation.":{
         "category": "Error",
         "code": 8005
     },
@@ -1793,6 +1793,13 @@
     "ForInStatementSyntax to RsStatement":{
         "category": "Unimplemented",
         "code": 8016
+    },
+    "Cannot translate type '{0}' into RefScript type.":{
+      "category": "Unimplemented",
+      "code": 8017
+    },
+    "Anonymous function cannot have more than one type annotations.":{
+      "category": "Error",
+      "code": 8018
     }
-
 }

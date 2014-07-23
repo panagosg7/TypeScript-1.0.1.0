@@ -436,7 +436,7 @@ Ambient_variable_declarator_for_0_needs_to_have_exactly_one_type_annotation: "Am
 Variable_declarator_for_0_needs_to_have_at_most_one_type_annotation: "Variable declarator for '{0}' needs to have at most one type annotation.",
 Class_0_has_multiple_class_annoatations: "Class '{0}' has multiple class annoatations.",
 Interface_0_has_multiple_interface_annoatations: "Interface '{0}' has multiple interface annoatations.",
-Function_0_should_have_a_single_annotation: "Function '{0}' should have a single annotation.",
+Function_0_can_have_at_most_one_type_annotation: "Function '{0}' can have at most one type annotation.",
 Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0: "Variable declarations are only supported in the first part of the loop in '{0}'.",
 Variable_annotation_binder_for_0_does_not_correspond_to_any_nearby_variable_declaration: "Variable annotation binder for '{0}' does not correspond to any nearby variable declaration.",
 Duplicate_type_annotation_for_variable_s_0: "Duplicate type annotation for variable(s): '{0}'",
@@ -448,5 +448,7 @@ BinaryExpression_toRsLValue: "BinaryExpression toRsLValue",
 InterfaceDeclaration_member: "InterfaceDeclaration member",
 HeritageClauses_to_RefScript: "HeritageClauses to RefScript",
 ForInStatementSyntax_to_RsStatement: "ForInStatementSyntax to RsStatement",
+Cannot_translate_type_0_into_RefScript_type: "Cannot translate type '{0}' into RefScript type.",
+Anonymous_function_cannot_have_more_than_one_type_annotations: "Anonymous function cannot have more than one type annotations.",
 }
 }

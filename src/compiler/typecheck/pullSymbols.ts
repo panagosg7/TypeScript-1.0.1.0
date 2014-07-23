@@ -3111,8 +3111,8 @@ module TypeScript {
 		/** toRsType: Convert a PullTypeSymbol to a RefScript type */
 		public toRsType(mut?: RsType): Serializable {
 
-			if (this.toString() === "any") {
-				return TAny;
+			if (this.isAny()) {
+				return TTop;
 			}
 
 			if (this.isPrimitive()) {
@@ -3123,7 +3123,7 @@ module TypeScript {
 				if (this.toString() === "number") return TNumber;
 				if (this.toString() === "boolean") return TBoolean;
 				if (this.toString() === "void") return TVoid;
-				return new TError("toNJSType:primitive: " + this.toString());
+				return new TError(this.toString());
 			}
 
 			if (this.isArrayNamedTypeReference()) {
@@ -3150,7 +3150,6 @@ module TypeScript {
 					tArgs = this.getTypeParameters();
 				}
 
-				//var nJSParams = tArgs.map(p => p.toRsTypeParameter());
 				var rsTParams = tArgs.map(p => p.toRsType());
 				if (mut !== undefined) {
 					rsTParams = [mut].concat(rsTParams);
@@ -3176,8 +3175,7 @@ module TypeScript {
 				return new TObject(fields);
 			}
 
-			console.log("Not supported in toNJSType[" + PullElementKind[this.kind] + "]: " + this.toString().substring(0, 120));
-			return TAny;
+			return new TError(this.toString()); 
 		}
 
 		public toRsTypeParameter(): TTypeParam {
