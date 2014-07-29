@@ -770,7 +770,35 @@ module TypeScript {
                 this.hasErrors = true;
             }
 
-            this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));
+			if (this.compilationSettings.refScript()) {
+				var lineMap = diagnostic.lineMap();
+				var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
+				var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
+
+				//var startPos = {
+				//	line: startLineAndCharacter.line(),
+				//	character: startLineAndCharacter.character()
+				//};
+				//var stopPos = {
+				//	line: stopLineAndCharacter.line(),
+				//	character: stopLineAndCharacter.character()
+				//};
+				//this.ioHost.stderr.Write(JSON.stringify({
+				//	fileName: diagnostic.fileName(),
+				//	startPos: startPos,
+				//	stopPos: stopPos,
+				//	message: diagnostic.message()
+				//}, undefined, 2));
+
+				var startPos = [startLineAndCharacter.line(), startLineAndCharacter.character()];
+				var stopPos = [stopLineAndCharacter.line(), stopLineAndCharacter.character()];
+
+				this.ioHost.stderr.Write(JSON.stringify([diagnostic.fileName(), startPos, stopPos, diagnostic.message()], undefined, 2));
+				this.ioHost.stderr.Write("\n");
+			}
+			else {
+				this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));
+			}
         }
 
         private tryWriteOutputFiles(outputFiles: OutputFile[]): boolean {
