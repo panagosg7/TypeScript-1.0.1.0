@@ -43,4 +43,13 @@ module TypeScript {
 
 	}
 
+  // FIXRESULT
+  //
+  // [{"Safe":[]},
+  //  {"Crash":[[],"stack"]},
+  //  {"Unsafe":[{"errMsg":"AAA","errLoc":{"sp_start":{"line":1,"column":1},"sp_stop":{"line":1,"column":1}}},
+  //             {"errMsg":"BBB","errLoc":{"sp_start":{"line":1,"column":1},"sp_stop":{"line":1,"column":1}}}]},
+  //  {"UnknownError":"Unkowntext"}]
+
+
 }

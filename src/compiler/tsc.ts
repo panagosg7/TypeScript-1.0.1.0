@@ -775,10 +775,9 @@ module TypeScript {
 				var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
 				var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
 
-				//var startPos = {
-				//	line: startLineAndCharacter.line(),
-				//	character: startLineAndCharacter.character()
-				//};
+        var sourceSpan = { "sp_begin": [ diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()],
+                           "sp_end"  : [ diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()] };
+
 				//var stopPos = {
 				//	line: stopLineAndCharacter.line(),
 				//	character: stopLineAndCharacter.character()
@@ -790,11 +789,11 @@ module TypeScript {
 				//	message: diagnostic.message()
 				//}, undefined, 2));
 
-				var startPos = [startLineAndCharacter.line(), startLineAndCharacter.character()];
-				var stopPos = [stopLineAndCharacter.line(), stopLineAndCharacter.character()];
+// 				var startPos = [startLineAndCharacter.line(), startLineAndCharacter.character()];
+// 				var stopPos = [stopLineAndCharacter.line(), stopLineAndCharacter.character()];
 
-				this.ioHost.stderr.Write(JSON.stringify([diagnostic.fileName(), startPos, stopPos, diagnostic.message()], undefined, 2));
-				this.ioHost.stderr.Write("\n");
+				this.ioHost.stderr.Write(JSON.stringify([sourceSpan, diagnostic.message()], undefined, 2));
+				this.ioHost.stderr.Write("\n#####\n");
 			}
 			else {
 				this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));
