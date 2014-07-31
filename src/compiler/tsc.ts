@@ -251,6 +251,7 @@ module TypeScript {
 
         // Returns true if compilation failed from some reason.
         private compile(): void {
+
             var compiler = new TypeScriptCompiler(this.logger, this.compilationSettings);
 
             this.resolvedFiles.forEach(resolvedFile => {
@@ -258,14 +259,38 @@ module TypeScript {
                 compiler.addFile(resolvedFile.path, sourceFile.scriptSnapshot, sourceFile.byteOrderMark, /*version:*/ 0, /*isOpen:*/ false, resolvedFile.referencedFiles);
             });
 
-            for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
-                var result = it.current();
 
-                result.diagnostics.forEach(d => this.addDiagnostic(d));
-                if (!this.tryWriteOutputFiles(result.outputFiles)) {
-                    return;
-                }
-            }
+			// RefScript: Adding try - catch 
+			try {
+
+				for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
+					var result = it.current();
+
+					result.diagnostics.forEach(d => this.addDiagnostic(d));
+
+					if (!this.tryWriteOutputFiles(result.outputFiles)) {
+						//return;	// RefScript 
+						break;
+					}
+				}
+
+				// RefScript - begin
+				if (this.compilationSettings.refScript()) {
+					this.dumpRefScriptDiagnostics();
+				}
+				// RefScript - end
+
+			} catch (e) {
+				if (this.compilationSettings.refScript()) {
+					//console.log(e);
+					this.dumpRefScriptUnknownError(e.message + "\n" + e.stack);
+				}
+				else {
+					// If not in RefScript mode throw the exception normally
+					throw e;
+				}
+			}
+
         }
 
         // Parse command line options
@@ -764,6 +789,21 @@ module TypeScript {
         }
 
 
+		// RefScript - begin
+		private _refScriptDiagnostics: Diagnostic[] = [];
+
+		private dumpRefScriptDiagnostics() {
+			var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
+			var fixResult = new FRUnsafe(errors);
+			this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+		}
+
+		private dumpRefScriptUnknownError(msg: string) {
+			var unknownError = new FRUnknownError(msg);
+			this.ioHost.stderr.Write(JSON.stringify(unknownError.toObject(), undefined, 2));			
+		}
+		// RefScript - end
+
         private addDiagnostic(diagnostic: Diagnostic): void {
             var diagnosticInfo = diagnostic.info();
             if (diagnosticInfo.category === DiagnosticCategory.Error) {
@@ -771,29 +811,18 @@ module TypeScript {
             }
 
 			if (this.compilationSettings.refScript()) {
-				var lineMap = diagnostic.lineMap();
-				var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
-				var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
+				//var lineMap = diagnostic.lineMap();
+				//var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
+				//var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
 
-        var sourceSpan = { "sp_begin": [ diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()],
-                           "sp_end"  : [ diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()] };
-
-				//var stopPos = {
-				//	line: stopLineAndCharacter.line(),
-				//	character: stopLineAndCharacter.character()
+				//var sourceSpan = {
+				//	"sp_begin": [diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()],
+				//	"sp_end": [diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()]
 				//};
-				//this.ioHost.stderr.Write(JSON.stringify({
-				//	fileName: diagnostic.fileName(),
-				//	startPos: startPos,
-				//	stopPos: stopPos,
-				//	message: diagnostic.message()
-				//}, undefined, 2));
 
-// 				var startPos = [startLineAndCharacter.line(), startLineAndCharacter.character()];
-// 				var stopPos = [stopLineAndCharacter.line(), stopLineAndCharacter.character()];
-
-				this.ioHost.stderr.Write(JSON.stringify([sourceSpan, diagnostic.message()], undefined, 2));
-				this.ioHost.stderr.Write("\n#####\n");
+				//this.ioHost.stderr.Write(JSON.stringify([sourceSpan, diagnostic.message()], undefined, 2));
+				//this.ioHost.stderr.Write("\n#####\n");
+				this._refScriptDiagnostics.push(diagnostic);
 			}
 			else {
 				this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));

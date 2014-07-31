@@ -43,6 +43,87 @@ module TypeScript {
 
 	}
 
+	export class FixResult {
+	}
+
+	export class FPSrcPos {
+		constructor(private name: string, private line: number, private column: number) { }
+
+		public toObject() {
+			return {
+				//"name": this.name,
+				"line": this.line,
+				"column": this.column
+			};
+		}
+	}
+
+	export class FPSrcSpan {
+		constructor(private sp_start: FPSrcPos, private sp_stop: FPSrcPos) { }
+
+		public toObject(): any {
+			return {
+				"sp_start": this.sp_start.toObject(),
+				"sp_stop": this.sp_stop.toObject()
+			};
+		}
+	}
+
+	export class FPError {
+		constructor(private errMsg: string, private errLoc: FPSrcSpan) { }
+
+		static mkFixError(diagnostic: Diagnostic): FPError {
+			var lineMap = diagnostic.lineMap();
+			var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
+			var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
+			return new FPError(
+				diagnostic.text(),
+				new FPSrcSpan(
+					new FPSrcPos(diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()),
+					new FPSrcPos(diagnostic.fileName(), stopLineAndCharacter.line(), stopLineAndCharacter.character())));			
+		}
+
+		public toObject() {
+			return {
+				"errMsg": this.errMsg,
+				"errLoc": this.errLoc.toObject()
+			};
+		}
+
+	}
+
+	export class FRCrash extends FixResult {
+		constructor(private errs: FPError[], private msg: string) {
+			super();
+		}
+
+		public toObject() {
+			return { "Crash": [this.errs.map(err => err.toObject()), this.msg] };
+		}
+	}
+
+	export class FRSafe extends FixResult { }
+
+	export class FRUnsafe extends FixResult {
+		constructor(private errs: FPError[]) {
+			super();
+		}
+
+		public toObject() {
+			return { "Unsafe": this.errs.map(err => err.toObject()) };
+		}
+	}
+
+	export class FRUnknownError extends FixResult {
+		constructor(private msg: string) {
+			super();
+		}
+
+		public toObject() {
+			return { "UnknownError": this.msg };
+		}
+	}
+
   // FIXRESULT
   //
   // [{"Safe":[]},
