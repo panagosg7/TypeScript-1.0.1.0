@@ -50,11 +50,8 @@ module TypeScript {
 		constructor(private name: string, private line: number, private column: number) { }
 
 		public toObject() {
-			return {
-				//"name": this.name,
-				"line": this.line,
-				"column": this.column
-			};
+			return [ this.name, this.line, this.column ];
+				//"name": this.name, "line": this.line, "column": this.column
 		}
 	}
 
@@ -102,7 +99,11 @@ module TypeScript {
 		}
 	}
 
-	export class FRSafe extends FixResult { }
+	export class FRSafe extends FixResult { 
+		public toObject(): any {
+			return { "Safe": [] };
+		}
+  }
 
 	export class FRUnsafe extends FixResult {
 		constructor(private errs: FPError[]) {
@@ -128,7 +129,12 @@ module TypeScript {
   //
   // [{"Safe":[]},
   //  {"Crash":[[],"stack"]},
-  //  {"Unsafe":[{"errMsg":"AAA","errLoc":{"sp_start":{"line":1,"column":1},"sp_stop":{"line":1,"column":1}}},
+  //  {"Unsafe":[{"errMsg":"AAA",
+  //              "errLoc": 
+  //                { "sp_start":{"line":1,"column":1},
+  //                  "sp_stop" :{"line":1,"column":1}
+  //                }
+  //             },
   //             {"errMsg":"BBB","errLoc":{"sp_start":{"line":1,"column":1},"sp_stop":{"line":1,"column":1}}}]},
   //  {"UnknownError":"Unkowntext"}]
 

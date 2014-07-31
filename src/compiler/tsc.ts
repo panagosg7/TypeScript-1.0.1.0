@@ -283,7 +283,7 @@ module TypeScript {
 			} catch (e) {
 				if (this.compilationSettings.refScript()) {
 					//console.log(e);
-					this.dumpRefScriptUnknownError(e.message + "\n" + e.stack);
+					this.dumpRefScriptUnknownError(e.stack);
 				}
 				else {
 					// If not in RefScript mode throw the exception normally
@@ -793,9 +793,14 @@ module TypeScript {
 		private _refScriptDiagnostics: Diagnostic[] = [];
 
 		private dumpRefScriptDiagnostics() {
-			var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
-			var fixResult = new FRUnsafe(errors);
-			this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+            if (this._refScriptDiagnostics.length > 0) {
+    			var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
+	    		var fixResult = new FRUnsafe(errors);
+		    	this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+            }            
+            else {
+		    	this.ioHost.stderr.Write(JSON.stringify((new FRSafe()).toObject(), undefined, 2));
+            }
 		}
 
 		private dumpRefScriptUnknownError(msg: string) {
@@ -803,6 +808,7 @@ module TypeScript {
 			this.ioHost.stderr.Write(JSON.stringify(unknownError.toObject(), undefined, 2));			
 		}
 		// RefScript - end
+    
 
         private addDiagnostic(diagnostic: Diagnostic): void {
             var diagnosticInfo = diagnostic.info();
@@ -811,17 +817,6 @@ module TypeScript {
             }
 
 			if (this.compilationSettings.refScript()) {
-				//var lineMap = diagnostic.lineMap();
-				//var startLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start());
-				//var stopLineAndCharacter = lineMap.getLineAndCharacterFromPosition(diagnostic.start() + diagnostic.length());
-
-				//var sourceSpan = {
-				//	"sp_begin": [diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()],
-				//	"sp_end": [diagnostic.fileName(), startLineAndCharacter.line(), startLineAndCharacter.character()]
-				//};
-
-				//this.ioHost.stderr.Write(JSON.stringify([sourceSpan, diagnostic.message()], undefined, 2));
-				//this.ioHost.stderr.Write("\n#####\n");
 				this._refScriptDiagnostics.push(diagnostic);
 			}
 			else {
