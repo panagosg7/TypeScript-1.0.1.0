@@ -798,9 +798,6 @@ module TypeScript {
 	    		var fixResult = new FRUnsafe(errors);
 		    	this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
             }            
-            else {
-		    	this.ioHost.stderr.Write(JSON.stringify((new FRSafe()).toObject(), undefined, 2));
-            }
 		}
 
 		private dumpRefScriptUnknownError(msg: string) {
