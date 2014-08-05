@@ -494,13 +494,24 @@ module TypeScript {
 			// Emitting module or multiple files, always goes to single file
 			if (this._shouldEmit(document)) {
 
+				if (document.emitToOwnOutputFile()) {
+					// We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
+					var singleEmitter = this.emitJSONWorker(document, rsAST, emitOptions);
+					if (singleEmitter) {
+						onSingleFileEmitComplete(singleEmitter.getOutputFiles());
+					}
+				}
+				else {
 
-				// We're outputting to a single file. Keep using the same emitter and don't
-				// close until below.
-				sharedEmitter = this.emitJSONWorker(document, rsAST, emitOptions, sharedEmitter);
-				onSingleFileEmitComplete(sharedEmitter.getOutputFiles());
+					// Shouldn't be called like this
+					throw new Error("_emitJSON should use multiple files");
 
+					// We're not outputting to multiple files.  Keep using the same emitter and don't
+					// close until below.
+					//sharedEmitter = this.emitJSONWorker(document, rsAST, emitOptions, sharedEmitter);
+				}
 			}
+
 			return sharedEmitter;
 		}
 
@@ -1246,8 +1257,6 @@ module TypeScript {
                     return this.moveNextSemanticsPhase();
                 case CompilerPhase.EmitOptionsValidation:
                     return this.moveNextEmitOptionsValidationPhase();
-				//case CompilerPhase.RefScriptTranslation:
-				//	return this.moveNextRefScriptTranslation();
                 case CompilerPhase.Emit:
                     return this.moveNextEmitPhase();
                 case CompilerPhase.DeclarationEmit:
@@ -1330,34 +1339,32 @@ module TypeScript {
             return true;
         }
 
-        private moveNextEmitPhase(): boolean {
-            Debug.assert(!this.hadSyntacticDiagnostics);
-            Debug.assert(this._emitOptions);
+		private moveNextEmitPhase(): boolean {
+			Debug.assert(!this.hadSyntacticDiagnostics);
+			Debug.assert(this._emitOptions);
 
-            if (this.hadEmitDiagnostics) {
-                return false;
-            }
+			if (this.hadEmitDiagnostics) {
+				return false;
+			}
 
-            Debug.assert(this.index >= 0 && this.index <= this.fileNames.length);
-            if (this.index < this.fileNames.length) {
-                var fileName = this.fileNames[this.index];
-                var document = this.compiler.getDocument(fileName);
+			Debug.assert(this.index >= 0 && this.index <= this.fileNames.length);
+			if (this.index < this.fileNames.length) {
+				var fileName = this.fileNames[this.index];
+				var document = this.compiler.getDocument(fileName);
 
 				//RefScript - begin
 				if (this.compiler.compilationSettings().refScript()) {
-					// Omit declaration files
-					if (this.compiler._shouldEmit(document)) {
-						//public emitJSON(ast: ISyntaxElement, startLine: boolean) {
-						var ast = document.sourceUnit();
-						var helper = new RsHelper(this.compiler.semanticInfoChain, document);
-						var rsAST = ast.toRsAST(helper);
-						var diagnostics = helper.diagnostics();
-						this._current = CompileResult.fromDiagnostics(diagnostics);
-						if (diagnostics.length === 0) {
-							this._sharedJSONEmitter = this.compiler._emitJSON(document, rsAST, this._emitOptions,
+					// Include imported declaration files
+					var ast = document.sourceUnit();
+					var helper = new RsHelper(this.compiler.semanticInfoChain, document);
+					var diagnostics = helper.diagnostics();
+					var rsAST = ast.toRsAST(helper);
+					this._current = CompileResult.fromDiagnostics(diagnostics);
+
+					if (diagnostics.length === 0) {
+						this._sharedJSONEmitter = this.compiler._emitJSON(document, rsAST, this._emitOptions,
 							outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
 							this._sharedJSONEmitter);
-						}
 					}
 				}
 				//RefScript - end
@@ -1365,26 +1372,32 @@ module TypeScript {
 
 					// Try to emit this single document.  It will either get emitted to its own file
 					// (in which case we'll have our call back triggered), or it will get added to the
-					// shared emitter (and we'll take care of it after all the files are done.
+					// shared emitter (and we'll take care of it after all the files are done).
 					this._sharedEmitter = this.compiler._emitDocument(
 						document, this._emitOptions,
 						outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
 						this._sharedEmitter);
 				}
+
 				return true;
-            }
-
-			if (!this.compiler.compilationSettings().refScript()) {
-				// If we've moved past all the files, and we have a multi-input->single-output
-				// emitter set up.  Then add the outputs of that emitter to the results.
-				if (this.index === this.fileNames.length && this._sharedEmitter) {
-					// Collect shared emit result.
-					this._current = CompileResult.fromOutputFiles(this._sharedEmitter.getOutputFiles());
-				}
-
 			}
-            return true;
-        }
+
+			// If we've moved past all the files, and we have a multi-input->single-output
+			// emitter set up.  Then add the outputs of that emitter to the results.
+			if (this.index === this.fileNames.length && this._sharedEmitter) {
+				// Collect shared emit result.
+				this._current = CompileResult.fromOutputFiles(this._sharedEmitter.getOutputFiles());
+			}
+
+			//// Shouldn't really happen: 
+			if (this.index === this.fileNames.length && this._sharedJSONEmitter) {
+				// Collect shared emit result.
+				//this._current = CompileResult.fromOutputFiles(this._sharedJSONEmitter.getOutputFiles());
+				this._sharedJSONEmitter.getOutputFiles().forEach(f => console.log(f.name));
+			}
+
+			return true;
+		}
 
         private moveNextDeclarationEmitPhase(): boolean {
             Debug.assert(!this.hadSyntacticDiagnostics);

@@ -268,6 +268,10 @@ module TypeScript {
 
 					result.diagnostics.forEach(d => this.addDiagnostic(d));
 
+					if (this.compilationSettings.refScript()) {
+						this._refScriptOutputFiles = this._refScriptOutputFiles.concat(result.outputFiles);
+					}
+
 					if (!this.tryWriteOutputFiles(result.outputFiles)) {
 						//return;	// RefScript 
 						break;
@@ -282,7 +286,6 @@ module TypeScript {
 
 			} catch (e) {
 				if (this.compilationSettings.refScript()) {
-					//console.log(e);
 					this.dumpRefScriptUnknownError(e.stack);
 				}
 				else {
@@ -791,13 +794,17 @@ module TypeScript {
 
 		// RefScript - begin
 		private _refScriptDiagnostics: Diagnostic[] = [];
+		private _refScriptOutputFiles: OutputFile[] = [];
 
 		private dumpRefScriptDiagnostics() {
-            if (this._refScriptDiagnostics.length > 0) {
-    			var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
-	    		var fixResult = new FRUnsafe(errors);
-		    	this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
-            }            
+			if (this._refScriptDiagnostics.length > 0) {
+				var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
+				var fixResult = new FRUnsafe(errors);
+				this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+			}
+			else {
+				this.ioHost.stdout.Write(JSON.stringify(this._refScriptOutputFiles.map(f => f.name), undefined, 2));
+			}
 		}
 
 		private dumpRefScriptUnknownError(msg: string) {

@@ -872,6 +872,7 @@ module TypeScript {
         }
 
         private resolveExternalModuleReference(idText: string, currentFileName: string): PullContainerSymbol {
+
             var originalIdText = idText;
             var symbol: PullContainerSymbol = null;
 

@@ -508,7 +508,6 @@ module TypeScript {
 		public sanityCheck(helper: RsHelper, bindAnns: RsBindAnnotation[]) {
 			//Do some sanity checks...
 			var definedNames = this.definedNames();
-			//console.log("DefinedNames: " + definedNames);
 			// 1. All binders match with exactly one variable being declared
 			bindAnns.forEach((b: RsBindAnnotation) => {
 				if (definedNames.indexOf(b.binderName(this, helper)) < 0) {

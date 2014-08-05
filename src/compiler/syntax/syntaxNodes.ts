@@ -103,8 +103,10 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST {
+
 			//Top-level should be a statement
 			return this.moduleElements.toRsStmt(helper);
+			
 		}
 		//RefScript - end
 	}
@@ -1226,7 +1228,6 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 				helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
 			}
 			var typeStr = type.toString();
-			//console.log(this.identifier.text() + " :: " + typeStr);
 			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.identifier.text() + " :: " + typeStr));
 		}
 		else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
