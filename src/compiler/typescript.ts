@@ -257,6 +257,10 @@ module TypeScript {
             return !document.isDeclareFile();
         }
 
+        public _shouldEmitJSON(document: Document) {
+            return !document.isLibDTSFile();
+        }
+
         public _shouldEmitDeclarations(document: Document) {
             if (!this.compilationSettings().generateDeclarationFiles()) {
                 return false;
@@ -431,7 +435,7 @@ module TypeScript {
 
 		private emitJSONWorker(document: Document, rsAST: RsAST, emitOptions: EmitOptions, emitter?: Emitter): Emitter {
             var sourceUnit = document.sourceUnit();
-            Debug.assert(this._shouldEmit(document));
+            Debug.assert(this._shouldEmitJSON(document));
 
             var typeScriptFileName = document.fileName;
             if (!emitter) {
@@ -492,7 +496,7 @@ module TypeScript {
 			sharedEmitter: Emitter): Emitter {
 
 			// Emitting module or multiple files, always goes to single file
-			if (this._shouldEmit(document)) {
+			if (this._shouldEmitJSON(document)) {
 
 				if (document.emitToOwnOutputFile()) {
 					// We're outputting to mulitple files.  We don't want to reuse an emitter in that case.
@@ -1355,17 +1359,19 @@ module TypeScript {
 				//RefScript - begin
 				if (this.compiler.compilationSettings().refScript()) {
 					// Include imported declaration files
-					var ast = document.sourceUnit();
-					var helper = new RsHelper(this.compiler.semanticInfoChain, document);
-					var diagnostics = helper.diagnostics();
-					var rsAST = ast.toRsAST(helper);
-					this._current = CompileResult.fromDiagnostics(diagnostics);
+					if (this.compiler._shouldEmit(document)) {
+                        var ast = document.sourceUnit();
+                        var helper = new RsHelper(this.compiler.semanticInfoChain, document);
+                        var diagnostics = helper.diagnostics();
+                        var rsAST = ast.toRsAST(helper);
+                        this._current = CompileResult.fromDiagnostics(diagnostics);
 
-					if (diagnostics.length === 0) {
-						this._sharedJSONEmitter = this.compiler._emitJSON(document, rsAST, this._emitOptions,
-							outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
-							this._sharedJSONEmitter);
-					}
+                        if (diagnostics.length === 0) {
+                            this._sharedJSONEmitter = this.compiler._emitJSON(document, rsAST, this._emitOptions,
+                              outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
+                              this._sharedJSONEmitter);
+                        }
+                    }
 				}
 				//RefScript - end
 				else {
