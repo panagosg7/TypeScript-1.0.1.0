@@ -288,10 +288,8 @@ module TypeScript {
 				if (this.compilationSettings.refScript()) {
 					this.dumpRefScriptUnknownError(e.stack);
 				}
-				else {
-					// If not in RefScript mode throw the exception normally
-					throw e;
-				}
+			    // If not in RefScript mode throw the exception normally
+				throw e;
 			}
 
         }
@@ -800,7 +798,7 @@ module TypeScript {
 			if (this._refScriptDiagnostics.length > 0) {
 				var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
 				var fixResult = new FRUnsafe(errors);
-				this.ioHost.stderr.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+				this.ioHost.stdout.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
 			}
 			else {
 				this.ioHost.stdout.Write(JSON.stringify(this._refScriptOutputFiles.map(f => f.name), undefined, 2));
@@ -809,7 +807,7 @@ module TypeScript {
 
 		private dumpRefScriptUnknownError(msg: string) {
 			var unknownError = new FRUnknownError(msg);
-			this.ioHost.stderr.Write(JSON.stringify(unknownError.toObject(), undefined, 2));			
+			this.ioHost.stdout.Write(JSON.stringify(unknownError.toObject(), undefined, 2));			
 		}
 		// RefScript - end
     
