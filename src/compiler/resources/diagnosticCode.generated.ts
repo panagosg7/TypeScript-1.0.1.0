@@ -432,7 +432,7 @@ _0_which_lacks_get_accessor_and_parameter_type_annotation_on_set_accessor_implic
 Index_signature_of_object_type_implicitly_has_an_any_type: "Index signature of object type implicitly has an 'any' type.",
 Object_literal_s_property_0_implicitly_has_an_any_type_from_widening: "Object literal's property '{0}' implicitly has an 'any' type from widening.",
 Translate_to_RefScript_JSON_format: "Translate to RefScript (JSON format)",
-Ambient_variable_declarator_for_0_needs_to_have_exactly_one_type_annotation: "Ambient variable declarator for '{0}' needs to have exactly one type annotation.",
+Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation: "Ambient variable declarator for '{0}' needs to have at least one type annotation.",
 Variable_declarator_for_0_needs_to_have_at_most_one_type_annotation: "Variable declarator for '{0}' needs to have at most one type annotation.",
 Class_0_has_multiple_class_annoatations: "Class '{0}' has multiple class annoatations.",
 Interface_0_has_multiple_interface_annoatations: "Interface '{0}' has multiple interface annoatations.",

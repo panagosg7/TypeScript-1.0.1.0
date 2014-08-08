@@ -2,6 +2,7 @@
 
 module TypeScript {
 
+	//RefScript - begin
 	/* Get the annotations that lead a token */
 	function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
@@ -10,9 +11,10 @@ module TypeScript {
 
 		var match = commentTrivia.map(ct => {
 			var cstart = ct.fullStart();
-			var matchStr = ct.fullText().match("/\*@(([^])*)\\*/");
-			if (matchStr && matchStr[1]) {
-				var cstring = matchStr[1];
+			var matchStr = ct.fullText().match(/\/\*@([^]*)\*\//g);
+			if (matchStr && matchStr[0]) {
+				var fullStr = matchStr[0];
+				var cstring = fullStr.substring(3, fullStr.length-2);
 				var startLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
 				var endLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart + cstring.length);
 				var ss = new RsSourceSpan(ct.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
@@ -20,9 +22,9 @@ module TypeScript {
 			}
 			return null;
 		});
-		return match.filter(t => t !== null)
-					.map(t => RsAnnotation.createAnnotation(t.snd(), ctx, t.fst()));
+		return match.filter(t => t !== null).map(t => RsAnnotation.createAnnotation(t.snd(), ctx, t.fst()));
 	}
+	//RefScript - end
 
 
 	export class SourceUnitSyntax extends SyntaxNode {
@@ -613,7 +615,7 @@ module TypeScript {
 			else if (anns.length === 1) {
 				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
 				//This might not be very straightforward because we might need to parse refinement types.
-				return <RsExplicitNamedTypeAnnotation> anns[0];
+				return <RsExplicitClassAnnotation> anns[0];
 			}
 			else {
 				helper.postDiagnostic(this, this.identifier.text());
@@ -756,9 +758,8 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 	public toRsStmt(helper: RsHelper): RsStatement {
 		var originalAnnots = tokenAnnots(this.firstToken());
 		//Is there an interface annotation given?
-		var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawType);
-		var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawType);
-
+		var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawIface);
+		var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawIface);
 		var annotStr = "";
 
 		//No interface annotation given - generate one based on the existing interface header
@@ -768,9 +769,9 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			//Type parameters
 			var typeParams: string[] = [];
 			if (this.typeParameterList) {
-				typeParams = this.typeParameterList.typeParameters.toNonSeparatorArray().map(p=>p.identifier.text());
+				typeParams = this.typeParameterList.typeParameters.toNonSeparatorArray().map(p=> p.identifier.text());
 			}
-			
+
 			//Mutability parameter
 			var mutParam = 'M';
 			while (typeParams.indexOf(mutParam) !== -1) {
@@ -778,7 +779,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 				mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 			}
 			typeParams.unshift(mutParam);
-			
+
 			annotStr += (typeParams.length > 0) ? ("<" + typeParams.join(", ") + "> ") : " ";
 
 			// Extends Heritage
@@ -793,7 +794,7 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 		else if (headerAnnots.length === 1) {
 			//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
 			//This might not be very straightforward because we might need to parse refinement types.
-			var headerAnnot = <RsExplicitNamedTypeAnnotation> headerAnnots[0];
+			var headerAnnot = <RsExplicitInterfaceAnnotation> headerAnnots[0];
 			annotStr = headerAnnot.content() + " ";
 		}
 		else {
@@ -801,31 +802,24 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 		}
 
 		//Body of the interface declaration
-		var members: string[][] = this.body.typeMembers.toNonSeparatorArray().map(m => {
+		var members: string[][] = this.body.typeMembers.toNonSeparatorArray().map((m: ITypeMemberSyntax) => {
 			switch (m.kind()) {
-				case SyntaxKind.FunctionDeclaration:		// Index signature
-					var f = <FunctionDeclarationSyntax>m;
-					var decl = helper.getDeclForAST(m);
-					var symb = helper.getSymbolForAST(m);
-					if (symb instanceof PullSignatureSymbol) {
-						var ssymb = <PullSignatureSymbol>symb;
-					}
-					break;
-				
-				case SyntaxKind.MethodSignature:
+				//case SyntaxKind.FunctionDeclaration:		// Index signature
+				//	var f = <FunctionDeclarationSyntax>m;
+				//	var decl = helper.getDeclForAST(m);
+				//	var symb = helper.getSymbolForAST(m);
+				//	if (symb instanceof PullSignatureSymbol) {
+				//		var ssymb = <PullSignatureSymbol>symb;
+				//	}
+				//	break;
+
+				case SyntaxKind.MethodSignature:			// Method signature
 					var v = <PropertySignatureSyntax> m;
 					var anns = tokenAnnots(v.propertyName);
 					if (anns.length === 0) {
 						//If there is no annotation
-
-						// FIXME: Keeping the PullSignatureSymbol toString method for RefScript types
-						// It would be nice if we could keep the TS printing facilities for our types 
-						// well -- what could go wrong? 
-						// * any type (can be treated as top) 
-						// * anything else ?
-
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + " : " + eltSymbol.toString()];
+						return [eltSymbol.name + ": " + eltSymbol.toRsType().toString()];
 					}
 					else {
 						//Annotation provided by user
@@ -839,13 +833,13 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + " : " + eltSymbol.type.toRsType().toString()];
+						return [eltSymbol.name + ": " + eltSymbol.type.toRsType().toString()];
 					}
 					else {
 						return anns.map(m => m.content());
 					}
 
-				case SyntaxKind.IndexSignature:
+				case SyntaxKind.IndexSignature:				// Index signature
 					var is = <IndexSignatureSyntax> m;
 					var symb = helper.getSymbolForAST(is);
 					if (symb.isSignature()) {
@@ -860,18 +854,20 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 			}
 		});
 
-		var r : string[] = [];
+		var r: string[] = [];
 		for (var i = 0; i < members.length; i++) {
 			r = r.concat(members[i]);
 		}
-    
+
 		annotStr += "{" + r.join("; ") + "}";
 
 		var sourceSpan = helper.getSourceSpan(this);
 
-		restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawType, annotStr));
-			return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
-		}
+		restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawIface, annotStr));
+
+		// Returning an empty statement
+		return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
+	}
 	//RefScript- end
 
 }
@@ -1211,11 +1207,6 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-
-		if (!this.block) {
-			return null;
-		}
-
 		var name = this.identifier.text();
 		var anns = tokenAnnots(this.firstToken());
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
@@ -1233,10 +1224,20 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 			helper.postDiagnostic(this, DiagnosticCode.Function_0_can_have_at_most_one_type_annotation, [name]);
 		}
-		return new RsFunctionStmt(
-			helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-			<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
-			new RsASTList([this.block.toRsStmt(helper)]));
+
+		if (!this.block) {
+			// Ambient function declaration
+			return new RsFunctionDecl(
+				helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+				<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
+		}
+		else {
+			// Function definition
+			return new RsFunctionStmt(
+				helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+				<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
+				new RsASTList([this.block.toRsStmt(helper)]));
+		}
 	}
 	//RefScript - end
 
@@ -1553,16 +1554,23 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 		//Invariant: anns are of kind RawBind
 		if (anns) {
 			var anns1 = anns.filter(a => a.binderName(this, helper) === this.propertyName.text());
-			//If this is an ambient variable, force it to have a type annotation.
 			var pullDecl = helper.getDeclForAST(this);
 			if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
-				if (anns1.length === 1) {
-					//We are counting on the fact that TypeScript only allows VariableStatements to be ambient or not 
-					//alltogether, so we won't be mixing up EmptyStatements and VariableDeclarators.
-					//The actual annotations are handled by VariableDeclaration, so we don't have to populate them here.
-					return new RsEmptyStmt(helper.getSourceSpan(this), anns1);
+			// Refscript treats ambient variable declarations as normal declarations. 
+				if (anns1.length === 0) {
+					var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
+					if (type instanceof TError) {
+						var tError = <TError>type;
+						helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
+					}
+					var typeStr = type.toString();
+					anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.propertyName.text() + " :: " + typeStr));
+					return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
+				} 
+				else if (anns1.length === 1) {
+					return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper), null);
 				}
-				helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_exactly_one_type_annotation,
+				helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation,
 					[this.propertyName.text()]);
 			}
 			//This is a normal declaration

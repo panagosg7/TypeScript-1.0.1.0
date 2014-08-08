@@ -1730,7 +1730,7 @@
         "category": "Message",
         "code": 8000
     },
-    "Ambient variable declarator for '{0}' needs to have exactly one type annotation.":{
+    "Ambient variable declarator for '{0}' needs to have at least one type annotation.":{
         "category": "Error",
         "code": 8001
     },

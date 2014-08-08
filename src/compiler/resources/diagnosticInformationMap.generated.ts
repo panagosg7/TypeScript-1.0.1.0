@@ -864,7 +864,7 @@ module TypeScript {
   { "code": 7018, "category": DiagnosticCategory.Error },
 "Translate to RefScript (JSON format)" : 
   { "code": 8000, "category": DiagnosticCategory.Message },
-"Ambient variable declarator for '{0}' needs to have exactly one type annotation." : 
+"Ambient variable declarator for '{0}' needs to have at least one type annotation." : 
   { "code": 8001, "category": DiagnosticCategory.Error },
 "Variable declarator for '{0}' needs to have at most one type annotation." : 
   { "code": 8002, "category": DiagnosticCategory.Error },

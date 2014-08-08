@@ -31,9 +31,9 @@ module TypeScript {
 	export enum AnnotKind {
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
-    RawFunc,    // Anonymous function type
+		RawFunc,		// Anonymous function type
 		RawExtern,		// External declaration
-		RawType,		// Data type definition
+		RawIface,		// Data type definition
 		RawClass,		// Class annotations
 		RawField,		// Field annotations
 		RawMethod,   	// Method annotations
@@ -81,7 +81,9 @@ module TypeScript {
 					}
 				}
 				case AnnotKind.RawClass:
-					return new RsExplicitNamedTypeAnnotation(ss, pair.snd());
+					return new RsExplicitClassAnnotation(ss, pair.snd());
+				case AnnotKind.RawIface:
+					return new RsExplicitInterfaceAnnotation(ss, pair.snd());
 				default:
 					return new RsGlobalAnnotation(ss, pair.fst(), pair.snd()); 
 			}
@@ -128,7 +130,7 @@ module TypeScript {
 			switch (s) {
 				case "measure": return AnnotKind.RawMeas;
 				case "qualif": return AnnotKind.RawQual;
-				case "interface": return AnnotKind.RawType;
+				case "interface": return AnnotKind.RawIface;
 				case "alias": return AnnotKind.RawTAlias;
 				case "class": return AnnotKind.RawClass;
 				case "predicate": return AnnotKind.RawPAlias;
@@ -236,8 +238,8 @@ module TypeScript {
 		}
 	}
 
-	/** A class annotation that is provided by the user */
-	export class RsExplicitNamedTypeAnnotation extends RsClassAnnotation {
+	/** A class annotation provided by the user */
+	export class RsExplicitClassAnnotation extends RsClassAnnotation {
 		/** This is not a global annotation (cannot float to top-level). 
 			Needs to stick around a class declaration. */
 		public isGlob(): boolean { return false; }
@@ -250,6 +252,22 @@ module TypeScript {
 			return "class " + super.content();
 		}
 	}
+
+	/** An interface annotation provided by the user */
+	export class RsExplicitInterfaceAnnotation extends RsClassAnnotation {
+		/** This is not a global annotation (cannot float to top-level). 
+			Needs to stick around an interface declaration. */
+		public isGlob(): boolean { return false; }
+
+		constructor(sourceSpan: RsSourceSpan, content: string) {
+			super(sourceSpan, AnnotKind.RawIface, content);
+		}
+
+		public content(): string {
+			return "interface " + super.content();
+		}
+	}
+
 
 
 	export class RsGlobalAnnotation extends RsAnnotation {

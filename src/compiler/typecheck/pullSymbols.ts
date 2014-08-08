@@ -1137,6 +1137,31 @@ module TypeScript {
 
             return null;
         }
+
+
+		// RefScript - begin
+		public toRsType(): RsType {
+
+			if (this.isMethod()) {
+				var type = this.type;
+				var sigs = type.getCallSignatures();
+
+				if (sigs.length !== 1) {
+					return new TError(type.toString());
+				}
+				var sig = sigs[0];
+
+				var methParams = sig.getTypeParameters().map(p => p.type.toRsTypeParameter());
+				var methArgs = sig.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+				var methRetT = sig.returnType.toRsType();
+				return new TMethodSig(methParams, methArgs, methRetT);
+			}
+			throw new Error("UNIMPLEMENTED: PullSymbol.toRsType not supprted for " + this.toString());
+
+		}
+		// RefScript - end
+
+
     }
 
     // This interface should be implemented by symbols that can be instantiated. (eg. PullTypeSymbol, PullSignatureSymbol)

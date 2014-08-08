@@ -81,6 +81,22 @@ module TypeScript {
 		}
 	}
 
+	export class TMethodSig {
+		constructor(private tParams: TTypeParam[], private argTs: BoundedRsType[], private returnT: Serializable) { }
+
+		public toString(): string {
+			var s = "";
+			if (this.tParams.length > 0) {
+				s += "forall " + this.tParams.map(p => p.toString()).join(" ") + " . ";
+			}
+			s += "( ";
+			s += this.argTs.map(b => b.toString()).join(", ");
+			s += " ): ";
+			s += this.returnT.toString();
+			return s;
+		}
+	}
+
 	export class TFunctionSig extends RsType {
 		constructor(private signatures: TFunctionSigMember[]) { super(); }
 
