@@ -980,4 +980,49 @@ module TypeScript {
 					public expression: RsExpression) {  super(ann);	}
 	}
 
+	export class RsModuleStmt extends RsStatement {
+		public toObject() {
+			return {
+				ModuleStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.body.toObject()]
+			};
+		}
+		
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public name: RsId,
+					public body: RsASTList<RsModuleElt>) { super(ann);	}
+	}
+
+	export class RsIfaceStmt extends RsStatement implements IRsVarDeclLike {
+		public toObject(): any {
+			return { IfaceStmt: [this.span.toObject(), this.mapAnn(a => a.toObject())] };
+		}
+
+		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
+			super(ann);
+		}
+	}
+
+
+
+	/* ****************************************************************************
+	 *
+	 *				Module Element
+	 * 
+	 * ****************************************************************************/
+
+	export class RsModuleElt extends RsAST {
+		public toObject() {
+			return { ModuleElt: [this.exported, this.body.toObject()] };
+		}
+		
+		constructor(public exported: boolean,
+					public body: RsStatement) {  super(); }
+	}
+
+
+
+
+
 }

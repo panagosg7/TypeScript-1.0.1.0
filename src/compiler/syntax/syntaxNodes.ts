@@ -754,8 +754,15 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
 
 
-	//RefScript - begin
-	public toRsStmt(helper: RsHelper): RsStatement {
+    //RefScript - begin
+
+    public toRsModuleElt(helper: RsHelper): RsModuleElt {
+        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
+        return new RsModuleElt(exported, this.toRsStmt(helper));
+    }
+
+
+    public toRsStmt(helper: RsHelper): RsStatement {
 		var originalAnnots = tokenAnnots(this.firstToken());
 		//Is there an interface annotation given?
 		var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawIface);
@@ -865,8 +872,8 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
 		restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawIface, annotStr));
 
-		// Returning an empty statement
-		return new RsEmptyStmt(helper.getSourceSpan(this), restAnnots)
+        // Returning an empty statement
+        return new RsIfaceStmt(helper.getSourceSpan(this), restAnnots);
 	}
 	//RefScript- end
 
@@ -1092,6 +1099,13 @@ export class ModuleDeclarationSyntax extends SyntaxNode implements IModuleElemen
 	public isTypeScriptSpecific(): boolean {
 		return true;
 	}
+
+	//RefScript - begin
+	public toRsStmt(helper: RsHelper): RsStatement {
+		return new RsModuleStmt(helper.getSourceSpan(this), tokenAnnots(this.moduleKeyword), this.name.toRsId(helper), this.moduleElements.toRsModuleElt(helper, []));
+	}
+	//RefScript - end
+
 }
 
 export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementSyntax {
@@ -1207,8 +1221,8 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-		var name = this.identifier.text();
-		var anns = tokenAnnots(this.firstToken());
+        var name = this.identifier.text();
+        var anns = tokenAnnots(this.firstToken());
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
@@ -1239,6 +1253,12 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 				new RsASTList([this.block.toRsStmt(helper)]));
 		}
 	}
+
+    public toRsModuleElt(helper: RsHelper): RsModuleElt {
+        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
+		// Pass over the annotations to the lower levels.
+        return new RsModuleElt(exported, this.toRsStmt(helper)); 
+    }
 	//RefScript - end
 
 }
@@ -1336,16 +1356,17 @@ export class VariableStatementSyntax extends SyntaxNode implements IStatementSyn
 		return this.variableDeclaration.toRsAST(helper);
 	}
 
+    public toRsModuleElt(helper: RsHelper): RsModuleElt {
+		var anns: RsAnnotation[] = ArrayUtilities.concat(
+			this.modifiers.toArray().map(m => tokenAnnots(m)));
+        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
+		// Pass over the annotations to the lower levels.
+        return new RsModuleElt(exported, this.variableDeclaration.toRsStmt(helper, anns)); 
+    }
+
 	public toRsStmt(helper: RsHelper): RsStatement {
 		var anns: RsAnnotation[] = ArrayUtilities.concat(
 			this.modifiers.toArray().map(m => tokenAnnots(m)));
-
-		//m.leadingTrivia().toArray()
-		//.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
-		//.map(t => { var r = t.fullText().match("/\*@(([^])*)\\*/"); return (r && r[1]) ? r[1] : null; })
-		//.filter(t => t !== null)
-		//.map(t => RsAnnotation.createAnnotation(t, AnnotContext.OtherContext))));
-
 		// Pass over the annotations to the lower levels.
 		return this.variableDeclaration.toRsStmt(helper, anns);
 	}
@@ -5138,16 +5159,16 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 		var methodName = this.propertyName.text();
 		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
    
-    var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassMethodContext;
+        var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassMethodContext;
 
 		var anns = tokenAnnots(this.firstToken(), ctx);
 
-    if (isStatic) {
-  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
-    }
-    else {
-  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
-    }
+        if (isStatic) {
+            var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
+        }
+        else {
+            var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
+        }
 
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {

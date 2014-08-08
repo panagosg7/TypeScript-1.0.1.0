@@ -3152,7 +3152,9 @@ module TypeScript {
 			}
 
 			if (this.isArrayNamedTypeReference()) {
-				return new TArray(this.getElementType().toRsType());
+				// Following IGJ [FSE2007] array types are by default Mutable.
+				var mutable = new TTypeReference("Mutable", []);
+				return new TTypeReference("Array" , [mutable, this.getElementType().toRsType()]);
 			}
 
 			if (this.isEnum()) {

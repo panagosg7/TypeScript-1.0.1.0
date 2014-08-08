@@ -21,13 +21,6 @@ module TypeScript {
 		public thd(): C { return this._thd;	}
 	}
 
-	export enum MutabilityModifiers {
-		ReadOnly,
-		Mutable,
-		Immutable
-	}
-
-
 	export enum AnnotKind {
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
@@ -167,11 +160,6 @@ module TypeScript {
 					this._binderName = lhss[0];
 					return this._binderName;
 				}
-				//// The first argument may be a mutability modifier.
-				//if (lhss && lhss.length === 2) {
-				//  this._binderName = lhss[1];
-				//  return this._binderName;
-				//}
 			}
 			// field annotation
 			bs = content.split(":");
