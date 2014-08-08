@@ -1482,13 +1482,15 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 		if (decls.members.every(d => d instanceof RsVarDecl)) {
 			return new RsVarDeclStmt(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
 		}
-		else if (decls.members.every(d => d instanceof RsEmptyStmt)) {
-			//Here we are dealing with Ambient definitions, so keep all the no-binder annotations as they are,
-			//and translate the binder ones to extern annotations.
-			var declAnnots: RsAnnotation[] =
-				noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(b.sourceSpan(), AnnotKind.RawExtern, b.content())));
-			return new RsEmptyStmt(helper.getSourceSpan(this), declAnnots);
-		} else {
+        // NO EMPTY STATEMENTS ANY MORE
+		//else if (decls.members.every(d => d instanceof RsEmptyStmt)) {
+		//    //Here we are dealing with Ambient definitions, so keep all the no-binder annotations as they are,
+		//    //and translate the binder ones to extern annotations.
+		//    var declAnnots: RsAnnotation[] =
+		//        noBindAnns.concat(bindAnns.map(b => new RsGlobalAnnotation(b.sourceSpan(), AnnotKind.RawExtern, b.content())));
+		//    return new RsEmptyStmt(helper.getSourceSpan(this), declAnnots);
+		//} 
+        else {
 			helper.postDiagnostic(this, DiagnosticCode.All_variable_declarators_need_to_be_translated_to_either_RsVarDecls_or_RsEmptyStmts);
 		}
 	}

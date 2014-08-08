@@ -25,7 +25,6 @@ module TypeScript {
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
 		RawFunc,		// Anonymous function type
-		RawExtern,		// External declaration
 		RawIface,		// Data type definition
 		RawClass,		// Class annotations
 		RawField,		// Field annotations
@@ -129,7 +128,6 @@ module TypeScript {
 				case "predicate": return AnnotKind.RawPAlias;
 				case "invariant": return AnnotKind.RawInvt;
 				case "cast": return AnnotKind.RawCast;
-				case "extern": return AnnotKind.RawExtern;
 				case "<anonymous>": return AnnotKind.RawFunc;
 				default: return AnnotKind.RawBind;
 			}
@@ -252,7 +250,7 @@ module TypeScript {
 		}
 
 		public content(): string {
-			return "interface " + super.content();
+			return super.content();
 		}
 	}
 
