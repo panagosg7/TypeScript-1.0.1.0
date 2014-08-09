@@ -232,15 +232,32 @@ module TypeScript {
             }
 
             var defaultLibStart = new Date().getTime();
-            if (includeDefaultLibrary) {
-                var libraryResolvedFile: IResolvedFile = {
-                    path: this.getDefaultLibraryFilePath(),
-                    referencedFiles: [],
-                    importedFiles: []
-                };
 
-                // Prepend the library to the resolved list
-                resolvedFiles = [libraryResolvedFile].concat(resolvedFiles);
+            if (this.compilationSettings.refScript()) {
+                // include this library with refscript
+                var refscriptLib = this.compilationSettings.refScriptLib();
+                if (refscriptLib && refscriptLib !== "") {
+                    var libraryResolvedFile: IResolvedFile = {
+                        path: this.resolvePath(refscriptLib),
+                        referencedFiles: [],
+                        importedFiles: []
+                    };
+                    // Prepend the library to the resolved list
+                    resolvedFiles = [libraryResolvedFile].concat(resolvedFiles);
+                }
+            }
+            else {
+                // ignore default library with refscript
+                if (includeDefaultLibrary) {
+                    var libraryResolvedFile: IResolvedFile = {
+                        path: this.getDefaultLibraryFilePath(),
+                        referencedFiles: [],
+                        importedFiles: []
+                    };
+
+                    // Prepend the library to the resolved list
+                    resolvedFiles = [libraryResolvedFile].concat(resolvedFiles);
+                }
             }
             TypeScript.fileResolutionGetDefaultLibraryTime += new Date().getTime() - defaultLibStart;
 
@@ -318,6 +335,17 @@ module TypeScript {
                 type: DiagnosticCode.DIRECTORY,
                 set: (str) => {
                     mutableSettings.outDirOption = str;
+                }
+            });
+
+            opts.option('lib', {
+                usage: {
+                    locCode: DiagnosticCode.Import_library_only_enabled_with_refscript,
+                    args: null
+                },
+                type: DiagnosticCode.LOCATION,
+                set: (str) => {
+                    mutableSettings.refscriptLib = str;
                 }
             });
 
@@ -740,6 +768,7 @@ module TypeScript {
 
             return libraryFilePath;
         }
+
 
         /// IReferenceResolverHost methods
         getScriptSnapshot(fileName: string): IScriptSnapshot {

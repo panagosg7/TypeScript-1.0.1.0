@@ -450,5 +450,6 @@ HeritageClauses_to_RefScript: "HeritageClauses to RefScript",
 ForInStatementSyntax_to_RsStatement: "ForInStatementSyntax to RsStatement",
 Cannot_translate_type_0_into_RefScript_type: "Cannot translate type '{0}' into RefScript type.",
 Anonymous_function_cannot_have_more_than_one_type_annotations: "Anonymous function cannot have more than one type annotations.",
+Import_library_only_enabled_with_refscript: "Import library (only enabled with 'refscript').",
 }
 }
