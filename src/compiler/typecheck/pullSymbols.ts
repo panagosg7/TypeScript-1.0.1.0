@@ -3176,11 +3176,7 @@ module TypeScript {
 					//since they are definitely not fixed).
 					tArgs = this.getTypeParameters();
 				}
-
-				var rsTParams = tArgs.map(p => p.toRsType());
-				if (mut !== undefined) {
-					rsTParams = [mut].concat(rsTParams);
-				}
+    			var rsTParams = [mut ? mut : new TTypeReference("Mutable", [])].concat(tArgs.map(p => p.toRsType()))
 				return new TTypeReference(this.fullName().split("<")[0], rsTParams);
 			}
 
