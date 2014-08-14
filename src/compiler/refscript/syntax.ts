@@ -984,6 +984,7 @@ module TypeScript {
 		public toObject() {
 			return {
 				ModuleStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+          this.name.toObject(),
 					this.body.toObject()]
 			};
 		}
@@ -1014,7 +1015,7 @@ module TypeScript {
 
 	export class RsModuleElt extends RsAST {
 		public toObject() {
-			return { ModuleElt: [this.exported, this.body.toObject()] };
+			return [this.exported, this.body.toObject()];
 		}
 		
 		constructor(public exported: boolean,
