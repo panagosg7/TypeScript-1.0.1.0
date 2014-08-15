@@ -12,7 +12,6 @@ module TypeScript {
 		toRsExp(helper: RsHelper): RsExpression;
 		toRsStmt(helper: RsHelper): RsStatement;
 		toRsId(helper: RsHelper): RsId;
-		toRsModuleElt(helper: RsHelper): RsModuleElt;
 		toRsLValue(helper: RsHelper): RsLValue;
 		toRsClassElt(helper: RsHelper): RsClassElt;
 		toRsForInit(helper: RsHelper): RsForInit;

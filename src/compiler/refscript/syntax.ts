@@ -992,7 +992,7 @@ module TypeScript {
 		constructor(public span: RsSourceSpan,
 					public ann: RsAnnotation[],
 					public name: RsId,
-					public body: RsASTList<RsModuleElt>) { super(ann);	}
+                    public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
 	export class RsIfaceStmt extends RsStatement implements IRsVarDeclLike {
@@ -1004,26 +1004,5 @@ module TypeScript {
 			super(ann);
 		}
 	}
-
-
-
-	/* ****************************************************************************
-	 *
-	 *				Module Element
-	 * 
-	 * ****************************************************************************/
-
-	export class RsModuleElt extends RsAST {
-		public toObject() {
-			return [this.exported, this.body.toObject()];
-		}
-		
-		constructor(public exported: boolean,
-					public body: RsStatement) {  super(); }
-	}
-
-
-
-
 
 }

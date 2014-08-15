@@ -443,10 +443,6 @@ module TypeScript {
 			throw new Error("toRsId not implemented for " + SyntaxKind[this.kind()]);
 		}
 
-		public toRsModuleElt(helper: RsHelper): RsModuleElt {
-			throw new Error("toRsModuleElt not implemented for " + SyntaxKind[this.kind()]);
-		}
-
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
 			throw new Error("toRsMemList not implemented for " + SyntaxKind[this.kind()]);
 		}
