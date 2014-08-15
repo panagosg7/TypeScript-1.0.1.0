@@ -635,6 +635,10 @@ module TypeScript {
 		var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
 		var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
 
+        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+            restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+        }
+
 		return new RsClassStmt(helper.getSourceSpan(this),
 			restAnnots, this.identifier.toRsId(helper),
 			(ext && ext.length > 0) ? ext[0] : null, imp,
@@ -756,14 +760,15 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
     //RefScript - begin
 
-    public toRsModuleElt(helper: RsHelper): RsModuleElt {
-        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
-        return new RsModuleElt(exported, this.toRsStmt(helper));
-    }
-
-
     public toRsStmt(helper: RsHelper): RsStatement {
 		var originalAnnots = tokenAnnots(this.firstToken());
+
+        // Is this exported?
+        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+            originalAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+        }
+
+
 		//Is there an interface annotation given?
 		var headerAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawIface);
 		var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawIface);
@@ -1102,7 +1107,12 @@ export class ModuleDeclarationSyntax extends SyntaxNode implements IModuleElemen
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-		return new RsModuleStmt(helper.getSourceSpan(this), tokenAnnots(this.moduleKeyword), this.name.toRsId(helper), this.moduleElements.toRsModuleElt(helper, []));
+        var originalAnnots = tokenAnnots(this.moduleKeyword);
+        // Is this exported?
+        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+            originalAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+        }
+		return new RsModuleStmt(helper.getSourceSpan(this), originalAnnots, this.name.toRsId(helper), this.moduleElements.toRsStmt(helper, []));
 	}
 	//RefScript - end
 
@@ -1223,6 +1233,11 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 	public toRsStmt(helper: RsHelper): RsStatement {
         var name = this.identifier.text();
         var anns = tokenAnnots(this.firstToken());
+
+        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+            anns.push(new RsAnnotation(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+        }
+
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawBind);
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
@@ -1254,11 +1269,6 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		}
 	}
 
-    public toRsModuleElt(helper: RsHelper): RsModuleElt {
-        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
-		// Pass over the annotations to the lower levels.
-        return new RsModuleElt(exported, this.toRsStmt(helper)); 
-    }
 	//RefScript - end
 
 }
@@ -1356,17 +1366,13 @@ export class VariableStatementSyntax extends SyntaxNode implements IStatementSyn
 		return this.variableDeclaration.toRsAST(helper);
 	}
 
-    public toRsModuleElt(helper: RsHelper): RsModuleElt {
-		var anns: RsAnnotation[] = ArrayUtilities.concat(
-			this.modifiers.toArray().map(m => tokenAnnots(m)));
-        var exported = this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword);
-		// Pass over the annotations to the lower levels.
-        return new RsModuleElt(exported, this.variableDeclaration.toRsStmt(helper, anns)); 
-    }
-
 	public toRsStmt(helper: RsHelper): RsStatement {
 		var anns: RsAnnotation[] = ArrayUtilities.concat(
 			this.modifiers.toArray().map(m => tokenAnnots(m)));
+
+        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+            anns.push(new RsAnnotation(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+        }
 		// Pass over the annotations to the lower levels.
 		return this.variableDeclaration.toRsStmt(helper, anns);
 	}
@@ -4941,7 +4947,7 @@ export class ExpressionStatementSyntax extends SyntaxNode implements IStatementS
 	public toRsStmt(helper: RsHelper): RsExprStmt {
 		return new RsExprStmt(helper.getSourceSpan(this), tokenAnnots(this), this.expression.toRsExp(helper));
 	}
-	//RefScript - end
+    //RefScript - end
 
 }
 

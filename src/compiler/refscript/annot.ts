@@ -35,7 +35,8 @@ module TypeScript {
 		RawPAlias,   	// Predicate alias
 		RawQual,     	// Qualifier
 		RawInvt,      	// Invariant
-		RawCast			// Cast
+		RawCast,		// Cast
+        RawExported     // Exported
 	}
 
 	export enum AnnotContext {
@@ -133,6 +134,12 @@ module TypeScript {
 			}
 		}
 	}
+
+    export class RsExported extends RsAnnotation {
+
+		public isGlob(): boolean { return false; }
+
+    }
 
 	export class RsBindAnnotation extends RsAnnotation {
 

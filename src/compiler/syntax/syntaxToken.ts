@@ -569,10 +569,6 @@ module TypeScript.Syntax {
 			throw new Error("toRsId not implemented for " + SyntaxKind[this.kind()]);
 		}
 
-		public toRsModuleElt(helper: RsHelper): RsModuleElt {
-			throw new Error("toRsModuleElt not implemented for " + SyntaxKind[this.kind()]);
-		}
-
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
 			throw new Error("toRsMemList not implemented for " + SyntaxKind[this.kind()]);
 		}
@@ -792,10 +788,6 @@ module TypeScript.Syntax {
 
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
 			throw new Error("RealizedToken toRsMemList not implemented for " + SyntaxKind[this.kind()]);
-		}
-
-		public toRsModuleElt(helper: RsHelper): RsModuleElt {
-			throw new Error("RealizedToken toRsModuleElt not implemented for " + SyntaxKind[this.kind()]);
 		}
 
 		public toRsLValue(helper: RsHelper): RsLValue {

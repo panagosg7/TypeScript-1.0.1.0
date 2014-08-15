@@ -64,10 +64,6 @@ module TypeScript.Syntax {
 		throw new Error("toRsStmt not implemented for " + SyntaxKind[token.kind()]);
 	}
 
-	export function toRsModuleElt(token: ISyntaxToken, helper: RsHelper): RsModuleElt {
-		throw new Error("toRsModuleElt not implemented for " + SyntaxKind[token.kind()]);
-	}
-
 	export function toRsId(token: ISyntaxToken, helper: RsHelper): RsId {
         return new RsId(helper.getSourceSpan(token), [] /*token.getNanoAnnotations(AnnotContext.OtherContext)*/, token.text());
 	}
@@ -235,7 +231,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -390,7 +385,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -544,7 +538,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -701,7 +694,6 @@ module TypeScript.Syntax {
         public toRsExp(helper: RsHelper): RsExpression { return toRsExp(this, helper); }
         public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
         public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
         public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); }
@@ -835,7 +827,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -975,7 +966,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -1115,7 +1105,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
@@ -1260,7 +1249,6 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsModuleElt(helper: RsHelper): RsModuleElt { return toRsModuleElt(this, helper); }
 		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper): RsClassElt { return toRsClassElt(this, helper); } 
