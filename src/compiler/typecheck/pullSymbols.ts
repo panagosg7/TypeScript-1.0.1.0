@@ -3177,7 +3177,7 @@ module TypeScript {
 					tArgs = this.getTypeParameters();
 				}
     			var rsTParams = [mut ? mut : new TTypeReference("Mutable", [])].concat(tArgs.map(p => p.toRsType()))
-				return new TTypeReference(this.fullName().split("<")[0], rsTParams);
+				return new TTypeReference(this.getDisplayName().split("<")[0], rsTParams);
 			}
 
 			if (this.isFunction()) {

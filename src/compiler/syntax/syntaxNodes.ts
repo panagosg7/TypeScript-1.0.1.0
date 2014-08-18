@@ -623,27 +623,27 @@ module TypeScript {
 		}
 
 		public toRsStmt(helper: RsHelper): RsStatement {
-		//Class header annotations
-		var originalAnnots = tokenAnnots(this.firstToken());
-		//Remove all class annotations and keep the rest
-		var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawClass);
-		//Is there a class annotation given?
-		var classAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawClass);
-		//Add the type annotation to the rest
-		restAnnots.push(this.headerAnnotation(helper, classAnnots));
+            //Class header annotations
+            var originalAnnots = tokenAnnots(this.firstToken());
+            //Remove all class annotations and keep the rest
+            var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawClass);
+            //Is there a class annotation given?
+            var classAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawClass);
+            //Add the type annotation to the rest
+            restAnnots.push(this.headerAnnotation(helper, classAnnots));
 
-		var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
-		var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
+            var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
+            var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
 
-        if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
-            restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+            if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
+                restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
+            }
+
+            return new RsClassStmt(helper.getSourceSpan(this),
+                restAnnots, this.identifier.toRsId(helper),
+                (ext && ext.length > 0) ? ext[0] : null, imp,
+                this.classElements.toRsClassElt(helper));
         }
-
-		return new RsClassStmt(helper.getSourceSpan(this),
-			restAnnots, this.identifier.toRsId(helper),
-			(ext && ext.length > 0) ? ext[0] : null, imp,
-			this.classElements.toRsClassElt(helper));
-	}
 	//RefScript - end
 
 }
@@ -962,6 +962,7 @@ export class HeritageClauseSyntax extends SyntaxNode {
 					switch (t.kind()) {
 						case SyntaxKind.IdentifierName:
 						case SyntaxKind.GenericType:
+						case SyntaxKind.QualifiedName:
 							return helper.getSymbolForAST(t).type.toRsType(mutParam);
 						default:
 							helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
@@ -978,6 +979,7 @@ export class HeritageClauseSyntax extends SyntaxNode {
 				switch (t.kind()) {
 					case SyntaxKind.IdentifierName:
 					case SyntaxKind.GenericType: 
+						case SyntaxKind.QualifiedName:
 						return t.toRsId(helper);
 					default:
 						helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
