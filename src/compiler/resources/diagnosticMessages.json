@@ -1805,5 +1805,38 @@
     "Import library (only enabled with 'refscript').": {
         "category": "Message",
         "code": 8019
+    },
+    "Constructors should have exactly one annotation." : {
+      "category": "Unimplemented",
+      "code": 8020
+    },
+    "Methods should have exactly one annotation." : {
+      "category": "Unimplemented",
+      "code": 8021
+    },
+    "Cannot call 'toRsExp' on a UnaryExpression with SyntaxKind {0}.": {
+      "category": "Unimplemented",
+      "code": 8022    
+    },
+		"Cannot call 'toRsLValue' on BinaryExpression.": {
+      "category": "Unimplemented",
+      "code": 8023
+    },
+		"Cannot call 'toRsExp' on BinaryExpression.": {
+      "category": "Unimplemented",
+      "code": 8024    
+    },
+		"Cannot call 'toRsExp' on PostfixUnaryExpression with SyntaxKind {0}.": {
+      "category": "Unimplemented",
+      "code": 8025
+    },
+		"Cannot call 'toRsAST' on MemberAccessExpression.": {
+      "category": "Unimplemented",
+      "code": 8026    
+    },
+		"Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}.": {
+      "category": "Unimplemented",
+      "code": 8027    
     }
+
 }

@@ -451,5 +451,13 @@ ForInStatementSyntax_to_RsStatement: "ForInStatementSyntax to RsStatement",
 Cannot_translate_type_0_into_RefScript_type: "Cannot translate type '{0}' into RefScript type.",
 Anonymous_function_cannot_have_more_than_one_type_annotations: "Anonymous function cannot have more than one type annotations.",
 Import_library_only_enabled_with_refscript: "Import library (only enabled with 'refscript').",
+Constructors_should_have_exactly_one_annotation: "Constructors should have exactly one annotation.",
+Methods_should_have_exactly_one_annotation: "Methods should have exactly one annotation.",
+Cannot_call_toRsExp_on_a_UnaryExpression_with_SyntaxKind_0: "Cannot call 'toRsExp' on a UnaryExpression with SyntaxKind {0}.",
+Cannot_call_toRsLValue_on_BinaryExpression: "Cannot call 'toRsLValue' on BinaryExpression.",
+Cannot_call_toRsExp_on_BinaryExpression: "Cannot call 'toRsExp' on BinaryExpression.",
+Cannot_call_toRsExp_on_PostfixUnaryExpression_with_SyntaxKind_0: "Cannot call 'toRsExp' on PostfixUnaryExpression with SyntaxKind {0}.",
+Cannot_call_toRsAST_on_MemberAccessExpression: "Cannot call 'toRsAST' on MemberAccessExpression.",
+Cannot_call_toRsExp_on_BinaryExpression_with_SyntaxKind_0: "Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}.",
 }
 }

@@ -826,8 +826,16 @@ module TypeScript {
 		private dumpRefScriptDiagnostics() {
 			if (this._refScriptDiagnostics.length > 0) {
 				var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
-				var fixResult = new FRUnsafe(errors);
+                var crashes = this._refScriptDiagnostics.filter(d => d.info().category === DiagnosticCategory.Unimplemented);
+                var fixResult: FixResult;
+                if (crashes.length > 0) {
+                    fixResult = new FRCrash(errors, "UNIMPLEMENTED");
+                }
+                else {
+				    fixResult = new FRUnsafe(errors);
+                }
 				this.ioHost.stdout.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+                this.ioHost.quit(1);
 			}
 			else {
 				this.ioHost.stdout.Write(JSON.stringify(this._refScriptOutputFiles.map(f => f.name), undefined, 2));

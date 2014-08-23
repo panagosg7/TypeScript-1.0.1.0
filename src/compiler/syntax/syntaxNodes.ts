@@ -1799,7 +1799,9 @@ export class PrefixUnaryExpressionSyntax extends SyntaxNode implements IUnaryExp
 			case SyntaxKind.CastExpression:
 				return this.toRsExp(helper);
 			default:
-				throw new Error("UnaryExpression:toRsExp SyntaxKind not supported: " + SyntaxKind[this.kind()]);
+			  helper.postDiagnostic(this, DiagnosticCode.
+            Cannot_call_toRsExp_on_a_UnaryExpression_with_SyntaxKind_0,
+            [SyntaxKind[this.kind()]]);
 		}
 	}
 	//RefScript - end
@@ -3274,8 +3276,8 @@ export class MemberAccessExpressionSyntax extends SyntaxNode implements IMemberE
 			//case SyntaxKind.ElementAccessExpression:
 			//    return new RsLBracket(helper.getSourceSpan(this), this.getRsAnnotations(AnnotContext.OtherContext), this.operand1.toRsExp(helper), this.operand2.toRsExp(helper));
 			default: {
-				//helper(this, DiagnosticCode
-				throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsLValue");
+			  helper.postDiagnostic(this,
+            DiagnosticCode.Cannot_call_toRsLValue_on_BinaryExpression);
 			}
 		}
 	}
@@ -3288,7 +3290,7 @@ export class MemberAccessExpressionSyntax extends SyntaxNode implements IMemberE
 					this.expression.toRsExp(helper),
 					this.name.toRsId(helper));
 			}
-			default: throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp");
+			default: helper.postDiagnostic(this, DiagnosticCode.Cannot_call_toRsExp_on_BinaryExpression);
 		}
 	}
 	//RefScript - end
@@ -3382,7 +3384,9 @@ export class PostfixUnaryExpressionSyntax extends SyntaxNode implements IPostfix
 			case SyntaxKind.PostDecrementExpression:
 				return new RsUnaryAssignExpr(helper.getSourceSpan(this), tokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
 			default:
-				throw new Error("PostfixUnaryExpression:toRsExp SyntaxKind not supported: " + SyntaxKind[this.kind()]);
+        helper.postDiagnostic(this,
+            DiagnosticCode.Cannot_call_toRsExp_on_PostfixUnaryExpression_with_SyntaxKind_0,
+            [SyntaxKind[this.kind()]]);
 		}
 	}
 	//RefScript - end
@@ -3823,7 +3827,10 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 							this.left.toRsExp(helper),
 							<RsId>this.right.toRsAST(helper));
 				}
-				throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsAST:MemberAccessExpression:op2-nonId");
+				//throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsAST:MemberAccessExpression:op2-nonId");
+        helper.postDiagnostic(this,
+            DiagnosticCode.Cannot_call_toRsAST_on_MemberAccessExpression);
+
 			}
 
 			case SyntaxKind.AssignmentExpression:
@@ -3884,7 +3891,10 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 					this.right.toRsExp(helper));
 
 			default:
-				throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for: " + SyntaxKind[this.kind()]);
+				//throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for: " + SyntaxKind[this.kind()]);
+        helper.postDiagnostic(this,
+            DiagnosticCode.Cannot_call_toRsExp_on_BinaryExpression_with_SyntaxKind_0,
+            [SyntaxKind[this.kind()]]);
 		}
 	}
 	//RefScript - end
@@ -5054,7 +5064,12 @@ export class ConstructorDeclarationSyntax extends SyntaxNode implements IClassEl
 		var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
 		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawConstr);
 		if (bindAnns.length !== 1) {
-			throw new Error("Constructors should have exactly one annotation.");
+			helper.postDiagnostic(this, DiagnosticCode.Constructors_should_have_exactly_one_annotation);
+  		return null; 
+        //new RsConstructor(helper.getSourceSpan(this), anns,
+        //new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+	      //new RsASTList([this.block.toRsStmt(helper)]));
+
 		}
 		return new RsConstructor(helper.getSourceSpan(this), anns,
 			new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
@@ -5182,7 +5197,7 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
-			throw new Error("Method '" + methodName + "' should have at least one annotation.");
+			helper.postDiagnostic(this, DiagnosticCode.Methods_should_have_exactly_one_annotation);
 		}
 		return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
 			this.propertyName.toRsId(helper),

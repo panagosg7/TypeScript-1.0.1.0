@@ -902,5 +902,21 @@ module TypeScript {
   { "code": 8018, "category": DiagnosticCategory.Error },
 "Import library (only enabled with 'refscript')." : 
   { "code": 8019, "category": DiagnosticCategory.Message },
+"Constructors should have exactly one annotation." : 
+  { "code": 8020, "category": DiagnosticCategory.Unimplemented },
+"Methods should have exactly one annotation." : 
+  { "code": 8021, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsExp' on a UnaryExpression with SyntaxKind {0}." : 
+  { "code": 8022, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsLValue' on BinaryExpression." : 
+  { "code": 8023, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsExp' on BinaryExpression." : 
+  { "code": 8024, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsExp' on PostfixUnaryExpression with SyntaxKind {0}." : 
+  { "code": 8025, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsAST' on MemberAccessExpression." : 
+  { "code": 8026, "category": DiagnosticCategory.Unimplemented },
+"Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}." : 
+  { "code": 8027, "category": DiagnosticCategory.Unimplemented },
 }
 }

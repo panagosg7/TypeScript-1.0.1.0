@@ -44,6 +44,9 @@ module TypeScript {
 	}
 
 	export class FixResult {
+		public toObject(): any {
+			throw new Error("FixResult.toObject - abstract");
+		}
 	}
 
 	export class FPSrcPos {
