@@ -1,215 +1,254 @@
 
 ///<reference path='..\typescript.ts' />
 
+
+// Object representation of the type definition found here:
+//
+// https://github.com/UCSD-PL/RefScript/blob/develop/src/Language/Nano/Types.hs
+//
+
 module TypeScript {
 
-	export interface Serializable { toString(): string; }
+    export interface Serializable { toString(): string; }
 
-	export class RsType implements Serializable {
-		public toString(): string { throw new Error("BUG: Abstract in RsType toString()"); }
-	}
+    export class RsType implements Serializable {
+        public toString(): string { throw new Error("BUG: Abstract in RsType toString()"); }
+    }
 
-	export class BoundedRsType {
-		constructor(private symbol: string, private type: Serializable) { }
+    export class BoundedRsType {
+        constructor(private symbol: string, private type: Serializable) { }
 
-		public toString() { return this.symbol + ": " + this.type.toString(); }
-	}
+        public toString() { return this.symbol + ": " + this.type.toString(); }
+    }
 
-	export class TError extends RsType {
-		constructor(private msg: string) {	super(); }
+    export class TError extends RsType {
+        constructor(private msg: string) { super(); }
 
-		public toString(): string { return "Error type: " + this.msg; }
+        public toString(): string { return "Error type: " + this.msg; }
 
-		public message(): string { return this.msg;	}
-	}
+        public message(): string { return this.msg; }
+    }
 
-	export class TTopC extends RsType {
-		public toString(): string {	return "top"; }
-	}
+    export class TTopC extends RsType {
+        public toString(): string { return "top"; }
+    }
 
-	export var TTop = new TTopC();
+    export var TTop = new TTopC();
 
-	export class TNumberC extends RsType {
-		public toString(): string { return "number"; }
-	}
+    export class TNumberC extends RsType {
+        public toString(): string { return "number"; }
+    }
 
-	export var TNumber = new TNumberC();
+    export var TNumber = new TNumberC();
 
-	export class TStringC extends RsType {
-		public toString(): string { return "string"; }
-	}
+    export class TStringC extends RsType {
+        public toString(): string { return "string"; }
+    }
 
-	export var TString = new TStringC();
+    export var TString = new TStringC();
 
-	export class TBooleanC extends RsType {
-		public toString(): string {	return "boolean"; }
-	}
+    export class TBooleanC extends RsType {
+        public toString(): string { return "boolean"; }
+    }
 
-	export var TBoolean = new TBooleanC();
+    export var TBoolean = new TBooleanC();
 
-	export class TVoidC extends RsType {
-		public toString(): string {	return "void"; }
-	}
+    export class TVoidC extends RsType {
+        public toString(): string { return "void"; }
+    }
 
-	export var TVoid = new TVoidC();
+    export var TVoid = new TVoidC();
 
-	export class TObject extends RsType {
-		constructor(public fields: TElt[]) { super();	}
+    export class TObject extends RsType {
+        constructor(public fields: RsTypeMember[]) { super(); }
 
-		public toString(): string {
-			var s = "";
-			s += "{ ";
-			s += this.fields.map(f => f.toString()).join("; ");
-			s += " }";
-			return s;
-		}
-	}
+        public toString(): string {
+            var s = "";
+            s += "{ ";
+            s += this.fields.map(f => f.toString()).join("; ");
+            s += " }";
+            return s;
+        }
+    }
 
-	export class TFunctionSigMember {
-		constructor(private tParams: TTypeParam[], private argTs: BoundedRsType[], private returnT: Serializable) { }
 
-		public toString(): string {
-			var s = "";
-			if (this.tParams.length > 0) {
-				s += "forall " + this.tParams.map(p => p.toString()).join(" ") + " . ";
+    export class RsFunctionLike extends RsType { }
+
+    export class RsTFun extends RsFunctionLike {
+        constructor(private tParams: TTypeParam[], private argTs: BoundedRsType[], private returnT: Serializable) {
+            super();
+        }
+
+        public toString(): string {
+            var s = "";
+            if (this.tParams.length > 0) {
+                s += "forall " + this.tParams.map(p => p.toString()).join(" ") + " . ";
+            }
+            s += "( ";
+            s += this.argTs.map(b => b.toString()).join(", ");
+            s += " ) => ";
+            s += this.returnT.toString();
+            return s;
+        }
+    }
+
+    export class RsMeth extends RsFunctionLike {
+        constructor(private tParams: TTypeParam[], private argTs: BoundedRsType[], private returnT: Serializable) {
+            super();
+        }
+
+        public toString(): string {
+            var s = "";
+            if (this.tParams.length > 0) {
+                s += "forall " + this.tParams.map(p => p.toString()).join(" ") + " . ";
+            }
+            s += "( ";
+            s += this.argTs.map(b => b.toString()).join(", ");
+            s += " ): ";
+            s += this.returnT.toString();
+            return s;
+        }
+    }
+
+    export class RsTAnd<V extends RsFunctionLike> extends RsType {
+        constructor(private signatures: V[]) { super(); }
+
+        public toString(): string {
+            if (this.signatures && this.signatures.length > 0) {
+                return (this.signatures.length == 1) ?
+                    this.signatures[0].toString() :
+                    ("\n" + this.signatures.map(s => "\t/\\ " + s.toString()).join("\n"));
+            }
+            else {
+                return new TError("RsTAnd").toString();
+            }
+        }
+    }
+
+    export class TArray extends RsType {
+        constructor(private eltT: Serializable) { super(); }
+
+        public toString(): string { return "[ " + this.eltT.toString() + " ]"; }
+    }
+
+    export class TTypeReference extends RsType {
+        constructor(private name: string, private params: RsType[]) { super(); }
+
+        public toString(): string {
+            var s = "";
+            s += "#" + this.name;
+            if (this.params && this.params.length > 0) {
+                s += "[" + this.params.map(t => t.toString()).join(", ") + "]";
+            }
+            return s;
+        }
+    }
+
+    export class TInterface implements Serializable {
+        constructor(private ref: TTypeReference, private type: TObject) { }
+
+        public toString() { return "type " + this.ref.toString() + " " + this.type.toString(); }
+    }
+
+    export class TTVar extends RsType {
+        constructor(private name: string) { super(); }
+
+        public toString() { return this.name; }
+    }
+
+
+    export class TTypeParam {
+        constructor(public name: string) { }
+
+        public toString(): string { return this.name; }
+    }
+
+    export class TTDef implements Serializable {
+        constructor(public name: string, public pars: TTypeParam[], private proto: TParentType, private elts: RsTypeMember[]) { }
+
+        public toString(): string {
+            var s = "";
+            s += name;
+            s += " ";
+            if (this.pars && this.pars.length > 0) {
+                s += "[ " + this.pars.map(a => a.toString()).join(", ") + " ] ";
+            }
+            //XXX: not implemented yet in the nano parser
+            if (this.proto) {
+                s += this.proto.toString
 			}
-			s += "( ";
-			s += this.argTs.map(b => b.toString()).join(", ");
-			s += " ) => ";
-			s += this.returnT.toString();
-			return s;
-		}
-	}
+            return;
+        }
+    }
 
-	export class TMethodSig {
-		constructor(private tParams: TTypeParam[], private argTs: BoundedRsType[], private returnT: Serializable) { }
+    export class TParentType implements Serializable {
+        constructor(private name: string, private targs: RsType[]) { }
 
-		public toString(): string {
-			var s = "";
-			if (this.tParams.length > 0) {
-				s += "forall " + this.tParams.map(p => p.toString()).join(" ") + " . ";
-			}
-			s += "( ";
-			s += this.argTs.map(b => b.toString()).join(", ");
-			s += " ): ";
-			s += this.returnT.toString();
-			return s;
-		}
-	}
-
-	export class TFunctionSig extends RsType {
-		constructor(private signatures: TFunctionSigMember[]) { super(); }
-
-		public toString(): string {
-			if (this.signatures && this.signatures.length > 0) {
-				if (this.signatures.length == 1) {
-					return this.signatures[0].toString();
-				}
-				else {
-					return "\n" + this.signatures.map(s => "\t/\\ " + s.toString()).join("\n");
-				}
-			}
-		}
-	}
-
-	export class TArray extends RsType {
-		constructor(private eltT: Serializable) { super(); }
-
-		public toString(): string { return "[ " + this.eltT.toString() + " ]"; }
-	}
-
-	export class TTypeReference extends RsType {
-		constructor(private name: string, private params: RsType[]) { super(); }
-
-		public toString(): string {
-			var s = "";
-			s += "#" + this.name;
-			if (this.params && this.params.length > 0) {
-				s += "[" + this.params.map(t => t.toString()).join(", ") + "]";
-			}
-			return s;
-		}
-	}
-
-	export class TInterface implements Serializable {
-		constructor(private ref: TTypeReference, private type: TObject) { }
-
-		public toString() {	return "type " + this.ref.toString() + " " + this.type.toString(); }
-	}
-
-	export class TTVar extends RsType {
-		constructor(private name: string) { super(); }
-
-		public toString() { return this.name; }
-	}
+        public toString(): string {
+            return this.name + " " + this.targs.map(a => a.toString()).join(", ");
+        }
+    }
 
 
-	export class TTypeParam {
-		constructor(public name: string) { }
+    /* ****************************************************************************
+     *
+     *				TypeMember
+     * 
+     * ****************************************************************************/
 
-		public toString(): string { return this.name; }
-	}
+    export class RsTypeMember implements Serializable { }
 
-	export class TTDef implements Serializable {
-		constructor(public name: string, public pars: TTypeParam[], private proto: TParentType, private elts: TElt[]) { }
+    // CallSig
+    export class RsCallSig extends RsTypeMember {
+        constructor(private type: RsType) {
+            super();
+        }
 
-		public toString(): string {
-			var s = "";
-			s += name;
-			s += " ";
-			if (this.pars && this.pars.length > 0) {
-				s += "[ " + this.pars.map(a => a.toString()).join(", ") + " ] ";
-			}
-			//XXX: not implemented yet in the nano parser
-			if (this.proto) {
-				s += this.proto.toString
-			}
-			return ;
-		}
-	}
+        public toString() {
+            return this.type.toString();
+        }
+    }
 
-	export class TParentType implements Serializable {
-		constructor(private name: string, private targs: RsType[]) { }
 
-		public toString(): string {
-			return this.name + " " + this.targs.map(a => a.toString()).join(", ");			
-		}
-	}
+    // ConsSig
+    export class RsConsSig extends RsTypeMember {
+        constructor(private type: RsType) {
+            super();
+        }
 
-	export class TElt implements Serializable {
+        public toString() {
+            return "new " + this.type.toString();
+        }
+    }
 
-		public static createTElt(t: PullTypeSymbol): TElt {
-			if (t.isMethod()) {
-				console.log("TypeParameters: " + t.getTypeParameters().map(t => t.toString()));
-			}
-			return null;
-		}
 
-		//constructor(private name: string, private type: RsType) { }
+    // IndexSig; TODO
 
-		//public toString(): string {
-		//	return this.name + " : "	+ this.type.toString();
-		//}
-	}
 
-	export class TMeth extends TElt {
-		constructor(private name: string, private args: RsType[], private rt: RsType) {
-			super();
-		}			
+    // FieldSig
+    // TODO: Add mutability here
+    export class RsFieldSig extends RsTypeMember {
+        constructor(private name: string, private type: RsType) {
+            super();
+        }
 
-		public toString() {
-			return this.name + ": (" + this.args.map(t=> t.toString()).join(", ") + "): " + this.rt.toString();
-		}
-	}
+        public toString() {
+            return this.name + ": " + this.type.toString();
+        }
+    }
 
-	export class TField extends TElt {
-		constructor(private name: string, private type: RsType) {
-			super();
-		}			
 
-		public toString() {
-			return this.name + ": " + this.type.toString();
-		}
-	}
+    // MethSig
+    export class RsMethSig extends RsTypeMember {
+        constructor(private name: string, private type: RsTAnd<RsMeth>) {
+            super();
+        }
+
+        public toString() {
+            return this.name + this.type.toString();
+        }
+    }
+
+    // StatSig:  These can't appear in object types
 
 }

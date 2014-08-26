@@ -1,5 +1,10 @@
 ///<reference path='..\typescript.ts' />
 
+// Object representation of the AST definition found here:
+//
+// https://github.com/UCSD-PL/language-ecmascript/blob/RefScript/src/Language/ECMAScript3/Syntax.hs
+//
+
 module TypeScript {
 
 	export class RsAST {
