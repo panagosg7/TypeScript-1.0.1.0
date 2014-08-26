@@ -815,29 +815,21 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 
 		//Body of the interface declaration
 		var members: string[][] = this.body.typeMembers.toNonSeparatorArray().map((m: ITypeMemberSyntax) => {
-			switch (m.kind()) {
-				//case SyntaxKind.FunctionDeclaration:		// Index signature
-				//	var f = <FunctionDeclarationSyntax>m;
-				//	var decl = helper.getDeclForAST(m);
-				//	var symb = helper.getSymbolForAST(m);
-				//	if (symb instanceof PullSignatureSymbol) {
-				//		var ssymb = <PullSignatureSymbol>symb;
-				//	}
-				//	break;
+            switch (m.kind()) {
 
-				case SyntaxKind.MethodSignature:			// Method signature
+			    case SyntaxKind.MethodSignature:			// Method signature
 					var v = <PropertySignatureSyntax> m;
 					var anns = tokenAnnots(v.propertyName);
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + ": " + eltSymbol.toRsType().toString()];
+                        return [new RsMethSig(eltSymbol.name,
+                            new RsTAnd(eltSymbol.type.getCallSignatures().map(s => s.toRsTMeth()))).toString()];
 					}
 					else {
 						//Annotation provided by user
 						return anns.map(m => m.content());
 					}
-					break;
 
 				case SyntaxKind.PropertySignature:			// Field signature
 					var v = <PropertySignatureSyntax> m;
@@ -845,7 +837,31 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-						return [eltSymbol.name + ": " + eltSymbol.type.toRsType().toString()];
+                        return [new RsFieldSig(eltSymbol.name, eltSymbol.type.toRsType()).toString()];
+					}
+					else {
+						return anns.map(m => m.content());
+					}
+                
+                case SyntaxKind.ConstructSignature:         // Constructor signature
+                    var c = <ConstructSignatureSyntax> m;
+					var anns = tokenAnnots(c.newKeyword);
+					if (anns.length === 0) {
+						//If there is no annotation
+						var eltSymbol = helper.getSymbolForAST(c);
+                        return [new RsConsSig(eltSymbol.type.toRsType()).toString()];
+					}
+					else {
+						return anns.map(m => m.content());
+					}
+ 
+                case SyntaxKind.CallSignature:              // Call signature
+                    var cs = <CallSignatureSyntax> m;
+					var anns = tokenAnnots(cs);
+					if (anns.length === 0) {
+						//If there is no annotation
+						var eltSymbol = helper.getSymbolForAST(cs);
+                        return [new RsCallSig(eltSymbol.type.toRsType()).toString()];
 					}
 					else {
 						return anns.map(m => m.content());

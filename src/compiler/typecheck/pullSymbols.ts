@@ -1139,27 +1139,32 @@ module TypeScript {
         }
 
 
-		// RefScript - begin
-		public toRsType(): RsType {
+		//// RefScript - begin
 
-			if (this.isMethod()) {
-				var type = this.type;
-				var sigs = type.getCallSignatures();
 
-				if (sigs.length !== 1) {
-					return new TError(type.toString());
-				}
-				var sig = sigs[0];
+        // WHO USED THIS ???
 
-				var methParams = sig.getTypeParameters().map(p => p.type.toRsTypeParameter());
-				var methArgs = sig.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
-				var methRetT = sig.returnType.toRsType();
-				return new TMethodSig(methParams, methArgs, methRetT);
-			}
-			throw new Error("UNIMPLEMENTED: PullSymbol.toRsType not supprted for " + this.toString());
 
-		}
-		// RefScript - end
+		//public toRsType(): RsType {
+
+		//	if (this.isMethod()) {
+		//		var type = this.type;
+		//		var sigs = type.getCallSignatures();
+
+		//		if (sigs.length !== 1) {
+		//			return new TError(type.toString());
+		//		}
+		//		var sig = sigs[0];
+
+		//		var methParams = sig.getTypeParameters().map(p => p.type.toRsTypeParameter());
+		//		var methArgs = sig.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+		//		var methRetT = sig.returnType.toRsType();
+		//		return new TMethodSig(methParams, methArgs, methRetT);
+		//	}
+		//	throw new Error("UNIMPLEMENTED: PullSymbol.toRsType not supprted for " + this.toString());
+
+		//}
+		//// RefScript - end
 
 
     }
@@ -1639,11 +1644,18 @@ module TypeScript {
         }
 
 		//RefScript begin
-		public toTFunctionSigMember(): TFunctionSigMember {
-			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
-			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
-			var retT = this.returnType.toRsType();
-			return new TFunctionSigMember(tParams, tArgs, retT);
+        public toRsTFun(): RsTFun {
+            var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+            var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+            var retT = this.returnType.toRsType();
+            return new RsTFun(tParams, tArgs, retT);
+		}	
+
+		public toRsTMeth(): RsMeth {
+            var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+            var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+            var retT = this.returnType.toRsType();
+            return new RsMeth(tParams, tArgs, retT);
 		}
 		//RefScript end
 
@@ -3188,15 +3200,32 @@ module TypeScript {
 					return !sig.isStringConstantOverloadSignature();
 				});
 
-				return new TFunctionSig(filteredSigs.map(s => s.toTFunctionSigMember()));
+				return new RsTAnd(filteredSigs.map(s => s.toRsTFun()));
 			}
 
 			if (this.kind === PullElementKind.ObjectType) {
-				var methods = this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all);
-				var properties = this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all);
-				var fields = methods.concat(properties).map(s => new TField(s.name, s.type.toRsType()));
-				return new TObject(fields);
-			}
+
+                // Methods
+                var methods = 
+                    this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all).
+                        map(m => new RsMethSig(m.name, new RsTAnd(m.type.getCallSignatures().map(s => s.toRsTMeth()))));
+                
+                // Properties
+                var properties =
+                    this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).
+                        map(p => new RsFieldSig(p.name, p.type.toRsType()));
+                
+                // Constructors
+                var constructors =
+                    this.getConstructSignatures().map(c => new RsConsSig(c.toRsTFun()));
+
+                // Call
+                //console.log(this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).map(m => m.name));
+                var calls =
+                    this.getCallSignatures().map(s => new RsCallSig(s.toRsTFun()));
+              
+                return new TObject(ArrayUtilities.concat([methods, properties, constructors, calls]));
+       		}
 
 			return new TError(this.toString()); 
 		}
@@ -3205,13 +3234,6 @@ module TypeScript {
 			return new TTypeParam(this.toString());
 		}
 
-
-		//public toRsMethod(): TMeth {
-		//	console.log(this.type.toString());
-		//	console.log(this.type.getCallSignatures().map(s=> s.toString()));
-		//	return null;
-		//}
-		
 		//RefScript - end
 
     }
