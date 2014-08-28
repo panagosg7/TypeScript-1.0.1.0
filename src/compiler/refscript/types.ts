@@ -249,6 +249,17 @@ module TypeScript {
         }
     }
 
+    // Special case used for user annotations on type members
+    export class RsRawStringMember extends RsTypeMember {
+        constructor(private str: string) {
+            super();
+        }
+
+        public toString() {
+            return this.str;
+        }
+    }
+
     // StatSig:  These can't appear in object types
 
 }

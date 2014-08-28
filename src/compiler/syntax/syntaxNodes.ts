@@ -4,7 +4,7 @@ module TypeScript {
 
 	//RefScript - begin
 	/* Get the annotations that lead a token */
-	function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
+	export function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
 		var commentTrivia = token.leadingTrivia().toArray()
 			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
@@ -1605,7 +1605,8 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 			if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
 			// Refscript treats ambient variable declarations as normal declarations. 
 				if (anns1.length === 0) {
-					var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
+					var type: RsType = helper.getDeclForAST(this).getSymbol().type.toRsType();
+                    //console.log("THE RSTYPE " + type.toString());
 					if (type instanceof TError) {
 						var tError = <TError>type;
 						helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);

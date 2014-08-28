@@ -3188,7 +3188,7 @@ module TypeScript {
 					//since they are definitely not fixed).
 					tArgs = this.getTypeParameters();
 				}
-    			var rsTParams = [mut ? mut : new TTypeReference("Mutable", [])].concat(tArgs.map(p => p.toRsType()))
+    			var rsTParams = [mut ? mut : new TTypeReference("Immutable", [])].concat(tArgs.map(p => p.toRsType()))
 				return new TTypeReference(this.getDisplayName().split("<")[0], rsTParams);
 			}
 
@@ -3205,28 +3205,113 @@ module TypeScript {
 
 			if (this.kind === PullElementKind.ObjectType) {
 
+                ///////////////////////////////////////////////////////////////
                 // Methods
-                var methods = 
-                    this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all).
-                        map(m => new RsMethSig(m.name, new RsTAnd(m.type.getCallSignatures().map(s => s.toRsTMeth()))));
-                
-                // Properties
-                var properties =
-                    this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).
-                        map(p => new RsFieldSig(p.name, p.type.toRsType()));
-                
-                // Constructors
-                var constructors =
-                    this.getConstructSignatures().map(c => new RsConsSig(c.toRsTFun()));
 
+                var methods: RsTypeMember[] = ArrayUtilities.concat(
+                    this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all).
+                        map(function(m: PullSymbol): RsTypeMember[] {
+                            //console.log("  Method member: " + m.toString());
+                            return m.type.getCallSignatures().map(function(s: PullSignatureSymbol): RsTypeMember {
+                                var decls = s.getDeclarations();
+                                if (decls.length === 1) {
+                                    var methAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
+                                    if (methAnns.length === 0) {
+                                        //console.log("    *M* " + decls[0].getSignatureSymbol().toString());
+                                        var ty = new RsTAnd([decls[0].getSignatureSymbol().toRsTMeth()]);
+                                        return new RsMethSig(m.name, ty);
+                                    }
+                                    else if (methAnns.length === 1) {
+                                        //console.log("    >M> " + methAnns[0].content());
+                                        return new RsRawStringMember(methAnns[0].content());
+                                    }
+                                    else {
+                                        throw new Error("PullTypeSymbol toRsType Multi user annotations");
+                                    }
+                                }
+                                else {
+                                    throw new Error("PullTypeSymbol toRsType Method Elements");
+                                }
+                            });
+                        }));
+
+                ///////////////////////////////////////////////////////////////
+                // Properties
+
+                var properties: RsTypeMember[] = ArrayUtilities.concat(
+                    this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).
+                        map(function(m: PullSymbol): RsTypeMember[] {
+                            //console.log("  Property member: " + m.toString());
+                            return m.getDeclarations().map(function (d: PullDecl): RsTypeMember {
+                                var propAnns = tokenAnnots(d.ast());
+                                switch (propAnns.length) {
+                                    case 0:
+                                        //console.log("   *F* " + m.type.toString());
+                                        return new RsFieldSig(m.name, m.type.toRsType());
+                                    case 1:
+                                        //console.log("    >F> " + propAnns[0].content());
+                                        return new RsRawStringMember(propAnns[0].content());
+                                    default:
+                                        throw new Error("BUG: PullTypeSymbol.toRsType.ObjectType.fields");
+                                }
+                            });
+                        }));
+
+
+                ///////////////////////////////////////////////////////////////
+                // Constructors
+
+                var constructors: RsTypeMember[] = 
+                    this.getConstructSignatures().
+                        map(function (s: PullSignatureSymbol): RsTypeMember {
+                            //console.log("  Constructor member: " + s.toString());
+                            var decls = s.getDeclarations();
+                            if (decls.length === 1) {
+                                var constrAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
+                                switch (constrAnns.length) {
+                                    case 0:
+                                        //console.log("    *C* " + s.toString());
+                                        return new RsConsSig(s.toRsTFun());
+                                    case 1:
+                                        //console.log("    >C> " + constrAnns[0].content());
+                                        return new RsRawStringMember(constrAnns[0].content());
+                                    default:
+                                        throw new Error("PullTypeSymbol toRsType Multi user annotations");
+                                }
+                            }
+                            else {
+                                throw new Error("PullTypeSymbol toRsType Method Elements");
+                            }
+                        });
+
+                ///////////////////////////////////////////////////////////////
                 // Call
-                //console.log(this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).map(m => m.name));
-                var calls =
-                    this.getCallSignatures().map(s => new RsCallSig(s.toRsTFun()));
-              
+
+                var calls: RsTypeMember[] = 
+                    this.getCallSignatures().
+                        map(function (s: PullSignatureSymbol): RsTypeMember {
+                            //console.log("  Call member: " + s.toString());
+                            var decls = s.getDeclarations();
+                            if (decls.length === 1) {
+                                var callAnns = tokenAnnots(decls[0].ast());
+                                switch (callAnns.length) {
+                                    case 0:
+                                        //console.log("    *S* " + s.toString());
+                                        return new RsCallSig(s.toRsTFun());
+                                    case 1:
+                                        //console.log("    >S> " + callAnns[0].content());
+                                        return new RsRawStringMember(callAnns[0].content());
+                                    default:
+                                        throw new Error("PullTypeSymbol toRsType Multi user annotations");
+                                }
+                            }
+                            else {
+                                throw new Error("PullTypeSymbol toRsType Method Elements");
+                            }
+                        });
+
                 return new TObject(ArrayUtilities.concat([methods, properties, constructors, calls]));
        		}
-
 			return new TError(this.toString()); 
 		}
 
