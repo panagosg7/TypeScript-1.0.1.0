@@ -7593,13 +7593,17 @@ export class FunctionExpressionSyntax extends SyntaxNode implements IPrimaryExpr
 		var funcAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawFunc);
 
 		if (funcAnns.length === 0) {
-			var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
-			if (type instanceof TError) {
-				var tError = <TError>type;
-				helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
-			}
-			var typeStr = type.toString();
-			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawFunc, typeStr));
+
+        // DO NOT INFER TYPES FOR FunctionExpressions 
+        // - Use contextual type (in RefScript) instead
+
+			//var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
+			//if (type instanceof TError) {
+			//    var tError = <TError>type;
+			//    helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
+			//}
+			//var typeStr = type.toString();
+			//anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawFunc, typeStr));
 		}
 		else if (funcAnns.length !== 1) {
 			helper.postDiagnostic(this, DiagnosticCode.Anonymous_function_cannot_have_more_than_one_type_annotations);
