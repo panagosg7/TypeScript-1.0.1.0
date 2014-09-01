@@ -1125,7 +1125,7 @@ export class ModuleDeclarationSyntax extends SyntaxNode implements IModuleElemen
 
 	//RefScript - begin
 	public toRsStmt(helper: RsHelper): RsStatement {
-        var originalAnnots = tokenAnnots(this.moduleKeyword);
+        var originalAnnots = tokenAnnots(this);
         // Is this exported?
         if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
             originalAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
@@ -1488,7 +1488,7 @@ export class VariableDeclarationSyntax extends SyntaxNode {
 
 	public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
 
-		var anns = tokenAnnots(this.varKeyword, AnnotContext.OtherContext);
+		var anns = tokenAnnots(this.firstToken(), AnnotContext.OtherContext);
 
 		//var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
 		//	.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
