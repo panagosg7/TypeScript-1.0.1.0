@@ -928,9 +928,9 @@ module TypeScript {
 		public toObject() {
 			return {
                 ForStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-                    (this.init) ? this.init.toObject() : null,
+                    this.init.toObject(),
 					(this.test) ? this.test.toObject() : null,
-					this.inc.toObject(),
+					(this.inc) ? this.inc.toObject() : null,
 					this.body.toObject()]
 			};
 		}
