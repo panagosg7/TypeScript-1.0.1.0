@@ -12,7 +12,7 @@ module TypeScript {
         public noLib: boolean = false;
         //RefScript - begin
         public refScript: boolean = false;
-        public refscriptLib: string = "";
+        public refscriptLibs: string[] = [];
         //RefScript - end
         public codeGenTarget: LanguageVersion = LanguageVersion.EcmaScript3;
         public moduleGenTarget: ModuleGenTarget = ModuleGenTarget.Unspecified;
@@ -40,7 +40,7 @@ module TypeScript {
         private _noLib: boolean;
         //RefScript - begin
         private _refScript: boolean;
-        private _refScriptLib: string;
+        private _refScriptLibs: string[];
         //RefScript - end
         private _codeGenTarget: LanguageVersion;
         private _moduleGenTarget: ModuleGenTarget;
@@ -64,7 +64,7 @@ module TypeScript {
         public noLib() { return this._noLib; }
         //RefScript - begin
         public refScript() { return this._refScript; }
-        public refScriptLib() { return this._refScriptLib; }
+        public refScriptLibs() { return this._refScriptLibs; }
         //RefScript - end
         public codeGenTarget() { return this._codeGenTarget; }
         public moduleGenTarget() { return this._moduleGenTarget; }
@@ -89,7 +89,7 @@ module TypeScript {
             noLib: boolean,
             //RefScript - begin
             refScript: boolean,
-            refScriptLib: string,
+            refScriptLibs: string[],
             //RefScript - end
             codeGenTarget: LanguageVersion,
             moduleGenTarget: ModuleGenTarget,
@@ -113,7 +113,7 @@ module TypeScript {
             this._noLib = noLib;
             //RefScript - begin
             this._refScript = refScript;
-            this._refScriptLib = refScriptLib;
+            this._refScriptLibs = refScriptLibs;
             //RefScript - end
             this._codeGenTarget = codeGenTarget;
             this._moduleGenTarget = moduleGenTarget;
@@ -148,7 +148,7 @@ module TypeScript {
                 settings.noLib,
                 //RefScript - begin
                 settings.refScript,
-                settings.refscriptLib,
+                settings.refscriptLibs,
                 //RefScript - end
                 settings.codeGenTarget,
                 settings.moduleGenTarget,

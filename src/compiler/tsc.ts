@@ -235,15 +235,16 @@ module TypeScript {
 
             if (this.compilationSettings.refScript()) {
                 // include this library with refscript
-                var refscriptLib = this.compilationSettings.refScriptLib();
-                if (refscriptLib && refscriptLib !== "") {
-                    var libraryResolvedFile: IResolvedFile = {
-                        path: this.resolvePath(refscriptLib),
-                        referencedFiles: [],
-                        importedFiles: []
-                    };
+                var refScriptLibs = this.compilationSettings.refScriptLibs();
+                if (refScriptLibs) {
+                    var libraryResolvedFiles: IResolvedFile[] = 
+                          refScriptLibs.map((refScriptLib) => {
+                              return {  path: this.resolvePath(refScriptLib),
+                                        referencedFiles: [],
+                                        importedFiles: [] };
+                          });
                     // Prepend the library to the resolved list
-                    resolvedFiles = [libraryResolvedFile].concat(resolvedFiles);
+                    resolvedFiles = libraryResolvedFiles.concat(resolvedFiles);
                 }
             }
             else {
@@ -345,7 +346,7 @@ module TypeScript {
                 },
                 type: DiagnosticCode.LOCATION,
                 set: (str) => {
-                    mutableSettings.refscriptLib = str;
+                    mutableSettings.refscriptLibs.push(str);
                 }
             });
 
