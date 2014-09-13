@@ -3907,6 +3907,13 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 					this.left.toRsExp(helper),
 					this.right.toRsExp(helper));
 
+            case SyntaxKind.InExpression:
+        		return new RsInfixExpr(helper.getSourceSpan(this),
+					tokenAnnots(this),
+					new RsInfixOp("in"),
+					this.left.toRsExp(helper),
+					this.right.toRsExp(helper));
+
 			default:
 				//throw new Error("UNIMMPLEMENTED:BinaryExpression:toRsExp:Expression for: " + SyntaxKind[this.kind()]);
         helper.postDiagnostic(this,
@@ -7194,9 +7201,9 @@ export class CastExpressionSyntax extends SyntaxNode implements IUnaryExpression
 
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
+		var sourceSpan = helper.getSourceSpan(this); 
 		var eltSymbol = helper.getSymbolForAST(this.type);
 		var castType = eltSymbol.type.toRsType();
-		var sourceSpan = helper.getSourceSpan(this); 
 		var castAnn = new RsBindAnnotation(sourceSpan, AnnotKind.RawCast, castType.toString()); 
 		return new RsCast(helper.getSourceSpan(this), [castAnn], this.expression.toRsExp(helper));
 	}
