@@ -44,7 +44,6 @@ module TypeScript {
             return isLibDTSFile(this.fileName);
         }
 
-
         private cacheSyntaxTreeInfo(syntaxTree: SyntaxTree): void {
             // If we're not keeping around the syntax tree, store the diagnostics and line
             // map so they don't have to be recomputed.

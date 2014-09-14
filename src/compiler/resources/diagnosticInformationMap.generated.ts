@@ -918,5 +918,7 @@ module TypeScript {
   { "code": 8026, "category": DiagnosticCategory.Unimplemented },
 "Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}." : 
   { "code": 8027, "category": DiagnosticCategory.Unimplemented },
+"Gather statistics about initialization" : 
+  { "code": 8028, "category": DiagnosticCategory.Message },
 }
 }

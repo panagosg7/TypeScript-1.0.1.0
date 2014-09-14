@@ -1837,6 +1837,10 @@
 		"Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}.": {
       "category": "Unimplemented",
       "code": 8027    
+    },
+    "Gather statistics about initialization":{
+        "category": "Message",
+        "code": 8028
     }
 
 }

@@ -248,7 +248,6 @@ module TypeScript {
                 }
             }
             else {
-                // ignore default library with refscript
                 if (includeDefaultLibrary) {
                     var libraryResolvedFile: IResolvedFile = {
                         path: this.getDefaultLibraryFilePath(),
@@ -277,39 +276,34 @@ module TypeScript {
                 compiler.addFile(resolvedFile.path, sourceFile.scriptSnapshot, sourceFile.byteOrderMark, /*version:*/ 0, /*isOpen:*/ false, resolvedFile.referencedFiles);
             });
 
-
-			// RefScript: Adding try - catch 
-			try {
-
-				for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
-					var result = it.current();
-
-					result.diagnostics.forEach(d => this.addDiagnostic(d));
-
-					if (this.compilationSettings.refScript()) {
+			if (this.compilationSettings.refScript()) {
+				// RefScript: Adding try - catch 
+				try {
+					for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
+						var result = it.current();
+						result.diagnostics.forEach(d => this.addDiagnostic(d));
 						this._refScriptOutputFiles = this._refScriptOutputFiles.concat(result.outputFiles);
+						if (!this.tryWriteOutputFiles(result.outputFiles)) {
+							//return;	// RefScript 
+							break;
+						}
 					}
-
-					if (!this.tryWriteOutputFiles(result.outputFiles)) {
-						//return;	// RefScript 
-						break;
-					}
-				}
-
-				// RefScript - begin
-				if (this.compilationSettings.refScript()) {
 					this.dumpRefScriptDiagnostics();
+				} catch (e) {
+					this.dumpRefScriptUnknownError(e.stack);					
+				    // If not in RefScript mode throw the exception normally
+					throw e;
 				}
-				// RefScript - end
-
-			} catch (e) {
-				if (this.compilationSettings.refScript()) {
-					this.dumpRefScriptUnknownError(e.stack);
-				}
-			    // If not in RefScript mode throw the exception normally
-				throw e;
 			}
-
+			else {
+				for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
+                	var result = it.current();
+	                result.diagnostics.forEach(d => this.addDiagnostic(d));
+	                if (!this.tryWriteOutputFiles(result.outputFiles)) {
+	                    return;
+	                }
+	            }			
+			}
         }
 
         // Parse command line options
@@ -447,6 +441,16 @@ module TypeScript {
 					mutableSettings.refScript = true;
 				}
             });
+
+			opts.flag('init-stats', {
+				usage: {
+					locCode: DiagnosticCode.Gather_statistics_about_initialization,
+					args: null
+				},
+				set: () => {
+					mutableSettings.initializationStats = true;
+				}
+            }); 
             //RefScript - end
 
             opts.flag('diagnostics', {

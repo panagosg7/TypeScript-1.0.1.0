@@ -128,7 +128,7 @@ module TypeScript {
     }
 
     export class TypeScriptCompiler {
-		// XXXXXXXXXXXXXXXXx
+		// XXXXXXXXXXXXXXXXX
         //private semanticInfoChain: SemanticInfoChain = null;
         public semanticInfoChain: SemanticInfoChain = null;
 
@@ -397,8 +397,6 @@ module TypeScript {
 		static mapToSeparateJSFileName(fileName: string, wholeFileNameReplaced: boolean) {
             return TypeScriptCompiler.mapToFileNameExtension(".out.js", fileName, wholeFileNameReplaced);
         }
-
-
 
         static mapToJSONFileName(fileName: string, wholeFileNameReplaced: boolean) {
             return TypeScriptCompiler.mapToFileNameExtension(".json", fileName, wholeFileNameReplaced);
@@ -1189,8 +1187,8 @@ module TypeScript {
     enum CompilerPhase {
         Syntax,
         Semantics,
+        InitializationStats,	
         EmitOptionsValidation,
-		//RefScriptTranslation,
         Emit,
         DeclarationEmit,
     }
@@ -1247,6 +1245,12 @@ module TypeScript {
                 this.compilerPhase++;
             }
 
+			//RefScript
+			if (this.compiler.compilationSettings().initializationStats() && this.compilerPhase > CompilerPhase.InitializationStats) {
+                // We're totally done.
+                return false;
+			}
+
             if (this.compilerPhase > CompilerPhase.DeclarationEmit) {
                 // We're totally done.
                 return false;
@@ -1257,6 +1261,8 @@ module TypeScript {
                     return this.moveNextSyntaxPhase();
                 case CompilerPhase.Semantics:
                     return this.moveNextSemanticsPhase();
+				case CompilerPhase.InitializationStats:		// RefScript
+					return this.moveNextInitializationPhase();
                 case CompilerPhase.EmitOptionsValidation:
                     return this.moveNextEmitOptionsValidationPhase();
                 case CompilerPhase.Emit:
@@ -1275,6 +1281,9 @@ module TypeScript {
                 case CompilerPhase.Syntax:
                 case CompilerPhase.Semantics:
                     // Each of these phases are done when we've processed the last file.
+                    return this.index === this.fileNames.length;
+				
+				case CompilerPhase.InitializationStats:
                     return this.index === this.fileNames.length;
 
                 case CompilerPhase.Emit:
@@ -1322,6 +1331,20 @@ module TypeScript {
 
             return true;
         }
+
+		private moveNextInitializationPhase(): boolean {
+			if (!this.compiler.compilationSettings().initializationStats()) {
+				return true;
+			}
+            Debug.assert(this.index >= 0 && this.index < this.fileNames.length);
+            var fileName = this.fileNames[this.index];
+            fileName = TypeScript.switchToForwardSlashes(fileName);
+
+            var document = this.compiler.getDocument(fileName);
+			TypeScript.initStats(this.compiler.semanticInfoChain, document);
+
+			return true;
+		}
 
         private moveNextEmitOptionsValidationPhase(): boolean {
             Debug.assert(!this.hadSyntacticDiagnostics);

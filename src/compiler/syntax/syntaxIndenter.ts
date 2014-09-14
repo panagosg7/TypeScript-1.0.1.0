@@ -10,7 +10,8 @@ module TypeScript {
                     private options: FormattingOptions) {
             super();
             this.lastTriviaWasNewLine = indentFirstToken;
-            this.indentationTrivia = Indentation.indentationTrivia(this.indentationAmount, this.options);
+            //this.indentationTrivia = Indentation.indentationTrivia(this.indentationAmount, this.options);
+            this.indentationTrivia = Indentation.indentationTrivia(indentationAmount, options);
         }
 
         public visitToken(token: ISyntaxToken): ISyntaxToken {

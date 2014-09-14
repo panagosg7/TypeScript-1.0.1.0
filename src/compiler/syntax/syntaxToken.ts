@@ -621,16 +621,30 @@ module TypeScript.Syntax {
             this._value = value;
             this._valueText = valueText;
 
-            this._leadingTrivia = leadingTrivia.clone();
-            this._trailingTrivia = trailingTrivia.clone();
+			//// Original code
+            //this._leadingTrivia = leadingTrivia.clone();
+            //this._trailingTrivia = trailingTrivia.clone();
 
-            if (!this._leadingTrivia.isShared()) {
-                this._leadingTrivia.parent = this;
+            //if (!this._leadingTrivia.isShared()) {
+            //    this._leadingTrivia.parent = this;
+            //}
+
+            //if (!this._trailingTrivia.isShared()) {
+            //    this._trailingTrivia.parent = this;
+            //}
+            var _leadingTrivia_clone = leadingTrivia.clone();
+            var _trailingTrivia_clone = trailingTrivia.clone();
+
+            if (!_leadingTrivia_clone.isShared()) {
+                _leadingTrivia_clone.parent = this;
             }
 
-            if (!this._trailingTrivia.isShared()) {
-                this._trailingTrivia.parent = this;
-            }
+            if (!_trailingTrivia_clone.isShared()) {
+                _trailingTrivia_clone.parent = this;
+			}
+			this._leadingTrivia = _leadingTrivia_clone;
+			this._trailingTrivia = _trailingTrivia_clone;
+ 
         }
 
         public syntaxTree(): SyntaxTree {

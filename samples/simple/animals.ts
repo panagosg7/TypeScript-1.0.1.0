@@ -1,5 +1,9 @@
 class Animal {
-    constructor(public name) { }
+	constructor(public name) {
+		this.name = name;
+		//this.move(<any>this.name);
+	}
+
     move(meters) {
         alert(this.name + " moved " + meters + "m.");
     }
