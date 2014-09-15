@@ -132,9 +132,13 @@ module TypeScript {
         //private semanticInfoChain: SemanticInfoChain = null;
         public semanticInfoChain: SemanticInfoChain = null;
 
+		// RefScript 
+		public helper: RsHelper;
+
         constructor(public logger: ILogger = new NullLogger(),
                     private _settings: ImmutableCompilationSettings = ImmutableCompilationSettings.defaultSettings()) {
-            this.semanticInfoChain = new SemanticInfoChain(this, logger);
+			this.semanticInfoChain = new SemanticInfoChain(this, logger);
+			this.helper = new RsHelper(this.semanticInfoChain);
         }
 
         public compilationSettings(): ImmutableCompilationSettings {
@@ -1333,7 +1337,7 @@ module TypeScript {
         }
 
 		private moveNextInitializationPhase(): boolean {
-			if (!this.compiler.compilationSettings().initializationStats()) {
+			if (!this.compiler.compilationSettings().initializationStats() && !this.compiler.compilationSettings().refScript()) {
 				return true;
 			}
             Debug.assert(this.index >= 0 && this.index < this.fileNames.length);
@@ -1341,7 +1345,9 @@ module TypeScript {
             fileName = TypeScript.switchToForwardSlashes(fileName);
 
             var document = this.compiler.getDocument(fileName);
-			TypeScript.initStats(this.compiler.semanticInfoChain, document);
+			this.compiler.helper.setDocument(document);
+
+			this.compiler.helper.ctorValidate();
 
 			return true;
 		}
@@ -1380,10 +1386,16 @@ module TypeScript {
 				//RefScript - begin
                 if (this.compiler.compilationSettings().refScript()) {
                     // Include imported declaration files
-                    var ast = document.sourceUnit();
-                    var helper = new RsHelper(this.compiler.semanticInfoChain, document);
-                    var diagnostics = helper.diagnostics();
-                    var rsAST = ast.toRsAST(helper);
+					var ast = document.sourceUnit();
+
+					// init helper for current doc
+					this.compiler.helper.setDocument(document);
+
+					// transform
+                    var rsAST = ast.toRsAST(this.compiler.helper);
+
+					// gather diagnostics
+                    var diagnostics = this.compiler.helper.diagnostics();
                     this._current = CompileResult.fromDiagnostics(diagnostics);
 
                     if (diagnostics.length === 0) {
@@ -1391,6 +1403,8 @@ module TypeScript {
                             outputFiles => { this._current = CompileResult.fromOutputFiles(outputFiles) },
                             this._sharedJSONEmitter);
                     }
+
+					this.compiler.helper.clearDiagnostics();
                 }
 				//RefScript - end
 				else {

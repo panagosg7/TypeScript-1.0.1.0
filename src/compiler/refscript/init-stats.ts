@@ -1,10 +1,9 @@
-
 ///<reference path='..\typescript.ts' />
 
 module TypeScript {
 
-	class StatsContext {
-		constructor(private document: Document, private semanticInfoChain: SemanticInfoChain) { }
+	export class StatsContext {
+		constructor(private _diagnostics: Diagnostic[]) { }
 
 		private _inCtor = false;
 		private _inAsgn = false;
@@ -32,72 +31,76 @@ module TypeScript {
 			return (id in this._validIds);
 		}
 
+		public postDiagnostic(diagnostic: Diagnostic) {
+			this._diagnostics.push(diagnostic);
+		}
+
 	}
 
-	function astToSourceSpan(ast: ISyntaxElement) {
-		var cstart = ast.fullStart();
-		var cstop  = ast.fullEnd();
-		var startLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
-		var endLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstop);
-		return new RsSourceSpan(ast.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
-	}
+	export class InitializationValidator {
 
-    function pre(ast: ISyntaxElement, context: StatsContext) {
+		static astToSourceSpan(ast: ISyntaxElement) {
+			var cstart = ast.fullStart();
+			var cstop  = ast.fullEnd();
+			var startLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
+			var endLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstop);
+			return new RsSourceSpan(ast.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
+		}
 
-		//if (context.inCtor()) {
-		//	console.log(SyntaxKind[ast.kind()] + " : " + astToSourceSpan(ast).toString());
-		//}
+	    static pre(ast: ISyntaxElement, context: StatsContext) {
 
-		switch (ast.kind()) {
-			case SyntaxKind.ConstructorDeclaration:
-				//console.log("In constructor declaration" + astToSourceSpan(ast).toString());
-				context.enteringCtor();
-				break;
+			//if (context.inCtor()) {
+			//	console.log(SyntaxKind[ast.kind()] + " : " + astToSourceSpan(ast).toString());
+			//}
 
-			case SyntaxKind.AssignmentExpression:
-				// register a assignment of the form:
-				// this._ = _;
-				if (context.inCtor()) {
-					var asgnExpr = <BinaryExpressionSyntax>ast;
-					var lhsAsgn = asgnExpr.left;
-					if (lhsAsgn.kind() === SyntaxKind.MemberAccessExpression) {
-						var memAccess = <MemberAccessExpressionSyntax> lhsAsgn;
-						if (memAccess.expression.kind() === SyntaxKind.ThisKeyword) {
-							context.registerValidId(memAccess.expression.syntaxID());
+			switch (ast.kind()) {
+				case SyntaxKind.ConstructorDeclaration:
+					//console.log("In constructor declaration" + astToSourceSpan(ast).toString());
+					context.enteringCtor();
+					break;
+
+				case SyntaxKind.AssignmentExpression:
+					// register a assignment of the form:
+					// this._ = _;
+					if (context.inCtor()) {
+						var asgnExpr = <BinaryExpressionSyntax>ast;
+						var lhsAsgn = asgnExpr.left;
+						if (lhsAsgn.kind() === SyntaxKind.MemberAccessExpression) {
+							var memAccess = <MemberAccessExpressionSyntax> lhsAsgn;
+							if (memAccess.expression.kind() === SyntaxKind.ThisKeyword) {
+								context.registerValidId(memAccess.expression.syntaxID());
+							}
 						}
 					}
-				}
-				break;
+					break;
 
-			case SyntaxKind.ThisKeyword:
-				if (context.inCtor()) {
-					if (context.isValidId(ast.syntaxID())) {
-						console.log("VALID: " + astToSourceSpan(ast).toString());
+				case SyntaxKind.ThisKeyword:
+					if (context.inCtor()) {
+						if (!context.isValidId(ast.syntaxID())) {
+							context.postDiagnostic(new Diagnostic(ast.fileName(), ast.syntaxTree().lineMap(), ast.start(), ast.width(),
+								DiagnosticCode.Invalid_reference_of_this_in_constructor, [], []));
+							//console.log("INVALID: " + InitializationValidator.astToSourceSpan(ast).toString());
+						}
 					}
-					else {
-						console.log("INVALID: " + astToSourceSpan(ast).toString());
-					}
-				}
-				break;
+					break;
+			}
 		}
-	}
 
-	function post(ast: ISyntaxElement, context: StatsContext) {
-		switch (ast.kind()) {
-			case SyntaxKind.ConstructorDeclaration:
-				context.exitingCtor();
-				break;
-
+		static post(ast: ISyntaxElement, context: StatsContext) {
+			switch (ast.kind()) {
+				case SyntaxKind.ConstructorDeclaration:
+					context.exitingCtor();
+					break;
+			}
 		}
+
+		public validate(document: Document, diagnostics: Diagnostic[]) {
+	        var sourceUnit = document.sourceUnit();
+			var statsContext = new StatsContext(diagnostics);
+			getAstWalkerFactory().simpleWalk(document.sourceUnit(),
+				InitializationValidator.pre, InitializationValidator.post, statsContext);
+		}
+
 	}
-
-    export function initStats(semanticInfoChain: SemanticInfoChain, document: Document): void {
-        var sourceUnit = document.sourceUnit();
-        var resolver = semanticInfoChain.getResolver();
-		var statsContext = new StatsContext(document, semanticInfoChain);
-
-		getAstWalkerFactory().simpleWalk(document.sourceUnit(), pre, post, statsContext);
-
-    }
 
 }

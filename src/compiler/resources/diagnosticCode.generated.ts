@@ -460,5 +460,6 @@ Cannot_call_toRsExp_on_PostfixUnaryExpression_with_SyntaxKind_0: "Cannot call 't
 Cannot_call_toRsAST_on_MemberAccessExpression: "Cannot call 'toRsAST' on MemberAccessExpression.",
 Cannot_call_toRsExp_on_BinaryExpression_with_SyntaxKind_0: "Cannot call 'toRsExp' on BinaryExpression with SyntaxKind {0}.",
 Gather_statistics_about_initialization: "Gather statistics about initialization",
+Invalid_reference_of_this_in_constructor: "Invalid reference of 'this' in constructor.",
 }
 }

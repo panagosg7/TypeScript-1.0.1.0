@@ -1841,6 +1841,9 @@
     "Gather statistics about initialization":{
         "category": "Message",
         "code": 8028
-    }
-
+    }, 
+	"Invalid reference of 'this' in constructor.":{
+		"category": "Error",
+		"code": 8029
+	}
 }

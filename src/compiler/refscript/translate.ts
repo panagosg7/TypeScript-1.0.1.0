@@ -4,8 +4,25 @@ module TypeScript {
 
 	export class RsHelper {
 
-		//constructor(private _compiler: TypeScriptCompiler, private _document: Document) { }
-		constructor(private _semanticInfoChain: SemanticInfoChain, private _document: Document) { }
+		private _initValidator: InitializationValidator;
+
+		constructor(private _semanticInfoChain: SemanticInfoChain) {
+			this._initValidator = new InitializationValidator();
+		}
+
+		public ctorValidate() {
+			this._initValidator.validate(this._document, this._diagnostics);
+		}
+
+		private _document: Document;
+
+		public setDocument(document: Document) {
+			this._document = document;
+		}
+
+		public clearDiagnostics() {
+			this._diagnostics = [];
+		}
 
 		private _diagnostics: Diagnostic[] = [];
 

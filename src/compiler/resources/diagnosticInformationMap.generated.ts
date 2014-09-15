@@ -920,5 +920,7 @@ module TypeScript {
   { "code": 8027, "category": DiagnosticCategory.Unimplemented },
 "Gather statistics about initialization" : 
   { "code": 8028, "category": DiagnosticCategory.Message },
+"Invalid reference of 'this' in constructor." : 
+  { "code": 8029, "category": DiagnosticCategory.Error },
 }
 }
