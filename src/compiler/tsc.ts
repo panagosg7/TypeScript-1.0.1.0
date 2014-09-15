@@ -442,16 +442,7 @@ module TypeScript {
 				}
             });
 
-			opts.flag('init-stats', {
-				usage: {
-					locCode: DiagnosticCode.Gather_statistics_about_initialization,
-					args: null
-				},
-				set: () => {
-					mutableSettings.initializationStats = true;
-				}
-            }); 
-            //RefScript - end
+           //RefScript - end
 
             opts.flag('diagnostics', {
                 experimental: true,

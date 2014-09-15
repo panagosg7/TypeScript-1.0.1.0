@@ -11,7 +11,6 @@ module TypeScript {
         public noImplicitAny: boolean = false;
         public noLib: boolean = false;
         //RefScript - begin
-        public initializationStats: boolean = false;
         public refScript: boolean = false;
         public refscriptLibs: string[] = [];
         //RefScript - end
@@ -41,7 +40,6 @@ module TypeScript {
         private _noLib: boolean;
         //RefScript - begin
         private _refScript: boolean;
-        private _initializationStats: boolean;
         private _refScriptLibs: string[];
         //RefScript - end
         private _codeGenTarget: LanguageVersion;
@@ -65,7 +63,6 @@ module TypeScript {
         public noImplicitAny() { return this._noImplicitAny; }
         public noLib() { return this._noLib; }
         //RefScript - begin
-        public initializationStats() { return this._initializationStats; }
         public refScript() { return this._refScript; }
         public refScriptLibs() { return this._refScriptLibs; }
         //RefScript - end
@@ -91,7 +88,6 @@ module TypeScript {
             noImplicitAny: boolean,
             noLib: boolean,
             //RefScript - begin
-			initializationStats: boolean,
             refScript: boolean,
             refScriptLibs: string[],
             //RefScript - end
@@ -116,7 +112,6 @@ module TypeScript {
             this._noImplicitAny = noImplicitAny;
             this._noLib = noLib;
 			//RefScript - begin
-			this._initializationStats = initializationStats;
             this._refScript = refScript;
             this._refScriptLibs = refScriptLibs;
             //RefScript - end
@@ -152,7 +147,6 @@ module TypeScript {
                 settings.noImplicitAny,
                 settings.noLib,
                 //RefScript - begin
-				settings.initializationStats,
                 settings.refScript,
                 settings.refscriptLibs,
                 //RefScript - end

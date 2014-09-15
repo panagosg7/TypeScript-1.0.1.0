@@ -1250,11 +1250,6 @@ module TypeScript {
             }
 
 			//RefScript
-			if (this.compiler.compilationSettings().initializationStats() && this.compilerPhase > CompilerPhase.InitializationStats) {
-                // We're totally done.
-                return false;
-			}
-
             if (this.compilerPhase > CompilerPhase.DeclarationEmit) {
                 // We're totally done.
                 return false;
@@ -1337,7 +1332,7 @@ module TypeScript {
         }
 
 		private moveNextInitializationPhase(): boolean {
-			if (!this.compiler.compilationSettings().initializationStats() && !this.compiler.compilationSettings().refScript()) {
+			if (!this.compiler.compilationSettings().refScript()) {
 				return true;
 			}
             Debug.assert(this.index >= 0 && this.index < this.fileNames.length);
