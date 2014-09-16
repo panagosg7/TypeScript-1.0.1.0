@@ -3882,6 +3882,7 @@ export class BinaryExpressionSyntax extends SyntaxNode implements IExpressionSyn
 			case SyntaxKind.LeftShiftExpression:
 			case SyntaxKind.SignedRightShiftExpression:
 			case SyntaxKind.UnsignedRightShiftExpression:
+			case SyntaxKind.BitwiseOrExpression:
 				return new RsInfixExpr(
 					helper.getSourceSpan(this),
 					tokenAnnots(this),
