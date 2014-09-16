@@ -1797,6 +1797,9 @@ export class PrefixUnaryExpressionSyntax extends SyntaxNode implements IUnaryExp
 			case SyntaxKind.PreDecrementExpression:
 				return new RsUnaryAssignExpr(helper.getSourceSpan(this), anns, new RsUnaryAssignOp(RsUnaryAssignOpKind.PrefixDec), this.operand.toRsLValue(helper));
 
+			case SyntaxKind.PlusExpression:
+				return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixPlus), this.operand.toRsExp(helper));
+
 			case SyntaxKind.NegateExpression:
 				return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixMinus), this.operand.toRsExp(helper));
 
