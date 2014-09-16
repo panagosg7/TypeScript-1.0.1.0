@@ -50,7 +50,8 @@ module TypeScript {
 		}
 
 		public postDiagnostic(ast: ISyntaxElement, diagnosticKey: string, _arguments: any[] = null, additionalLocations: Location[] = null) {
-			var diagnostic = new Diagnostic(ast.fileName(), this._document.lineMap(), ast.start(), ast.width(), diagnosticKey, _arguments, additionalLocations);
+			var diagnostic = new Diagnostic(ast.fileName(), this._document.lineMap(), 
+                ast.start(), ast.width(), diagnosticKey, _arguments, additionalLocations);
 			this._diagnostics.push(diagnostic);
 		}
 
@@ -70,7 +71,7 @@ module TypeScript {
 		constructor(private name: string, private line: number, private column: number) { }
 
 		public toObject() {
-			return [ this.name, this.line, this.column ];
+			return [ this.name, this.line + 1, this.column + 1 ]; // Calibrating off by one 
 				//"name": this.name, "line": this.line, "column": this.column
 		}
 	}
