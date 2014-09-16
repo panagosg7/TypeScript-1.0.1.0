@@ -7203,8 +7203,31 @@ export class CastExpressionSyntax extends SyntaxNode implements IUnaryExpression
 	//RefScript - begin
 	public toRsExp(helper: RsHelper): RsExpression {
 		var sourceSpan = helper.getSourceSpan(this); 
-		var eltSymbol = helper.getSymbolForAST(this.type);
-		var castType = eltSymbol.type.toRsType();
+
+    var castType: RsType;
+
+    switch (this.type.kind()) {
+      case SyntaxKind.AnyKeyword: 
+          castType = TTop;
+          break;
+      case SyntaxKind.BooleanKeyword:
+          castType = TBoolean
+          break;
+      case SyntaxKind.NumberKeyword: 
+          castType = TNumber;
+          break;
+      case SyntaxKind.StringKeyword: 
+          castType = TString;
+          break;
+      case SyntaxKind.VoidKeyword: 
+          castType = TVoid;
+          break;
+      default:
+          var eltSymbol = helper.getSymbolForAST(this.type);
+          castType = eltSymbol.type.toRsType();
+          break;
+    }
+
 		var castAnn = new RsBindAnnotation(sourceSpan, AnnotKind.RawCast, castType.toString()); 
 		return new RsCast(helper.getSourceSpan(this), [castAnn], this.expression.toRsExp(helper));
 	}
