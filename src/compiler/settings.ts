@@ -13,6 +13,7 @@ module TypeScript {
         //RefScript - begin
         public refScript: boolean = false;
         public refscriptLibs: string[] = [];
+        public gatherOverloadStats: boolean = false;
         //RefScript - end
         public codeGenTarget: LanguageVersion = LanguageVersion.EcmaScript3;
         public moduleGenTarget: ModuleGenTarget = ModuleGenTarget.Unspecified;
@@ -41,6 +42,7 @@ module TypeScript {
         //RefScript - begin
         private _refScript: boolean;
         private _refScriptLibs: string[];
+        private _gatherOverloadStats: boolean;
         //RefScript - end
         private _codeGenTarget: LanguageVersion;
         private _moduleGenTarget: ModuleGenTarget;
@@ -65,6 +67,7 @@ module TypeScript {
         //RefScript - begin
         public refScript() { return this._refScript; }
         public refScriptLibs() { return this._refScriptLibs; }
+        public gatherOverloadStats() { return this._gatherOverloadStats; }
         //RefScript - end
         public codeGenTarget() { return this._codeGenTarget; }
         public moduleGenTarget() { return this._moduleGenTarget; }
@@ -90,6 +93,7 @@ module TypeScript {
             //RefScript - begin
             refScript: boolean,
             refScriptLibs: string[],
+            gatherOverloadStats: boolean,
             //RefScript - end
             codeGenTarget: LanguageVersion,
             moduleGenTarget: ModuleGenTarget,
@@ -114,6 +118,7 @@ module TypeScript {
 			//RefScript - begin
             this._refScript = refScript;
             this._refScriptLibs = refScriptLibs;
+            this._gatherOverloadStats = gatherOverloadStats;
             //RefScript - end
             this._codeGenTarget = codeGenTarget;
             this._moduleGenTarget = moduleGenTarget;
@@ -149,6 +154,7 @@ module TypeScript {
                 //RefScript - begin
                 settings.refScript,
                 settings.refscriptLibs,
+                settings.gatherOverloadStats,
                 //RefScript - end
                 settings.codeGenTarget,
                 settings.moduleGenTarget,
