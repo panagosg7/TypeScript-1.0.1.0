@@ -103,7 +103,8 @@ module TypeScript {
                     this.logger.log(" noResolve " + this.compilationSettings.noResolve());
                     this.logger.log(" noImplicitAny " + this.compilationSettings.noImplicitAny());
                     this.logger.log(" nolib " + this.compilationSettings.noLib());
-					this.logger.log(" refscript " + this.compilationSettings.refScript());
+                    this.logger.log(" refscript " + this.compilationSettings.refScript());
+                    this.logger.log(" overloadStats " + this.compilationSettings.gatherOverloadStats());
                     this.logger.log(" target " + this.compilationSettings.codeGenTarget());
                     this.logger.log(" module " + this.compilationSettings.moduleGenTarget());
                     this.logger.log(" out " + this.compilationSettings.outFileOption());
@@ -276,34 +277,34 @@ module TypeScript {
                 compiler.addFile(resolvedFile.path, sourceFile.scriptSnapshot, sourceFile.byteOrderMark, /*version:*/ 0, /*isOpen:*/ false, resolvedFile.referencedFiles);
             });
 
-			if (this.compilationSettings.refScript()) {
-				// RefScript: Adding try - catch 
-				try {
-					for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
-						var result = it.current();
-						result.diagnostics.forEach(d => this.addDiagnostic(d));
-						this._refScriptOutputFiles = this._refScriptOutputFiles.concat(result.outputFiles);
-						if (!this.tryWriteOutputFiles(result.outputFiles)) {
-							//return;	// RefScript 
-							break;
-						}
-					}
-					this.dumpRefScriptDiagnostics();
-				} catch (e) {
-					this.dumpRefScriptUnknownError(e.stack);					
-				    // If not in RefScript mode throw the exception normally
-					throw e;
-				}
-			}
-			else {
-				for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
-                	var result = it.current();
-	                result.diagnostics.forEach(d => this.addDiagnostic(d));
-	                if (!this.tryWriteOutputFiles(result.outputFiles)) {
-	                    return;
-	                }
-	            }			
-			}
+            if (this.compilationSettings.refScript()) {
+                // RefScript: Adding try - catch 
+                try {
+                    for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
+                        var result = it.current();
+                        result.diagnostics.forEach(d => this.addDiagnostic(d));
+                        this._refScriptOutputFiles = this._refScriptOutputFiles.concat(result.outputFiles);
+                        if (!this.tryWriteOutputFiles(result.outputFiles)) {
+                            //return;   // RefScript 
+                            break;
+                        }
+                    }
+                    this.dumpRefScriptDiagnostics();
+                } catch (e) {
+                    this.dumpRefScriptUnknownError(e.stack);                    
+                    // If not in RefScript mode throw the exception normally
+                    throw e;
+                }
+            }
+            else {
+                for (var it = compiler.compile((path: string) => this.resolvePath(path)); it.moveNext();) {
+                    var result = it.current();
+                    result.diagnostics.forEach(d => this.addDiagnostic(d));
+                    if (!this.tryWriteOutputFiles(result.outputFiles)) {
+                        return;
+                    }
+                }           
+            }
         }
 
         // Parse command line options
@@ -431,18 +432,23 @@ module TypeScript {
                 }
             });
 
-			//RefScript - begin
-			opts.flag('refscript', {
-				usage: {
-					locCode: DiagnosticCode.Translate_to_RefScript_JSON_format,
-					args: null
-				},
-				set: () => {
-					mutableSettings.refScript = true;
-				}
+            //RefScript - begin
+            opts.flag('refscript', {
+                usage: {
+                    locCode: DiagnosticCode.Translate_to_RefScript_JSON_format,
+                    args: null
+                },
+                set: () => {
+                    mutableSettings.refScript = true;
+                }
             });
 
-           //RefScript - end
+            opts.flag('overloadStats', {
+                set: () => {
+                    mutableSettings.gatherOverloadStats = true;
+                }
+            }, 'Q');
+            //RefScript - end
 
             opts.flag('diagnostics', {
                 experimental: true,
@@ -815,34 +821,34 @@ module TypeScript {
         }
 
 
-		// RefScript - begin
-		private _refScriptDiagnostics: Diagnostic[] = [];
-		private _refScriptOutputFiles: OutputFile[] = [];
+        // RefScript - begin
+        private _refScriptDiagnostics: Diagnostic[] = [];
+        private _refScriptOutputFiles: OutputFile[] = [];
 
-		private dumpRefScriptDiagnostics() {
-			if (this._refScriptDiagnostics.length > 0) {
-				var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
+        private dumpRefScriptDiagnostics() {
+            if (this._refScriptDiagnostics.length > 0) {
+                var errors: FPError[] = this._refScriptDiagnostics.map(d => FPError.mkFixError(d));
                 var crashes = this._refScriptDiagnostics.filter(d => d.info().category === DiagnosticCategory.Unimplemented);
                 var fixResult: FixResult;
                 if (crashes.length > 0) {
                     fixResult = new FRCrash(errors, "UNIMPLEMENTED");
                 }
                 else {
-				    fixResult = new FRUnsafe(errors);
+                    fixResult = new FRUnsafe(errors);
                 }
-				this.ioHost.stdout.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+                this.ioHost.stdout.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
                 this.ioHost.quit(1);
-			}
-			else {
-				this.ioHost.stdout.Write(JSON.stringify(this._refScriptOutputFiles.map(f => f.name), undefined, 2));
-			}
-		}
+            }
+            else {
+                this.ioHost.stdout.Write(JSON.stringify(this._refScriptOutputFiles.map(f => f.name), undefined, 2));
+            }
+        }
 
-		private dumpRefScriptUnknownError(msg: string) {
-			var unknownError = new FRUnknownError(msg);
-			this.ioHost.stdout.Write(JSON.stringify(unknownError.toObject(), undefined, 2));			
-		}
-		// RefScript - end
+        private dumpRefScriptUnknownError(msg: string) {
+            var unknownError = new FRUnknownError(msg);
+            this.ioHost.stdout.Write(JSON.stringify(unknownError.toObject(), undefined, 2));
+        }
+        // RefScript - end
     
 
         private addDiagnostic(diagnostic: Diagnostic): void {
@@ -851,12 +857,12 @@ module TypeScript {
                 this.hasErrors = true;
             }
 
-			if (this.compilationSettings.refScript()) {
-				this._refScriptDiagnostics.push(diagnostic);
-			}
-			else {
-				this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));
-			}
+            if (this.compilationSettings.refScript()) {
+                this._refScriptDiagnostics.push(diagnostic);
+            }
+            else {
+                this.ioHost.stderr.Write(TypeScriptCompiler.getFullDiagnosticText(diagnostic, path => this.resolvePath(path)));
+            }
         }
 
         private tryWriteOutputFiles(outputFiles: OutputFile[]): boolean {

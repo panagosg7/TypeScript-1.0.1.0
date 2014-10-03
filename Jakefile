@@ -132,6 +132,7 @@ var compilerSources = [
 	"refscript/syntax.ts",
 	"refscript/translate.ts",
 	"refscript/init-stats.ts",
+	"refscript/overload-stats.ts",
 	"refscript/types.ts",
 	"typescript.ts"
 ].map(function (f) {
