@@ -5245,7 +5245,7 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 				new RsASTList([this.block.toRsStmt(helper)]));
 		}
 		else {
-			return new RsMemberMethDefinition(helper.getSourceSpan(this), anns, isStatic,
+			return new RsMemberMethDef(helper.getSourceSpan(this), anns, isStatic,
 				this.propertyName.toRsId(helper),
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))));
 		}
@@ -5602,13 +5602,13 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
 		}
 
 		if (this.variableDeclarator.equalsValueClause) {
-			return new RsMemberVarDecl(helper.getSourceSpan(this), anns,
-				this.variableDeclarator.propertyName.toRsId(helper), isStatic,
+			return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
+				this.variableDeclarator.propertyName.toRsId(helper), 
 				this.variableDeclarator.equalsValueClause.toRsExp(helper));
 		}
 		else {
-			return new RsMemberVarDecl(helper.getSourceSpan(this), anns,
-			this.variableDeclarator.propertyName.toRsId(helper), isStatic,
+			return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
+			this.variableDeclarator.propertyName.toRsId(helper), 
 			null);
 		}
 	}

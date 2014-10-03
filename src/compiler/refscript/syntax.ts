@@ -751,8 +751,8 @@ module TypeScript {
 
 		constructor(public span: RsSourceSpan,
 					public ann: RsAnnotation[],
-					public name: RsId,
 					public sta: boolean,
+					public name: RsId,
 					public exp?: RsExpression) { super(ann); }
 	}
 
@@ -772,7 +772,7 @@ module TypeScript {
 					public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
-	export class RsMemberMethDefinition extends RsClassElt {
+	export class RsMemberMethDef extends RsClassElt {
 		public toObject(): any {
 			return {
 				MemberMethDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
