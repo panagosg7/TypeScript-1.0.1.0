@@ -1644,12 +1644,12 @@ module TypeScript {
         }
 
 		//RefScript begin
-        public toRsTFun(): RsTFun {
-            var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
-            var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
-            var retT = this.returnType.toRsType();
-            return new RsTFun(tParams, tArgs, retT);
-		}	
+		public toRsTFun(): RsTFun {
+			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+			var retT = this.returnType.toRsType();
+			return new RsTFun(tParams, tArgs, retT);
+		}
 
 		public toRsTMeth(): RsMeth {
             var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
@@ -3210,19 +3210,17 @@ module TypeScript {
 
                 var methods: RsTypeMember[] = ArrayUtilities.concat(
                     this.getAllMembers(PullElementKind.Method, GetAllMembersVisiblity.all).
-                        map(function(m: PullSymbol): RsTypeMember[] {
-                            //console.log("  Method member: " + m.toString());
+						map(function (m: PullSymbol): RsTypeMember[] {
+
                             return m.type.getCallSignatures().map(function(s: PullSignatureSymbol): RsTypeMember {
                                 var decls = s.getDeclarations();
                                 if (decls.length === 1) {
                                     var methAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
                                     if (methAnns.length === 0) {
-                                        //console.log("    *M* " + decls[0].getSignatureSymbol().toString());
-                                        var ty = new RsTAnd([decls[0].getSignatureSymbol().toRsTMeth()]);
+                                        var ty = decls[0].getSignatureSymbol().toRsTMeth()
                                         return new RsMethSig(m.name, ty);
                                     }
                                     else if (methAnns.length === 1) {
-                                        //console.log("    >M> " + methAnns[0].content());
                                         return new RsRawStringMember(methAnns[0].content());
                                     }
                                     else {
@@ -3233,7 +3231,9 @@ module TypeScript {
                                     throw new Error("PullTypeSymbol toRsType Method Elements");
                                 }
                             });
-                        }));
+
+
+						}));
 
                 ///////////////////////////////////////////////////////////////
                 // Properties

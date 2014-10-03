@@ -822,9 +822,8 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 					var anns = tokenAnnots(v.propertyName);
 					if (anns.length === 0) {
 						//If there is no annotation
-						var eltSymbol = helper.getSymbolForAST(v);
-                        return [new RsMethSig(eltSymbol.name,
-                            new RsTAnd(eltSymbol.type.getCallSignatures().map(s => s.toRsTMeth()))).toString()];
+						var eltDecl = helper.getDeclForAST(v);
+						return [new RsMethSig(eltDecl.name, eltDecl.getSignatureSymbol().toRsTMeth()).toString()];
 					}
 					else {
 						//Annotation provided by user
@@ -1252,6 +1251,10 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
         var name = this.identifier.text();
         var anns = tokenAnnots(this.firstToken());
 
+		var declID = PullHelpers.getSignatureForFuncDecl(helper.getDeclForAST(this)).signature.pullSymbolID;
+
+		var decl: PullDecl = helper.getDeclForAST(this);
+
         if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
             anns.push(new RsAnnotation(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
         }
@@ -1260,17 +1263,15 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
 		if (bindAnnNames.length === 0) {
-			var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
-			if (type instanceof TError) {
-				var tError = <TError>type;
-				helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
-			}
+			var type = decl.getSignatureSymbol().toRsTFun();
 			var typeStr = type.toString();
 			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.identifier.text() + " :: " + typeStr));
 		}
 		else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 			helper.postDiagnostic(this, DiagnosticCode.Function_0_can_have_at_most_one_type_annotation, [name]);
 		}
+
+		//console.log(this.firstToken().text() + " - " + declID + " : " + this.identifier.text());
 
 		if (!this.block) {
 			// Ambient function declaration
@@ -1606,7 +1607,6 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 			// Refscript treats ambient variable declarations as normal declarations. 
 				if (anns1.length === 0) {
 					var type: RsType = helper.getDeclForAST(this).getSymbol().type.toRsType();
-                    //console.log("THE RSTYPE " + type.toString());
 					if (type instanceof TError) {
 						var tError = <TError>type;
 						helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
@@ -5223,14 +5223,32 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
             var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
         }
 
-		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
-		if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
-			helper.postDiagnostic(this, DiagnosticCode.Methods_should_have_exactly_one_annotation);
+		//var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
+		//if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
+		//	helper.postDiagnostic(this, DiagnosticCode.Methods_should_have_exactly_one_annotation);
+		//}
+
+		// HEREHERE
+
+		if (bindAnns.length === 0) {
+			//If there is no annotation
+			var methDecl = helper.getDeclForAST(this);
+			anns.push(new RsBindAnnotation(helper.getSourceSpan(this),
+				isStatic ? AnnotKind.RawStatic : AnnotKind.RawMethod,
+				methDecl.getSignatureSymbol().toRsTMeth().toString()));
 		}
-		return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
-			this.propertyName.toRsId(helper),
-			new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
-			new RsASTList([this.block.toRsStmt(helper)]));
+
+		if (this.block) {
+			return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
+				this.propertyName.toRsId(helper),
+				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+				new RsASTList([this.block.toRsStmt(helper)]));
+		}
+		else {
+			return new RsMemberMethDefinition(helper.getSourceSpan(this), anns, isStatic,
+				this.propertyName.toRsId(helper),
+				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))));
+		}
 	}
 	//RefScript - end
 
@@ -5551,28 +5569,48 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
 	public toRsClassElt(helper: RsHelper): RsClassElt {
 
 		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
-    var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassFieldContext;
+		var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassFieldContext;
 
 		var anns = tokenAnnots(this.firstToken(), ctx);
 
-    if (isStatic) {
-  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
-    }
-    else {
-  		var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
-    }
+		if (isStatic) {
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
+		}
+		else {
+			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
+		}
 
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
-		if (bindAnnNames.length == 0) {
-			helper.postDiagnostic(this, DiagnosticCode.Fields_should_have_at_least_one_annotation);
+
+
+		if (bindAnns.length === 0) {
+			//If there is no annotation
+			var fieldDecl = helper.getDeclForAST(this);
+			anns.push(new RsBindAnnotation(helper.getSourceSpan(this),
+				isStatic ? AnnotKind.RawStatic : AnnotKind.RawField,
+				fieldDecl.getSymbol().type.toRsType().toString()));
 		}
-   
-		var binderNames = <RsBindAnnotation[]>anns.filter(
-        b => b.kind() === AnnotKind.RawField || b.kind() === AnnotKind.RawStatic);
+
+		//var binderNames = <RsBindAnnotation[]>anns.filter(
+		//	b => b.kind() === AnnotKind.RawField || b.kind() === AnnotKind.RawStatic);
 
 		// Adding the annotations in the enclosing RsVarDecl instead of the top-level.
-		return new RsMemberVarDecl(helper.getSourceSpan(this), [], isStatic,
-			this.variableDeclarator.toRsVarDecl(helper, binderNames));
+
+
+		if (!this.variableDeclarator) {
+			helper.postDiagnostic(this, DiagnosticCode.Fields_should_have_at_least_one_declaration);
+		}
+
+		if (this.variableDeclarator.equalsValueClause) {
+			return new RsMemberVarDecl(helper.getSourceSpan(this), anns,
+				this.variableDeclarator.propertyName.toRsId(helper), isStatic,
+				this.variableDeclarator.equalsValueClause.toRsExp(helper));
+		}
+		else {
+			return new RsMemberVarDecl(helper.getSourceSpan(this), anns,
+			this.variableDeclarator.propertyName.toRsId(helper), isStatic,
+			null);
+		}
 	}
 	//RefScript - end
 

@@ -240,7 +240,7 @@ module TypeScript {
 
     // MethSig
     export class RsMethSig extends RsTypeMember {
-        constructor(private name: string, private type: RsTAnd<RsMeth>) {
+        constructor(private name: string, private type: RsMeth) {
             super();
         }
 

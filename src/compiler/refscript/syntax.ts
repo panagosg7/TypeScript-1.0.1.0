@@ -742,14 +742,18 @@ module TypeScript {
 		public toObject(): any {
 			return {
 				MemberVarDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.sta,this.vardecl.toObject()]
+					this.name.toObject(),
+					this.sta,
+					(this.exp) ? this.exp.toObject() : null
+				]
 			};
 		}
 
 		constructor(public span: RsSourceSpan,
 					public ann: RsAnnotation[],
+					public name: RsId,
 					public sta: boolean,
-					public vardecl: IRsVarDeclLike) { super(ann); }
+					public exp?: RsExpression) { super(ann); }
 	}
 
 	export class RsMemberMethDecl extends RsClassElt {
@@ -767,6 +771,22 @@ module TypeScript {
 					public args: RsASTList<RsId>,
 					public body: RsASTList<RsStatement>) { super(ann); }
 	}
+
+	export class RsMemberMethDefinition extends RsClassElt {
+		public toObject(): any {
+			return {
+				MemberMethDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.sta, this.name.toObject(),	this.args.toObject()]
+			};
+		}
+
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public sta: boolean,
+					public name: RsId,
+					public args: RsASTList<RsId>) { super(ann); }
+	}
+
 
 
 

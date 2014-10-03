@@ -441,7 +441,7 @@ Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0: "Va
 Variable_annotation_binder_for_0_does_not_correspond_to_any_nearby_variable_declaration: "Variable annotation binder for '{0}' does not correspond to any nearby variable declaration.",
 Duplicate_type_annotation_for_variable_s_0: "Duplicate type annotation for variable(s): '{0}'",
 Invalid_RefScript_annotation_0_Perhaps_you_need_to_replace_with: "Invalid RefScript annotation '{0}'. Perhaps you need to replace ':' with '::'.",
-Fields_should_have_at_least_one_annotation: "Fields should have at least one annotation.",
+Fields_should_have_at_least_one_declaration: "Fields should have at least one declaration.",
 For_in_only_non_ambient_variable_declarators_are_allowed_here: "For-in: only non-ambient variable declarators are allowed here.",
 All_variable_declarators_need_to_be_translated_to_either_RsVarDecls_or_RsEmptyStmts: "All variable declarators need to be translated to either RsVarDecls or RsEmptyStmts",
 BinaryExpression_toRsLValue: "BinaryExpression toRsLValue",

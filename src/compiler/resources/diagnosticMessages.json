@@ -1766,7 +1766,7 @@
         "category": "Error",
         "code": 8009
     },
-    "Fields should have at least one annotation.":{
+    "Fields should have at least one declaration.":{
         "category": "Error",
         "code": 8010
     },

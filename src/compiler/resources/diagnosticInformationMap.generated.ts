@@ -882,7 +882,7 @@ module TypeScript {
   { "code": 8008, "category": DiagnosticCategory.Error },
 "Invalid RefScript annotation '{0}'. Perhaps you need to replace ':' with '::'." : 
   { "code": 8009, "category": DiagnosticCategory.Error },
-"Fields should have at least one annotation." : 
+"Fields should have at least one declaration." : 
   { "code": 8010, "category": DiagnosticCategory.Error },
 "For-in: only non-ambient variable declarators are allowed here." : 
   { "code": 8011, "category": DiagnosticCategory.Error },
