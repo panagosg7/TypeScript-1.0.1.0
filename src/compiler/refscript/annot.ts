@@ -30,7 +30,6 @@ module TypeScript {
 		RawField,		// Field annotations
 		RawMethod,   	// Method annotations
 		RawConstr,		// Constructor annotations
-		RawStatic,		// Static fields/methods
 		RawTAlias,   	// Type alias
 		RawPAlias,   	// Predicate alias
 		RawQual,     	// Qualifier
@@ -41,7 +40,6 @@ module TypeScript {
 
 	export enum AnnotContext {
 		ClassMethodContext,		    // Class method
-		ClassStaticContext,		    // Class static field/method
 		ClassFieldContext,		    // Class field
 		ClassContructorContext,		// Class constructor
 		OtherContext			    // Rest
@@ -61,8 +59,6 @@ module TypeScript {
 					switch (ctx) {
 						case AnnotContext.ClassMethodContext:
 							return new RsBindAnnotation(ss, AnnotKind.RawMethod, pair.snd());
-						case AnnotContext.ClassStaticContext:
-							return new RsBindAnnotation(ss, AnnotKind.RawStatic, pair.snd());
 						case AnnotContext.ClassFieldContext:
 							return new RsBindAnnotation(ss, AnnotKind.RawField, pair.snd());
 						case AnnotContext.ClassContructorContext:

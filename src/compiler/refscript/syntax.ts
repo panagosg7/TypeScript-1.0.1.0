@@ -742,8 +742,8 @@ module TypeScript {
 		public toObject(): any {
 			return {
 				MemberVarDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.name.toObject(),
 					this.sta,
+					this.name.toObject(),
 					(this.exp) ? this.exp.toObject() : null
 				]
 			};
@@ -756,10 +756,10 @@ module TypeScript {
 					public exp?: RsExpression) { super(ann); }
 	}
 
-	export class RsMemberMethDecl extends RsClassElt {
+	export class RsMemberMethDef extends RsClassElt {
 		public toObject(): any {
 			return {
-				MemberMethDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+				MemberMethDef: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
 					this.sta, this.name.toObject(),	this.args.toObject(), this.body.toObject()]
 			};
 		}
@@ -772,7 +772,7 @@ module TypeScript {
 					public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
-	export class RsMemberMethDef extends RsClassElt {
+	export class RsMemberMethDecl extends RsClassElt {
 		public toObject(): any {
 			return {
 				MemberMethDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],

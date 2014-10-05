@@ -5212,40 +5212,30 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 		var methodName = this.propertyName.text();
 		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
    
-        var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassMethodContext;
+        var ctx = AnnotContext.ClassMethodContext;
 
 		var anns = tokenAnnots(this.firstToken(), ctx);
 
-        if (isStatic) {
-            var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
-        }
-        else {
-            var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
-        }
-
-		//var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
-		//if (bindAnnNames.length == 0 || bindAnnNames[0] !== methodName) {
-		//	helper.postDiagnostic(this, DiagnosticCode.Methods_should_have_exactly_one_annotation);
-		//}
-
-		// HEREHERE
+        var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 
 		if (bindAnns.length === 0) {
 			//If there is no annotation
 			var methDecl = helper.getDeclForAST(this);
-			anns.push(new RsBindAnnotation(helper.getSourceSpan(this),
-				isStatic ? AnnotKind.RawStatic : AnnotKind.RawMethod,
-				methDecl.getSignatureSymbol().toRsTMeth().toString()));
+            var sym = methDecl.getSignatureSymbol();
+			anns.push(new RsBindAnnotation(
+                  helper.getSourceSpan(this),
+				  AnnotKind.RawMethod,
+				  new RsMethSig(sym.name, sym.toRsTMeth()).toString()));
 		}
 
 		if (this.block) {
-			return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
+			return new RsMemberMethDef(helper.getSourceSpan(this), anns, isStatic,
 				this.propertyName.toRsId(helper),
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
 				new RsASTList([this.block.toRsStmt(helper)]));
 		}
 		else {
-			return new RsMemberMethDef(helper.getSourceSpan(this), anns, isStatic,
+			return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
 				this.propertyName.toRsId(helper),
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))));
 		}
@@ -5569,26 +5559,22 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
 	public toRsClassElt(helper: RsHelper): RsClassElt {
 
 		var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
-		var ctx = (isStatic) ? AnnotContext.ClassStaticContext : AnnotContext.ClassFieldContext;
+		var ctx = AnnotContext.ClassFieldContext;
 
 		var anns = tokenAnnots(this.firstToken(), ctx);
 
-		if (isStatic) {
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawStatic);
-		}
-		else {
-			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
-		}
+      	var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
 
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
-
 
 		if (bindAnns.length === 0) {
 			//If there is no annotation
 			var fieldDecl = helper.getDeclForAST(this);
-			anns.push(new RsBindAnnotation(helper.getSourceSpan(this),
-				isStatic ? AnnotKind.RawStatic : AnnotKind.RawField,
-				fieldDecl.getSymbol().type.toRsType().toString()));
+            var sym = fieldDecl.getSymbol()
+			anns.push(new RsBindAnnotation(
+                  helper.getSourceSpan(this),
+                  AnnotKind.RawField,
+                  new RsFieldSig(sym.name, sym.type.toRsType()).toString()));
 		}
 
 		//var binderNames = <RsBindAnnotation[]>anns.filter(
