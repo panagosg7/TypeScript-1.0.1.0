@@ -833,10 +833,12 @@ export class InterfaceDeclarationSyntax extends SyntaxNode implements IModuleEle
 				case SyntaxKind.PropertySignature:			// Field signature
 					var v = <PropertySignatureSyntax> m;
 					var anns = tokenAnnots(v.propertyName);
+
+
 					if (anns.length === 0) {
 						//If there is no annotation
 						var eltSymbol = helper.getSymbolForAST(v);
-                        return [new RsFieldSig(eltSymbol.name, eltSymbol.type.toRsType()).toString()];
+                        return [new RsFieldSig(v.propertyName.text(), eltSymbol.type.toRsType()).toString()];
 					}
 					else {
 						return anns.map(m => m.content());
@@ -1270,8 +1272,6 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 			helper.postDiagnostic(this, DiagnosticCode.Function_0_can_have_at_most_one_type_annotation, [name]);
 		}
-
-		//console.log(this.firstToken().text() + " - " + declID + " : " + this.identifier.text());
 
 		if (!this.block) {
 			// Ambient function declaration
@@ -5222,10 +5222,11 @@ export class MemberFunctionDeclarationSyntax extends SyntaxNode implements IMemb
 			//If there is no annotation
 			var methDecl = helper.getDeclForAST(this);
             var sym = methDecl.getSignatureSymbol();
+
 			anns.push(new RsBindAnnotation(
                   helper.getSourceSpan(this),
 				  AnnotKind.RawMethod,
-				  new RsMethSig(sym.name, sym.toRsTMeth()).toString()));
+				  new RsMethSig(methodName, sym.toRsTMeth()).toString()));
 		}
 
 		if (this.block) {
@@ -5570,11 +5571,12 @@ export class MemberVariableDeclarationSyntax extends SyntaxNode implements IMemb
 		if (bindAnns.length === 0) {
 			//If there is no annotation
 			var fieldDecl = helper.getDeclForAST(this);
-            var sym = fieldDecl.getSymbol()
+            var sym = fieldDecl.getSymbol();
+
 			anns.push(new RsBindAnnotation(
                   helper.getSourceSpan(this),
                   AnnotKind.RawField,
-                  new RsFieldSig(sym.name, sym.type.toRsType()).toString()));
+                  new RsFieldSig(this.variableDeclarator.propertyName.text(), sym.type.toRsType()).toString()));
 		}
 
 		//var binderNames = <RsBindAnnotation[]>anns.filter(

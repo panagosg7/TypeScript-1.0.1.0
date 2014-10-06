@@ -128,17 +128,16 @@ module TypeScript {
     export class TArray extends RsType {
         constructor(private eltT: Serializable) { super(); }
 
-        public toString(): string { return "[ " + this.eltT.toString() + " ]"; }
+        public toString(): string { return "<" + this.eltT.toString() + ">"; }
     }
 
     export class TTypeReference extends RsType {
         constructor(private name: string, private params: RsType[]) { super(); }
 
         public toString(): string {
-            var s = "";
-            s += "#" + this.name;
+            var s = this.name;
             if (this.params && this.params.length > 0) {
-                s += "[" + this.params.map(t => t.toString()).join(", ") + "]";
+                s += "<" + this.params.map(t => t.toString()).join(", ") + ">";
             }
             return s;
         }
@@ -171,7 +170,7 @@ module TypeScript {
             s += name;
             s += " ";
             if (this.pars && this.pars.length > 0) {
-                s += "[ " + this.pars.map(a => a.toString()).join(", ") + " ] ";
+                s += "< " + this.pars.map(a => a.toString()).join(", ") + ">";
             }
             //XXX: not implemented yet in the nano parser
             if (this.proto) {
