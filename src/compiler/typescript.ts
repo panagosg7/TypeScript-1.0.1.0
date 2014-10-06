@@ -1191,6 +1191,7 @@ module TypeScript {
     enum CompilerPhase {
         Syntax,
         Semantics,
+        OverloadStats,
         InitializationStats,	
         EmitOptionsValidation,
         Emit,
@@ -1260,6 +1261,8 @@ module TypeScript {
                     return this.moveNextSyntaxPhase();
                 case CompilerPhase.Semantics:
                     return this.moveNextSemanticsPhase();
+                case CompilerPhase.OverloadStats:
+                    return this.moveNextOverloadStatsPhase();
 				case CompilerPhase.InitializationStats:		// RefScript
 					return this.moveNextInitializationPhase();
                 case CompilerPhase.EmitOptionsValidation:
@@ -1282,6 +1285,7 @@ module TypeScript {
                     // Each of these phases are done when we've processed the last file.
                     return this.index === this.fileNames.length;
 				
+				case CompilerPhase.OverloadStats:
 				case CompilerPhase.InitializationStats:
                     return this.index === this.fileNames.length;
 
@@ -1327,6 +1331,21 @@ module TypeScript {
 
                 this._current = CompileResult.fromDiagnostics(diagnostics);
             }
+
+            return true;
+        }
+
+        private moveNextOverloadStatsPhase(): boolean {
+            if (!this.compiler.compilationSettings().gatherOverloadStats()) {
+                return true;
+            }
+            Debug.assert(this.index >= 0 && this.index < this.fileNames.length);
+            var fileName = this.fileNames[this.index];
+            fileName = TypeScript.switchToForwardSlashes(fileName);
+            console.log(fileName);
+
+            OverloadStatGatherer.gather(this.compiler.getDocument(fileName),
+                                        this.compiler.semanticInfoChain);
 
             return true;
         }
