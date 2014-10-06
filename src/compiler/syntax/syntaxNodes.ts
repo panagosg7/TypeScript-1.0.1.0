@@ -1274,10 +1274,17 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		}
 
 		if (!this.block) {
-			// Ambient function declaration
-			return new RsFunctionDecl(
-				helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-				<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
+            if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.DeclareKeyword)) {
+                // Ambient function declaration
+                return new RsFunctionAmbientDecl(
+                    helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+                    <RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
+            }
+            else {
+                return new RsFunctionOverload(
+                    helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+                    <RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));            
+            }
 		}
 		else {
 			// Function definition

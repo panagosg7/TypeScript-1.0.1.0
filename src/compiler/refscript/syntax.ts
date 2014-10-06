@@ -853,10 +853,10 @@ module TypeScript {
 					public body: RsASTList<RsStatement>) { super(ann); }
 	}
 
-	export class RsFunctionDecl extends RsStatement {
+	export class RsFunctionAmbientDecl extends RsStatement {
 		public toObject() {
 			return {
-				FunctionDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+				FuncAmbDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
 					this.id.toObject(), this.args.toObject()]
 			};
 		}
@@ -866,6 +866,21 @@ module TypeScript {
 					public id: RsId,
 					public args: RsASTList<RsId>) { super(ann); }
 	}
+
+  export class RsFunctionOverload extends RsStatement {
+		public toObject() {
+			return {
+				FuncOverload: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.id.toObject(), this.args.toObject()]
+			};
+		}
+		
+		constructor(public span: RsSourceSpan,
+					public ann: RsAnnotation[],
+					public id: RsId,
+					public args: RsASTList<RsId>) { super(ann); }
+	}
+
 
 	export class RsReturnStmt extends RsStatement {
 		public toObject() {
