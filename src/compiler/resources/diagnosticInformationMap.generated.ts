@@ -922,5 +922,7 @@ module TypeScript {
   { "code": 8028, "category": DiagnosticCategory.Message },
 "Invalid reference of 'this' in constructor." : 
   { "code": 8029, "category": DiagnosticCategory.Error },
+"No support for value assigned enumeration element '{0}'." : 
+  { "code": 8030, "category": DiagnosticCategory.Unimplemented },
 }
 }

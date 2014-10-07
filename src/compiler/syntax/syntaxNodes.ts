@@ -7081,6 +7081,25 @@ export class EnumDeclarationSyntax extends SyntaxNode implements IModuleElementS
 	public isTypeScriptSpecific(): boolean {
 		return true;
 	}
+
+	// RefScript - begin
+	public toRsStmt(helper: RsHelper): RsEnumStmt {
+		var originalAnnots = tokenAnnots(this.firstToken());
+		var sourceSpan = helper.getSourceSpan(this);
+
+		// Check that no value is being assigned
+		this.enumElements.toNonSeparatorArray().forEach(element => {
+			if (element.equalsValueClause) {
+				helper.postDiagnostic(element, DiagnosticCode.No_support_for_value_assigned_enumeration_element_0, [element.propertyName.text()]);
+			}
+		});
+
+		return new RsEnumStmt(sourceSpan, originalAnnots,
+			this.identifier.toRsId(helper),
+			new RsASTList(this.enumElements.toNonSeparatorArray().map(a => a.toRsId(helper))));
+	}
+	// RefScript - end
+
 }
 
 export class EnumElementSyntax extends SyntaxNode {
@@ -7149,6 +7168,12 @@ export class EnumElementSyntax extends SyntaxNode {
 		if (this.equalsValueClause !== null && this.equalsValueClause.isTypeScriptSpecific()) { return true; }
 		return false;
 	}
+
+	// RefScript - begin
+	public toRsId(helper: RsHelper): RsId {
+		return this.propertyName.toRsId(helper);
+	}
+	// RefScript - end
 }
 
 export class CastExpressionSyntax extends SyntaxNode implements IUnaryExpressionSyntax {

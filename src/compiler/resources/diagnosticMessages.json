@@ -1845,5 +1845,9 @@
 	"Invalid reference of 'this' in constructor.":{
 		"category": "Error",
 		"code": 8029
+	},
+	"No support for value assigned enumeration element '{0}'.":{
+		"category": "Unimplemented",
+		"code": 8030
 	}
 }

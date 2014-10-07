@@ -928,6 +928,23 @@ module TypeScript {
 			public body: RsASTList<RsClassElt>) { super(ann); }
 	}
 
+	export class RsEnumStmt extends RsStatement {
+
+		public toObject() {
+			return {
+				EnumStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.id.toObject(),
+					this.body.toObject()]
+			};
+		}
+
+		constructor(public span: RsSourceSpan,
+			public ann: RsAnnotation[],
+			public id: RsId,
+			public body: RsASTList<RsId>) { super(ann); }
+	}
+
+
 	export class RsWhileStmt extends RsStatement {
 		public toObject() {
 			return {
