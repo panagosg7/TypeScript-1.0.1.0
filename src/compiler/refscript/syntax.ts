@@ -51,6 +51,12 @@ module TypeScript {
 		public toObject(): any { return this.members.map(m => m.toObject()); }
 	}
 
+	export class RsASTPair<S extends RsAST, T extends RsAST> extends RsAST {
+		constructor(public fst: S, public snd:  T) { super(); }
+
+		public toObject(): any { return [this.fst.toObject(), this.snd.toObject()] }
+	}
+
 	export class RsId extends RsAnnotatedAST {
 		constructor(public span: RsSourceSpan,
 			public ann: RsAnnotation[],
@@ -929,7 +935,6 @@ module TypeScript {
 	}
 
 	export class RsEnumStmt extends RsStatement {
-
 		public toObject() {
 			return {
 				EnumStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
@@ -941,9 +946,8 @@ module TypeScript {
 		constructor(public span: RsSourceSpan,
 			public ann: RsAnnotation[],
 			public id: RsId,
-			public body: RsASTList<RsId>) { super(ann); }
+			public body: RsASTList<RsEnumElt>) { super(ann); }
 	}
-
 
 	export class RsWhileStmt extends RsStatement {
 		public toObject() {
@@ -1062,4 +1066,26 @@ module TypeScript {
 		}
 	}
 
+	/* ****************************************************************************
+	 *
+	 *				Enum Element
+	 * 
+	 * ****************************************************************************/
+
+	export class RsEnumElt extends RsAnnotatedAST {
+		public toObject() {
+			return {
+				EnumElt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.id.toObject(),
+					this.num]
+			};
+		}
+
+		constructor(public span: RsSourceSpan,
+			public ann: RsAnnotation[],
+			public id: RsId,
+			public num: number) { super(ann); }
+	}
+
 }
+

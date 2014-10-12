@@ -7086,17 +7086,9 @@ export class EnumDeclarationSyntax extends SyntaxNode implements IModuleElementS
 	public toRsStmt(helper: RsHelper): RsEnumStmt {
 		var originalAnnots = tokenAnnots(this.firstToken());
 		var sourceSpan = helper.getSourceSpan(this);
-
-		// Check that no value is being assigned
-		this.enumElements.toNonSeparatorArray().forEach(element => {
-			if (element.equalsValueClause) {
-				helper.postDiagnostic(element, DiagnosticCode.No_support_for_value_assigned_enumeration_element_0, [element.propertyName.text()]);
-			}
-		});
-
 		return new RsEnumStmt(sourceSpan, originalAnnots,
 			this.identifier.toRsId(helper),
-			new RsASTList(this.enumElements.toNonSeparatorArray().map(a => a.toRsId(helper))));
+			new RsASTList(this.enumElements.toNonSeparatorArray().map(e => e.toRsEnumElt(helper))))
 	}
 	// RefScript - end
 
@@ -7170,8 +7162,10 @@ export class EnumElementSyntax extends SyntaxNode {
 	}
 
 	// RefScript - begin
-	public toRsId(helper: RsHelper): RsId {
-		return this.propertyName.toRsId(helper);
+	public toRsEnumElt(helper: RsHelper): RsEnumElt {
+		var anns = tokenAnnots(this.firstToken());
+		var enumDecl = <PullEnumElementDecl>helper.getDeclForAST(this);
+		return new RsEnumElt(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), enumDecl.constantValue);
 	}
 	// RefScript - end
 }
