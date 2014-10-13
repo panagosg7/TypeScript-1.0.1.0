@@ -1,5 +1,6 @@
 ///<reference path='..\typescript.ts' />
 
+//TODO (known bug): doesn't handle e.g. interface I { field: () => number; }
 module TypeScript {
     class OverloadState {
         constructor(public semanticInfoChain: SemanticInfoChain,
@@ -22,6 +23,18 @@ module TypeScript {
         return false;
     }
 
+    function numCallSigChildren(ast: ISyntaxElement) {
+        var numChildren = ast.childCount();
+        var ans = 0;
+        for (var i = 0; i < numChildren; i++) {
+            //TODO: not sure why the non-null check is needed
+            if (ast.childAt(i) && ast.childAt(i).kind() == SyntaxKind.CallSignature) {
+                ans++;
+            }
+        }
+        return ans;
+    }
+
     export class OverloadStatGatherer {
         private static pre(ast: ISyntaxElement, state: OverloadState) {
             switch (ast.kind()) {
@@ -29,10 +42,8 @@ module TypeScript {
                 case SyntaxKind.FunctionDeclaration:
                 case SyntaxKind.MemberFunctionDeclaration:
                 case SyntaxKind.MethodSignature:
-                //case SyntaxKind.CallSignature:
                     var functionDecl = state.semanticInfoChain.getDeclForAST(ast);
                     var name = functionDecl.name;
-                    console.log(name);
                     var funcSymbol = functionDecl.getSymbol();
                     var container = funcSymbol.getContainer();
                     var previouslySeenContainers = state.funcs.get(name);
@@ -43,6 +54,12 @@ module TypeScript {
                     var funcTypeSymbol = funcSymbol.type;
                     var signatures = funcTypeSymbol.getCallSignatures().length;
                     signatures > 1 ? state.overloadFuncs++ : state.normalFuncs++;
+                    break;
+                default:
+                    var callSigs = numCallSigChildren(ast);
+                    if (callSigs == 1) state.normalFuncs++;
+                    if (callSigs > 1) state.overloadFuncs++;
+                    break;
             }
         }
 
