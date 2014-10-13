@@ -1074,16 +1074,16 @@ module TypeScript {
 
 	export class RsEnumElt extends RsAnnotatedAST {
 		public toObject() {
-			return {
-				EnumElt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(),
-					this.num]
-			};
+		  return [
+          [this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.name.toObject(),
+					this.num
+        ];
 		}
 
 		constructor(public span: RsSourceSpan,
 			public ann: RsAnnotation[],
-			public id: RsId,
+			public name: RsId,
 			public num: number) { super(ann); }
 	}
 
