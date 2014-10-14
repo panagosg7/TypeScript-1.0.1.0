@@ -110,7 +110,7 @@ module TypeScript {
         }
     }
 
-    export class RsTAnd<V extends RsFunctionLike> extends RsType {
+    export class RsTAnd<V extends RsFunctionLike> extends RsFunctionLike {
         constructor(private signatures: V[]) { super(); }
 
         public toString(): string {
@@ -239,7 +239,7 @@ module TypeScript {
 
     // MethSig
     export class RsMethSig extends RsTypeMember {
-        constructor(private name: string, private type: RsMeth) {
+		constructor(private name: string, private type: RsFunctionLike) {
             super();
         }
 

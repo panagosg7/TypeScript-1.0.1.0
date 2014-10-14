@@ -1265,6 +1265,7 @@ export class FunctionDeclarationSyntax extends SyntaxNode implements IStatementS
 		var bindAnnNames: string[] = bindAnns.map(a => (<RsBindAnnotation>a).binderName(this, helper));
 
 		if (bindAnnNames.length === 0) {
+			// no annotation -- get the TS inferred one
 			var type = decl.getSignatureSymbol().toRsTFun();
 			var typeStr = type.toString();
 			anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.identifier.text() + " :: " + typeStr));

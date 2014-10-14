@@ -1644,18 +1644,48 @@ module TypeScript {
         }
 
 		//RefScript begin
-		public toRsTFun(): RsTFun {
+		public toRsTFun(): RsFunctionLike {
 			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
 			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+
+			var nonOptionalPamars = this.parameters.filter(p => !p.isOptional);
+			var nonOptionalLength = nonOptionalPamars.length;
+			var totParamsLength = this.parameters.length;
+
+			var sigs: BoundedRsType[][] = []
+			for (var i = nonOptionalLength; i <= totParamsLength; i++) {
+				var aaa = tArgs.slice(0, i);
+				sigs.push(aaa);
+			}
 			var retT = this.returnType.toRsType();
-			return new RsTFun(tParams, tArgs, retT);
+
+			switch (sigs.length) {
+				case 0	: return new RsTFun(tParams, tArgs, retT);
+				case 1	: return new RsTFun(tParams, tArgs, retT);
+				default: return new RsTAnd(sigs.map(s => new RsTFun(tParams, s, retT)));
+			}
 		}
 
-		public toRsTMeth(): RsMeth {
+		public toRsTMeth(): RsFunctionLike {
             var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
             var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
-            var retT = this.returnType.toRsType();
-            return new RsMeth(tParams, tArgs, retT);
+
+			var nonOptionalPamars = this.parameters.filter(p => !p.isOptional);
+			var nonOptionalLength = nonOptionalPamars.length;
+			var totParamsLength = this.parameters.length;
+
+			var sigs: BoundedRsType[][] = []
+			for (var i = nonOptionalLength; i <= totParamsLength; i++) {
+				var aaa = tArgs.slice(0, i);
+				sigs.push(aaa);
+			}
+			var retT = this.returnType.toRsType();
+
+			switch (sigs.length) {
+				case 0	: return new RsMeth(tParams, tArgs, retT);
+				case 1	: return new RsMeth(tParams, tArgs, retT);
+				default: return new RsTAnd(sigs.map(s => new RsMeth(tParams, s, retT)));
+			}		
 		}
 		//RefScript end
 
@@ -3194,13 +3224,15 @@ module TypeScript {
 
 			if (this.isFunction()) {
 				var sigs = this.getCallSignatures();
-				//TODO: Overloads !!!
 				var filteredSigs = sigs.filter((sig: PullSignatureSymbol) => {
-					//sig.invalidate();
 					return !sig.isStringConstantOverloadSignature();
 				});
 
-				return new RsTAnd(filteredSigs.map(s => s.toRsTFun()));
+
+				return new RsTAnd(filteredSigs.map(s => {
+					return s.toRsTFun();
+
+				}));
 			}
 
 			if (this.kind === PullElementKind.ObjectType) {
@@ -3241,15 +3273,12 @@ module TypeScript {
                 var properties: RsTypeMember[] = ArrayUtilities.concat(
                     this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).
                         map(function(m: PullSymbol): RsTypeMember[] {
-                            //console.log("  Property member: " + m.toString());
                             return m.getDeclarations().map(function (d: PullDecl): RsTypeMember {
                                 var propAnns = tokenAnnots(d.ast());
                                 switch (propAnns.length) {
                                     case 0:
-                                        //console.log("   *F* " + m.type.toString());
                                         return new RsFieldSig(m.name, m.type.toRsType());
                                     case 1:
-                                        //console.log("    >F> " + propAnns[0].content());
                                         return new RsRawStringMember(propAnns[0].content());
                                     default:
                                         throw new Error("BUG: PullTypeSymbol.toRsType.ObjectType.fields");
@@ -3264,16 +3293,13 @@ module TypeScript {
                 var constructors: RsTypeMember[] = 
                     this.getConstructSignatures().
                         map(function (s: PullSignatureSymbol): RsTypeMember {
-                            //console.log("  Constructor member: " + s.toString());
                             var decls = s.getDeclarations();
                             if (decls.length === 1) {
                                 var constrAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
                                 switch (constrAnns.length) {
                                     case 0:
-                                        //console.log("    *C* " + s.toString());
                                         return new RsConsSig(s.toRsTFun());
                                     case 1:
-                                        //console.log("    >C> " + constrAnns[0].content());
                                         return new RsRawStringMember(constrAnns[0].content());
                                     default:
                                         throw new Error("PullTypeSymbol toRsType Multi user annotations");
@@ -3290,16 +3316,13 @@ module TypeScript {
                 var calls: RsTypeMember[] = 
                     this.getCallSignatures().
                         map(function (s: PullSignatureSymbol): RsTypeMember {
-                            //console.log("  Call member: " + s.toString());
                             var decls = s.getDeclarations();
                             if (decls.length === 1) {
                                 var callAnns = tokenAnnots(decls[0].ast());
                                 switch (callAnns.length) {
                                     case 0:
-                                        //console.log("    *S* " + s.toString());
                                         return new RsCallSig(s.toRsTFun());
                                     case 1:
-                                        //console.log("    >S> " + callAnns[0].content());
                                         return new RsRawStringMember(callAnns[0].content());
                                     default:
                                         throw new Error("PullTypeSymbol toRsType Multi user annotations");
