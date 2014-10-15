@@ -24,6 +24,7 @@ module TypeScript {
 	export enum AnnotKind {
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
+		RawAmbBind,		// Ambient / variable binder
 		RawFunc,		// Anonymous function type
 		RawIface,		// Data type definition
 		RawClass,		// Class annotations
@@ -102,6 +103,9 @@ module TypeScript {
 				var kind = RsAnnotation.toSpecKind(tokens[0]);
 				if (kind === AnnotKind.RawBind) {
 					return new Pair(AnnotKind.RawBind, tokens.join(" "));
+				}
+                else if (kind === AnnotKind.RawAmbBind) {
+					return new Pair(AnnotKind.RawAmbBind, tokens.join(" "));
 				}
 				else {
 					return new Pair(RsAnnotation.toSpecKind(tokens[0]), tokens.slice(1).join(" "));

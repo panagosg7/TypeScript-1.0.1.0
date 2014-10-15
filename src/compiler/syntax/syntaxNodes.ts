@@ -1620,10 +1620,11 @@ export class VariableDeclaratorSyntax extends SyntaxNode {
 						helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
 					}
 					var typeStr = type.toString();
-					anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.propertyName.text() + " :: " + typeStr));
+					anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, this.propertyName.text() + " :: " + typeStr));
 					return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
 				} 
 				else if (anns1.length === 1) {
+                    anns1[0]["_kind"] = AnnotKind.RawAmbBind;
 					return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper), null);
 				}
 				helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation,
