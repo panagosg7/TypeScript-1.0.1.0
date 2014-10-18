@@ -3219,7 +3219,7 @@ module TypeScript {
 					tArgs = this.getTypeParameters();
 				}
     			var rsTParams = [mut ? mut : new TTypeReference("Immutable", [])].concat(tArgs.map(p => p.toRsType()))
-				return new TTypeReference(this.getDisplayName().split("<")[0], rsTParams);
+				return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
 			}
 
 			if (this.isFunction()) {
