@@ -895,7 +895,8 @@ module TypeScript {
 			restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawIface, annotStr));
 
 			// Returning an empty statement
-			return new RsIfaceStmt(helper.getSourceSpan(this), restAnnots);
+			return new RsIfaceStmt(helper.getSourceSpan(this), restAnnots,
+                this.identifier.toRsId(helper));
 		}
 		//RefScript- end
 

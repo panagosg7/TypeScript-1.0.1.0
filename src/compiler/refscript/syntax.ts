@@ -1058,10 +1058,12 @@ module TypeScript {
 
 	export class RsIfaceStmt extends RsStatement implements IRsVarDeclLike {
 		public toObject(): any {
-			return { IfaceStmt: [this.span.toObject(), this.mapAnn(a => a.toObject())] };
+			return { IfaceStmt: [[this.span.toObject(), this.mapAnn(a =>
+                a.toObject())], this.name.toObject()] };
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
+		constructor(public span: RsSourceSpan, public ann: RsAnnotation[],
+            public name: RsId) {
 			super(ann);
 		}
 	}
