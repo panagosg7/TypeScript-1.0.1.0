@@ -155,16 +155,9 @@ module TypeScript {
 	}
 
 	export class RsExprInit extends RsForInit {
-		public toObject(): any {
-			return {
-				ExprInit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject()]
-			};
-		}
+		public toObject(): any { return { ExprInit: this.exp.toObject() } ; }
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public exp: RsExpression) {	super(ann); }
+		constructor(public exp: RsExpression) {	super(null); }
 	}
 
 

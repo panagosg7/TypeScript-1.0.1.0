@@ -6625,7 +6625,7 @@ module TypeScript {
 				return new RsForStmt(
 					helper.getSourceSpan(this),
 					tokenAnnots(this),
-					new RsExprInit(helper.getSourceSpan(this.initializer), tokenAnnots(this.initializer), this.initializer.toRsExp(helper)),
+					new RsExprInit(this.initializer.toRsExp(helper)),
 					this.condition ? this.condition.toRsExp(helper) : null,
 					this.incrementor ? this.incrementor.toRsExp(helper) : null,
 					this.statement.toRsStmt(helper));
