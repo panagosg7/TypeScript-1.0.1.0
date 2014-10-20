@@ -896,7 +896,7 @@ module TypeScript {
 
 			// Returning an empty statement
 			return new RsIfaceStmt(helper.getSourceSpan(this), restAnnots,
-                this.identifier.toRsId(helper));
+				this.identifier.toRsId(helper));
 		}
 		//RefScript- end
 
@@ -2371,7 +2371,7 @@ module TypeScript {
 		public toRsId(helper: RsHelper): RsId {
 			return new RsId(helper.getSourceSpan(this),
 				tokenAnnots(this.firstToken()),
-				this.left.fullText() + "_" + this.right.fullText()); 
+				this.left.fullText() + "_" + this.right.fullText());
 		}
 		// RefScript - end
 
@@ -6611,17 +6611,26 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			//For the moment force variable declarations to be null. We'll only support initializers.
-			if (this.initializer) {
-				helper.postDiagnostic(this, DiagnosticCode.Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0, [this.initializer.fullText()]);
-			}
 			var anns = tokenAnnots(this.forKeyword);
-			return new RsForStmt(
-				helper.getSourceSpan(this),
-				tokenAnnots(this),
-				this.variableDeclaration.toRsForInit(helper, anns),
-				this.condition ? this.condition.toRsExp(helper) : null,
-				this.incrementor ? this.incrementor.toRsExp(helper) : null,
-				this.statement.toRsStmt(helper));
+			if (this.variableDeclaration && !this.initializer) {
+				return new RsForStmt(
+					helper.getSourceSpan(this),
+					tokenAnnots(this),
+					this.variableDeclaration.toRsForInit(helper, anns),
+					this.condition ? this.condition.toRsExp(helper) : null,
+					this.incrementor ? this.incrementor.toRsExp(helper) : null,
+					this.statement.toRsStmt(helper));
+			}
+			else if (this.initializer && !this.variableDeclaration) {
+				return new RsForStmt(
+					helper.getSourceSpan(this),
+					tokenAnnots(this),
+					new RsExprInit(helper.getSourceSpan(this.initializer), tokenAnnots(this.initializer), this.initializer.toRsExp(helper)),
+					this.condition ? this.condition.toRsExp(helper) : null,
+					this.incrementor ? this.incrementor.toRsExp(helper) : null,
+					this.statement.toRsStmt(helper));
+			}
+			helper.postDiagnostic(this, DiagnosticCode.Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0, [this.initializer.fullText()]);
 		}
 		//RefScript - end
 
