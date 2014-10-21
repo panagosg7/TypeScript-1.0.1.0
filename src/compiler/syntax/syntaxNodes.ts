@@ -861,8 +861,8 @@ module TypeScript {
 						var anns = tokenAnnots(cs);
 						if (anns.length === 0) {
 							//If there is no annotation
-							var eltSymbol = helper.getSymbolForAST(cs);
-							return [new RsCallSig(eltSymbol.type.toRsType()).toString()];
+                            var csDecl = helper.getDeclForAST(cs);
+                            return [new RsCallSig(csDecl.getSignatureSymbol().toRsTFun()).toString()];
 						}
 						else {
 							return anns.map(m => m.content());
@@ -3909,6 +3909,7 @@ module TypeScript {
 				case SyntaxKind.SignedRightShiftExpression:
 				case SyntaxKind.UnsignedRightShiftExpression:
 				case SyntaxKind.BitwiseOrExpression:
+				case SyntaxKind.BitwiseAndExpression:
 					return new RsInfixExpr(
 						helper.getSourceSpan(this),
 						tokenAnnots(this),
