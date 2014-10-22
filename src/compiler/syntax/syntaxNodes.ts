@@ -3909,6 +3909,8 @@ module TypeScript {
 				case SyntaxKind.SignedRightShiftExpression:
 				case SyntaxKind.UnsignedRightShiftExpression:
 				case SyntaxKind.BitwiseOrExpression:
+				case SyntaxKind.BitwiseExclusiveOrExpression:
+				case SyntaxKind.BitwiseAndExpression:
 					return new RsInfixExpr(
 						helper.getSourceSpan(this),
 						tokenAnnots(this),
