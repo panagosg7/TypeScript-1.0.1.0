@@ -645,7 +645,7 @@ module TypeScript {
             var type = this.type;
             var nameStr = this.getDisplayName(scopeSymbol);
             if (type) {
-                nameStr = nameStr + (this.isOptional ? "?" : "");
+                nameStr = nameStr + ((this.isOptional) ? "?" : "");
                 var memberName: MemberName = this.getTypeNameForFunctionSignature(nameStr, scopeSymbol);
                 if (!memberName) {
                     var typeNameEx = type.getScopedNameEx(scopeSymbol);
@@ -3235,7 +3235,7 @@ module TypeScript {
 				}));
 			}
 
-			if (this.kind === PullElementKind.ObjectType) {
+			if (this.kind === PullElementKind.ObjectType || this.kind === PullElementKind.ObjectLiteral) {
 
                 ///////////////////////////////////////////////////////////////
                 // Methods
@@ -3277,7 +3277,7 @@ module TypeScript {
                                 var propAnns = tokenAnnots(d.ast());
                                 switch (propAnns.length) {
                                     case 0:
-                                        return new RsFieldSig(m.name, m.type.toRsType());
+                                        return new RsFieldSig(m.name, m.isOptional, m.type.toRsType());
                                     case 1:
                                         return new RsRawStringMember(propAnns[0].content());
                                     default:
@@ -3335,6 +3335,7 @@ module TypeScript {
 
                 return new TObject(ArrayUtilities.concat([methods, properties, constructors, calls]));
        		}
+
 			return new TError(this.toString()); 
 		}
 

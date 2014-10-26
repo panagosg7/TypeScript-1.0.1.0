@@ -227,12 +227,12 @@ module TypeScript {
     // FieldSig
     // TODO: Add mutability here
     export class RsFieldSig extends RsTypeMember {
-        constructor(private name: string, private type: RsType) {
+        constructor(private name: string, private opt: boolean, private type: RsType) {
             super();
         }
 
         public toString() {
-            return this.name + ": " + this.type.toString();
+            return this.name + (this.opt ? "?" : "") + ": " + this.type.toString();
         }
     }
 

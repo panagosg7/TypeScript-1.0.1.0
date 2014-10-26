@@ -838,7 +838,8 @@ module TypeScript {
 						if (anns.length === 0) {
 							//If there is no annotation
 							var eltSymbol = helper.getSymbolForAST(v);
-							return [new RsFieldSig(v.propertyName.text(), eltSymbol.type.toRsType()).toString()];
+							return [new RsFieldSig(v.propertyName.text(),
+                                eltSymbol.isOptional, eltSymbol.type.toRsType()).toString()];
 						}
 						else {
 							return anns.map(m => m.content());
@@ -5600,7 +5601,8 @@ module TypeScript {
 				anns.push(new RsBindAnnotation(
 					helper.getSourceSpan(this),
 					AnnotKind.RawField,
-					new RsFieldSig(this.variableDeclarator.propertyName.text(), sym.type.toRsType()).toString()));
+					new RsFieldSig(this.variableDeclarator.propertyName.text(), 
+                      sym.isOptional, sym.type.toRsType()).toString()));
 			}
 
 			//var binderNames = <RsBindAnnotation[]>anns.filter(
