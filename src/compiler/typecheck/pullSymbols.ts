@@ -3224,7 +3224,7 @@ module TypeScript {
 					switch (mut) {
 						case MutabilityKind.PresetK:
 							var rsTParams: RsType[] = [presetMut].concat(tArgs.map(p => p.toRsType()));
-							return new TAll(mutStr, new TTypeReference(this.getScopedName().split("<")[0], rsTParams));
+							return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
 						case MutabilityKind.ParametricK:
 							var possible = "0123456789";
 							var mutStr = "M" + possible.charAt(Math.floor(Math.random() * possible.length));
