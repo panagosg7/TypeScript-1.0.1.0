@@ -267,7 +267,9 @@ module TypeScript {
 	export enum RsAssignOpKind {
 		OpAssign,
 		OpAssignAdd,
-		OpAssignSub
+		OpAssignSub,
+		OpAssignMul,
+		OpAssignDiv
 	}
 
 	export class RsAssignOp extends RsAST {
@@ -278,6 +280,8 @@ module TypeScript {
 				case "=": return RsAssignOpKind.OpAssign;
 				case "+=": return RsAssignOpKind.OpAssignAdd;
 				case "-=": return RsAssignOpKind.OpAssignSub;
+				case "*=": return RsAssignOpKind.OpAssignMul;
+				case "/=": return RsAssignOpKind.OpAssignDiv;
 			}
 			throw new Error("Case: " + this.sign + " not handled in RsAssignOp.signToOpKind");
 		}
