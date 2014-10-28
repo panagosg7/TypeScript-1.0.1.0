@@ -3176,7 +3176,7 @@ module TypeScript {
 		//RefScript - begin
 
 		/** toRsType: Convert a PullTypeSymbol to a RefScript type */
-		public toRsType(mut?: RsType): Serializable {
+		public toRsType(mut?: MutabilityKind, presetMut?: RsType): Serializable {
 
 			if (this.isAny()) {
 				return TTop;
@@ -3218,8 +3218,41 @@ module TypeScript {
 					//since they are definitely not fixed).
 					tArgs = this.getTypeParameters();
 				}
-    			var rsTParams = [mut ? mut : new TTypeReference("Immutable", [])].concat(tArgs.map(p => p.toRsType()))
-				return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
+
+				var mutT: TTypeReference;
+				if (mut) {
+					switch (mut) {
+						case MutabilityKind.PresetK:
+							var rsTParams: RsType[] = [presetMut].concat(tArgs.map(p => p.toRsType()));
+							return new TAll(mutStr, new TTypeReference(this.getScopedName().split("<")[0], rsTParams));
+						case MutabilityKind.ParametricK:
+							var possible = "0123456789";
+							var mutStr = "M" + possible.charAt(Math.floor(Math.random() * possible.length));
+							var mutVar = new TTVar(mutStr);
+							var mutT: TTypeReference = new TTypeReference(mutStr, []);
+							var rsTParams: RsType[] = [<RsType>mutT].concat(tArgs.map(p => p.toRsType()));
+							return new TAll(mutStr, new TTypeReference(this.getScopedName().split("<")[0], rsTParams));
+						case MutabilityKind.MutableK:
+							var mutT: TTypeReference = new TTypeReference("Mutable", []);
+							var rsTParams: RsType[] = [<RsType>mutT].concat(tArgs.map(p => p.toRsType()));
+							return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
+						case MutabilityKind.ReadOnlyK:
+							var mutT: TTypeReference = new TTypeReference("ReadOnly", []);
+							var rsTParams: RsType[] = [<RsType>mutT].concat(tArgs.map(p => p.toRsType()));
+							return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
+						case MutabilityKind.DefaultK:			//default cases
+						case MutabilityKind.ImmutableK:
+						default:
+							var mutT: TTypeReference = new TTypeReference("Immutable", []);
+							var rsTParams: RsType[] = [<RsType>mutT].concat(tArgs.map(p => p.toRsType()));
+							return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
+					}
+				}
+				else {
+					var mutT: TTypeReference = new TTypeReference("Immutable", []);				//default case
+					var rsTParams: RsType[] = [<RsType>mutT].concat(tArgs.map(p => p.toRsType()));
+					return new TTypeReference(this.getScopedName().split("<")[0], rsTParams);
+				}
 			}
 
 			if (this.isFunction()) {

@@ -71,6 +71,19 @@ module TypeScript {
         }
     }
 
+	export class TAll extends RsType {
+		constructor(public param: string, public ty: RsType) { super(); }
+
+		public toString(): string {
+			var s = "";
+			s += "forall ";
+			s += this.param;
+			s += " . " 
+			s += this.ty.toString();
+			return s;
+		}
+	}
+
 
     export class RsFunctionLike extends RsType { }
 
@@ -259,6 +272,21 @@ module TypeScript {
         }
     }
 
-    // StatSig:  These can't appear in object types
+	// StatSig:  These can't appear in object types
+
+
+	////////////////////////////////
+	// Mutability kind
+
+	export enum MutabilityKind {
+		MutableK,
+		ImmutableK,
+		ReadOnlyK,
+		ParametricK,
+		PresetK,		//set by caller
+		DefaultK
+	}
+
+
 
 }

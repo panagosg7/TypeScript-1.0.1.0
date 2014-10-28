@@ -986,7 +986,7 @@ module TypeScript {
 							//console.log(helper.getSymbolForAST(t).type.toString());
 							//console.log(helper.getSymbolForAST(t).type.getScopedName());
 							//console.log(helper.getSymbolForAST(t).type.toRsType(mutParam). toString());
-							return helper.getSymbolForAST(t).type.toRsType(mutParam);
+							return helper.getSymbolForAST(t).type.toRsType(MutabilityKind.PresetK, mutParam);
 						default:
 							helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
 					}
@@ -7308,7 +7308,7 @@ module TypeScript {
 					break;
 				default:
 					var eltSymbol = helper.getSymbolForAST(this.type);
-					castType = eltSymbol.type.toRsType();
+					castType = eltSymbol.type.toRsType(MutabilityKind.ParametricK);
 					break;
 			}
 
