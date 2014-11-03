@@ -3923,6 +3923,12 @@ module TypeScript {
 				case SyntaxKind.SubtractAssignmentExpression:
 				case SyntaxKind.DivideAssignmentExpression:
 				case SyntaxKind.MultiplyAssignmentExpression:
+				case SyntaxKind.LeftShiftAssignmentExpression:
+				case SyntaxKind.SignedRightShiftAssignmentExpression:
+				case SyntaxKind.UnsignedRightShiftAssignmentExpression:
+				case SyntaxKind.AndAssignmentExpression:
+				case SyntaxKind.ExclusiveOrAssignmentExpression:
+				case SyntaxKind.OrAssignmentExpression:
 					return new RsAssignExpr(
 						helper.getSourceSpan(this),
 						tokenAnnots(this),

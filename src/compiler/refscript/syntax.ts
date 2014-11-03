@@ -269,7 +269,13 @@ module TypeScript {
 		OpAssignAdd,
 		OpAssignSub,
 		OpAssignMul,
-		OpAssignDiv
+		OpAssignDiv,
+		OpAssignLShift,
+		OpAssignSpRShift,
+		OpAssignZfRShift,
+		OpAssignBAnd,
+		OpAssignBXor,
+		OpAssignBOr
 	}
 
 	export class RsAssignOp extends RsAST {
@@ -282,6 +288,12 @@ module TypeScript {
 				case "-=": return RsAssignOpKind.OpAssignSub;
 				case "*=": return RsAssignOpKind.OpAssignMul;
 				case "/=": return RsAssignOpKind.OpAssignDiv;
+				case "<<=": return RsAssignOpKind.OpAssignLShift;
+				case ">>=": return RsAssignOpKind.OpAssignSpRShift;
+				case ">>>=": return RsAssignOpKind.OpAssignZfRShift;
+				case "&=": return RsAssignOpKind.OpAssignBAnd;
+				case "^=": return RsAssignOpKind.OpAssignBXor;
+				case "|=": return RsAssignOpKind.OpAssignBOr;
 			}
 			throw new Error("Case: " + this.sign + " not handled in RsAssignOp.signToOpKind");
 		}
