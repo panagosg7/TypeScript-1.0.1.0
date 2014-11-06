@@ -3896,6 +3896,7 @@ module TypeScript {
 				case SyntaxKind.SubtractExpression:
 				case SyntaxKind.MultiplyExpression:
 				case SyntaxKind.DivideExpression:
+				case SyntaxKind.ModuloExpression:
 				case SyntaxKind.EqualsExpression:
 				case SyntaxKind.EqualsWithTypeConversionExpression:
 				case SyntaxKind.GreaterThanExpression:
