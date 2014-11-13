@@ -1842,12 +1842,16 @@
         "category": "Message",
         "code": 8028
     }, 
-	"Invalid reference of 'this' in constructor.":{
-		"category": "Error",
-		"code": 8029
-	},
-	"No support for value assigned enumeration element '{0}'.":{
-		"category": "Unimplemented",
-		"code": 8030
-	}
+    "Invalid reference of 'this' in constructor.":{
+	"category": "Error",
+        "code": 8029
+    },
+    "No support for value assigned enumeration element '{0}'.":{
+        "category": "Unimplemented",
+	"code": 8030
+    },
+    "Initialization of parameter '{0}' at the signature site is not supported.":{
+        "category": "Unimplemented",
+	"code": 8031
+    }
 }

@@ -1256,6 +1256,13 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
+
+			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
+				if (p.equalsValueClause) {
+					helper.postDiagnostic(this, DiagnosticCode.Initialization_of_parameter_0_at_the_signature_site_is_not_supported, [p.identifier.text()]);
+				}
+			});
+
 			var name = this.identifier.text();
 			var anns = tokenAnnots(this.firstToken());
 
@@ -5122,6 +5129,13 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
+
+			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
+				if (p.equalsValueClause) {
+					helper.postDiagnostic(this, DiagnosticCode.Initialization_of_parameter_0_at_the_signature_site_is_not_supported, [p.identifier.text()]);
+				}
+			});
+
 			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawConstr);
 			if (bindAnns.length !== 1) {
@@ -5242,6 +5256,13 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsClassElt(helper: RsHelper): RsClassElt {
+
+			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
+				if (p.equalsValueClause) {
+					helper.postDiagnostic(this, DiagnosticCode.Initialization_of_parameter_0_at_the_signature_site_is_not_supported, [p.identifier.text()]);
+				}
+			});
+
 			var methodName = this.propertyName.text();
 			var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
 
@@ -7710,6 +7731,12 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
+
+			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
+				if (p.equalsValueClause) {
+					helper.postDiagnostic(this, DiagnosticCode.Initialization_of_parameter_0_at_the_signature_site_is_not_supported, [p.identifier.text()]);
+				}
+			});
 
 			var anns = tokenAnnots(this.block);
 			var funcAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawFunc);

@@ -924,5 +924,7 @@ module TypeScript {
   { "code": 8029, "category": DiagnosticCategory.Error },
 "No support for value assigned enumeration element '{0}'." : 
   { "code": 8030, "category": DiagnosticCategory.Unimplemented },
+"Initialization of parameter '{0}' at the signature site is not supported." : 
+  { "code": 8031, "category": DiagnosticCategory.Unimplemented },
 }
 }
