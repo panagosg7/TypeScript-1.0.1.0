@@ -6,7 +6,8 @@ module TypeScript {
         constructor(public semanticInfoChain: SemanticInfoChain,
                     public funcs = new Map(),
                     public overloadFuncs = 0,
-                    public normalFuncs = 0) { }
+                    public hasOptArg = 0,
+                    public totalFuncs = 0) { }
     }
 
     // based on d3's map
@@ -53,14 +54,25 @@ module TypeScript {
                     state.funcs.set(name, previouslySeenContainers);
                     var funcTypeSymbol = funcSymbol.type;
                     var signatures = funcTypeSymbol.getCallSignatures().length;
-                    signatures > 1 ? state.overloadFuncs++ : state.normalFuncs++;
+                    state.totalFuncs++;
+                    if (signatures > 1) state.overloadFuncs++;
+                    if (OverloadStatGatherer.hasOptionalArg(ast)) state.hasOptArg++;
                     break;
                 default:
                     var callSigs = numCallSigChildren(ast);
-                    if (callSigs == 1) state.normalFuncs++;
-                    if (callSigs > 1) state.overloadFuncs++;
+                    if (callSigs >= 1) {
+                        state.totalFuncs++;
+                        if (callSigs > 1) state.overloadFuncs++;
+                        if (OverloadStatGatherer.hasOptionalArg(ast)) state.hasOptArg++;
+                    }
                     break;
             }
+        }
+
+        private static hasOptionalArg(ast: ISyntaxElement) {
+            var relStart = ast.start() - ast.fullStart();
+            var funcText = ast.fullText().substring(relStart, relStart + ast.width());
+            return funcText.indexOf("?") >= 0;
         }
 
         public static gather(document: Document, semanticInfoChain: SemanticInfoChain) {
@@ -70,8 +82,9 @@ module TypeScript {
             getAstWalkerFactory().simpleWalk(document.sourceUnit(),
                 OverloadStatGatherer.pre, null, state);
 
+            console.log("Total functions: " + state.totalFuncs);
             console.log("Overloaded functions: " + state.overloadFuncs);
-            console.log("Other functions: " + state.normalFuncs);
+            console.log("OptArg functions: " + state.hasOptArg);
         }
     }
 }
