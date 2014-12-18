@@ -6,7 +6,8 @@ module TypeScript {
         constructor(public semanticInfoChain: SemanticInfoChain,
                     public funcs = new Map(),
                     public overloadFuncs = 0,
-                    public hasOptArg = 0,
+                    public optargedFuncs = 0,
+                    public overloadedIntersectOptargedFuncs = 0,
                     public totalFuncs = 0) { }
     }
 
@@ -38,6 +39,7 @@ module TypeScript {
 
     export class OverloadStatGatherer {
         private static pre(ast: ISyntaxElement, state: OverloadState) {
+            var callSigs:number;
             switch (ast.kind()) {
                 //case SyntaxKind.ConstructorDeclaration:
                 case SyntaxKind.FunctionDeclaration:
@@ -49,24 +51,23 @@ module TypeScript {
                     var container = funcSymbol.getContainer();
                     var previouslySeenContainers = state.funcs.get(name);
                     if (!previouslySeenContainers) previouslySeenContainers = [];
-                    if (contains(previouslySeenContainers, container)) break;
+                    if (contains(previouslySeenContainers, container)) return;
                     previouslySeenContainers.push(container);
                     state.funcs.set(name, previouslySeenContainers);
                     var funcTypeSymbol = funcSymbol.type;
-                    var signatures = funcTypeSymbol.getCallSignatures().length;
-                    state.totalFuncs++;
-                    if (signatures > 1) state.overloadFuncs++;
-                    if (OverloadStatGatherer.hasOptionalArg(ast)) state.hasOptArg++;
+                    callSigs = funcTypeSymbol.getCallSignatures().length;
                     break;
                 default:
-                    var callSigs = numCallSigChildren(ast);
-                    if (callSigs >= 1) {
-                        state.totalFuncs++;
-                        if (callSigs > 1) state.overloadFuncs++;
-                        if (OverloadStatGatherer.hasOptionalArg(ast)) state.hasOptArg++;
-                    }
+                    callSigs = numCallSigChildren(ast);
+                    if (callSigs == 0) return;
                     break;
             }
+            state.totalFuncs++;
+            var overloaded = callSigs > 1;
+            var optarged = OverloadStatGatherer.hasOptionalArg(ast);
+            if (overloaded && optarged) state.overloadedIntersectOptargedFuncs++;
+            if (overloaded) state.overloadFuncs++;
+            if (optarged) state.optargedFuncs++;
         }
 
         private static hasOptionalArg(ast: ISyntaxElement) {
@@ -83,8 +84,9 @@ module TypeScript {
                 OverloadStatGatherer.pre, null, state);
 
             console.log("Total functions: " + state.totalFuncs);
+            console.log("Funcs both Overloaded and OptArg: " + state.overloadedIntersectOptargedFuncs);
             console.log("Overloaded functions: " + state.overloadFuncs);
-            console.log("OptArg functions: " + state.hasOptArg);
+            console.log("OptArg functions: " + state.optargedFuncs);
         }
     }
 }
