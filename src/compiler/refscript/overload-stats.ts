@@ -37,6 +37,17 @@ module TypeScript {
         return ans;
     }
 
+    function getFirstCallSigChild(ast: ISyntaxElement) {
+        var numChildren = ast.childCount();
+        for (var i = 0; i < numChildren; i++) {
+            //TODO: not sure why the non-null check is needed
+            if (ast.childAt(i) && ast.childAt(i).kind() == SyntaxKind.CallSignature) {
+                return ast.childAt(i);
+            }
+        }
+        throw new Error("Don't call this function if ast has no CallSig childrem");
+    }
+
     export class OverloadStatGatherer {
         private static pre(ast: ISyntaxElement, state: OverloadState) {
             var callSigs:number;
@@ -71,6 +82,7 @@ module TypeScript {
         }
 
         private static hasOptionalArg(ast: ISyntaxElement) {
+            ast = getFirstCallSigChild(ast);
             var relStart = ast.start() - ast.fullStart();
             var funcText = ast.fullText().substring(relStart, relStart + ast.width());
             return funcText.indexOf("?") >= 0;
