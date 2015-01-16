@@ -1301,11 +1301,21 @@ module TypeScript {
 				}
 			}
 			else {
-				// Function definition
-				return new RsFunctionStmt(
-					helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-					<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
-					new RsASTList([this.block.toRsStmt(helper)]));
+				var funcName = this.identifier.text();
+				if (/^[A-Z]/.test(funcName)) {
+					// Constructor Function
+					return new RsFuncCtorStmt(
+						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
+						new RsASTList([this.block.toRsStmt(helper)]));
+				}
+				else {
+					// Function definition
+					return new RsFunctionStmt(
+						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
+						new RsASTList([this.block.toRsStmt(helper)]));
+				}
 			}
 		}
 

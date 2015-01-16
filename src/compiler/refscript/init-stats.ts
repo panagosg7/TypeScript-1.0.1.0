@@ -59,6 +59,12 @@ module TypeScript {
 					context.enteringCtor();
 					break;
 
+				case SyntaxKind.FunctionDeclaration:
+					// Functions Constructor
+					var funcName = (<FunctionDeclarationSyntax>ast).identifier.text();
+					if (/^[A-Z]/.test(funcName)) context.enteringCtor();
+					break;
+
 				case SyntaxKind.AssignmentExpression:
 					// register a assignment of the form:
 					// this._ = _;
