@@ -1301,21 +1301,25 @@ module TypeScript {
 				}
 			}
 			else {
-				var funcName = this.identifier.text();
-				if (/^[A-Z]/.test(funcName)) {
-					// Constructor Function
-					return new RsFuncCtorStmt(
-						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
-						new RsASTList([this.block.toRsStmt(helper)]));
-				}
-				else {
+
+				// XXX: Disabling this for now
+
+
+				//var funcName = this.identifier.text();
+				// if (/^[A-Z]/.test(funcName)) {
+				//	// Constructor Function
+				//	return new RsFuncCtorStmt(
+				//		helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
+				//		<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
+				//		new RsASTList([this.block.toRsStmt(helper)]));
+				//}
+				//else {
 					// Function definition
 					return new RsFunctionStmt(
 						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
 						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
 						new RsASTList([this.block.toRsStmt(helper)]));
-				}
+				//}
 			}
 		}
 
@@ -5148,14 +5152,22 @@ module TypeScript {
 
 			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawConstr);
-			if (bindAnns.length !== 1) {
-				helper.postDiagnostic(this, DiagnosticCode.Constructors_should_have_exactly_one_annotation);
+
+			if (bindAnns.length === 0) {
+				// no annotation -- get the TS inferred one
+				var decl: PullDecl = helper.getDeclForAST(this);
+				var type = decl.getSignatureSymbol().toRsTCtor();
+				var typeStr = type.toString();
+				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr,  "new " + typeStr));
+			}
+			if (bindAnns.length > 1) {
+				helper.postDiagnostic(this, DiagnosticCode.Constructors_should_have_at_most_one_annotation);
 				return null;
 				//new RsConstructor(helper.getSourceSpan(this), anns,
 				//new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
 				//new RsASTList([this.block.toRsStmt(helper)]));
-
 			}
+
 			return new RsConstructor(helper.getSourceSpan(this), anns,
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
 				new RsASTList([this.block.toRsStmt(helper)]));

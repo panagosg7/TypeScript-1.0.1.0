@@ -1806,7 +1806,7 @@
         "category": "Message",
         "code": 8019
     },
-    "Constructors should have exactly one annotation." : {
+    "Constructors should have at most one annotation." : {
       "category": "Unimplemented",
       "code": 8020
     },

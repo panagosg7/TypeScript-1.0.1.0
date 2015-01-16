@@ -1666,6 +1666,30 @@ module TypeScript {
 			}
 		}
 
+		public toRsTCtor(): RsFunctionLike {
+			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+
+			var nonOptionalPamars = this.parameters.filter(p => !p.isOptional);
+			var nonOptionalLength = nonOptionalPamars.length;
+			var totParamsLength = this.parameters.length;
+
+			var sigs: BoundedRsType[][] = []
+			for (var i = nonOptionalLength; i <= totParamsLength; i++) {
+				var aaa = tArgs.slice(0, i);
+				sigs.push(aaa);
+			}
+			var retT = TVoid; 
+
+			switch (sigs.length) {
+				case 0	: return new RsTFun(tParams, tArgs, retT);
+				case 1	: return new RsTFun(tParams, tArgs, retT);
+				default: return new RsTAnd(sigs.map(s => new RsTFun(tParams, s, retT)));
+			}
+		}
+
+
+
 		public toRsTMeth(): RsFunctionLike {
             var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
             var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));

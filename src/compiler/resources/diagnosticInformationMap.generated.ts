@@ -902,7 +902,7 @@ module TypeScript {
   { "code": 8018, "category": DiagnosticCategory.Error },
 "Import library (only enabled with 'refscript')." : 
   { "code": 8019, "category": DiagnosticCategory.Message },
-"Constructors should have exactly one annotation." : 
+"Constructors should have at most one annotation." : 
   { "code": 8020, "category": DiagnosticCategory.Unimplemented },
 "Methods should have exactly one annotation." : 
   { "code": 8021, "category": DiagnosticCategory.Unimplemented },
