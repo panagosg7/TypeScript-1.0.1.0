@@ -36,7 +36,8 @@ module TypeScript {
 		RawQual,     	// Qualifier
 		RawInvt,      	// Invariant
 		RawCast,		// Cast
-        RawExported     // Exported
+        RawExported,    // Exported
+		RawOption		// RT Option
 	}
 
 	export enum AnnotContext {
@@ -130,6 +131,7 @@ module TypeScript {
 				case "invariant": return AnnotKind.RawInvt;
 				case "cast": return AnnotKind.RawCast;
 				case "<anonymous>": return AnnotKind.RawFunc;
+				case "option": return AnnotKind.RawOption;
 				default: return AnnotKind.RawBind;
 			}
 		}

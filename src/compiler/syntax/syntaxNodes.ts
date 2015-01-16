@@ -1846,11 +1846,7 @@ module TypeScript {
 					return new RsPrefixExpr(helper.getSourceSpan(this), anns, new RsPrefixOp(RsPrefixOpKind.PrefixTypeof), this.operand.toRsExp(helper));
 
 				case SyntaxKind.BitwiseNotExpression:
-					return new RsPrefixExpr(
-						helper.getSourceSpan(this),
-						tokenAnnots(this.operatorToken),
-						new RsPrefixOp(RsPrefixOpKind.PrefixBNot),
-						this.operand.toRsExp(helper));
+					return new RsPrefixExpr(helper.getSourceSpan(this), anns ,new RsPrefixOp(RsPrefixOpKind.PrefixBNot), this.operand.toRsExp(helper));
 
 				case SyntaxKind.CastExpression:
 					return this.toRsExp(helper);
@@ -5039,7 +5035,8 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsExprStmt {
-			return new RsExprStmt(helper.getSourceSpan(this), tokenAnnots(this), this.expression.toRsExp(helper));
+			// The annotations will be provided by the contents
+			return new RsExprStmt(helper.getSourceSpan(this), /* tokenAnnots(this) */ [], this.expression.toRsExp(helper));
 		}
 		//RefScript - end
 
