@@ -574,7 +574,7 @@ module TypeScript {
 			return text;
 		}
 
-		private headerAnnotation(helper: RsHelper, anns: RsAnnotation[]): RsAnnotation {
+		private headerAnnotation(helper: RsHelper, anns: RsAnnotation[]): { ann: RsAnnotation; mut: TTVar } {
 
 			//No class annotation given - generate one based on class information from TypeScript.
 			if (anns.length === 0) {
@@ -610,12 +610,18 @@ module TypeScript {
 					.map(t => t.toRsHeritage(helper, SyntaxKind.ImplementsKeyword, mutType))
 					.filter(t => t !== null));
 				var sourceSpan = helper.getSourceSpan(this);
-				return new RsInferredClassAnnotation(sourceSpan, this.identifier, typeParams, extendsSerial, implementsHeritage);
+				return {
+					ann: new RsInferredClassAnnotation(sourceSpan, this.identifier, typeParams, extendsSerial, implementsHeritage),
+					mut: mutType
+				};
 			}
 			else if (anns.length === 1) {
 				//TODO: Add sanity checks here - do these annotations agree with the TypeScript ones?
 				//This might not be very straightforward because we might need to parse refinement types.
-				return <RsExplicitClassAnnotation> anns[0];
+				return {
+					ann: <RsExplicitClassAnnotation> anns[0],
+					mut: undefined
+				};
 			}
 			else {
 				helper.postDiagnostic(this, this.identifier.text());
@@ -630,7 +636,11 @@ module TypeScript {
 			//Is there a class annotation given?
 			var classAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() === AnnotKind.RawClass);
 			//Add the type annotation to the rest
-			restAnnots.push(this.headerAnnotation(helper, classAnnots));
+
+			var _headerAnnotation = this.headerAnnotation(helper, classAnnots);
+			var mutabilityVar = _headerAnnotation.mut;
+
+			restAnnots.push(_headerAnnotation.ann);
 
 			var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
 			var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
@@ -642,7 +652,7 @@ module TypeScript {
 			return new RsClassStmt(helper.getSourceSpan(this),
 				restAnnots, this.identifier.toRsId(helper),
 				(ext && ext.length > 0) ? ext[0] : null, imp,
-				this.classElements.toRsClassElt(helper));
+				this.classElements.toRsClassElt(helper, mutabilityVar));
 		}
 		//RefScript - end
 
@@ -790,6 +800,9 @@ module TypeScript {
 					var possible = "0123456789";
 					mutParam += possible.charAt(Math.floor(Math.random() * possible.length));
 				}
+
+				var mutType = new TTVar(mutParam);
+
 				typeParams.unshift(mutParam);
 
 				annotStr += (typeParams.length > 0) ? ("<" + typeParams.join(", ") + "> ") : " ";
@@ -851,7 +864,20 @@ module TypeScript {
 						if (anns.length === 0) {
 							//If there is no annotation
 							var eltSymbol = helper.getSymbolForAST(c);
-							return [new RsConsSig(eltSymbol.type.toRsType()).toString()];
+							var ss = <PullSignatureSymbol>eltSymbol;					
+							var tParams = ss.getTypeParameters().map(p => p.type.toRsTypeParameter());
+							var tArgs = ss.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+							if (mutType) {
+								var tRet = ss.returnType.toRsType(MutabilityKind.PresetK, mutType);
+							}
+							else {
+								var tRet = ss.returnType.toRsType();
+							}
+							//console.log(ss.toString());
+							//console.log(tParams.map(p => p.toString()).join(","));
+							//console.log(tArgs.map(a => a.toString()).join(","));
+							//console.log(tRet.toString());
+							return [new RsConsSig(new RsTFun(tParams, tArgs, tRet)).toString()];
 						}
 						else {
 							return anns.map(m => m.content());
@@ -5139,7 +5165,7 @@ module TypeScript {
 		}
 
 		//RefScript - begin
-		public toRsClassElt(helper: RsHelper): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
 
 			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
 				if (p.equalsValueClause) {
@@ -5153,7 +5179,12 @@ module TypeScript {
 			if (bindAnns.length === 0) {
 				// no annotation -- get the TS inferred one
 				var decl: PullDecl = helper.getDeclForAST(this);
-				var type = decl.getSignatureSymbol().toRsTCtor();
+				if (mut) {
+					var type = decl.getSignatureSymbol().toRsTCtor(MutabilityKind.PresetK, mut);
+				}
+				else {
+					var type = decl.getSignatureSymbol().toRsTCtor();
+				}
 				var typeStr = type.toString();
 				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr,  "new " + typeStr));
 			}
@@ -5274,7 +5305,7 @@ module TypeScript {
 		}
 
 		//RefScript - begin
-		public toRsClassElt(helper: RsHelper): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
 
 			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
 				if (p.equalsValueClause) {
@@ -5630,7 +5661,7 @@ module TypeScript {
 		}
 
 		//RefScript - begin
-		public toRsClassElt(helper: RsHelper): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
 
 			var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
 			var ctx = AnnotContext.ClassFieldContext;

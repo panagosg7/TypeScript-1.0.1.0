@@ -1666,9 +1666,15 @@ module TypeScript {
 			}
 		}
 
-		public toRsTCtor(): RsFunctionLike {
+		// public toRsTCtor(): RsFunctionLike {
+		public toRsTCtor(mut?: MutabilityKind, presetMut?: RsType): RsFunctionLike {
 			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
 			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
+
+			// console.log("RETURN TYPE: " + this.returnType.toString());
+			//console.log(" ==> " + this.returnType.toRsType(mut, presetMut).toString());
+			//console.log("FULL TYPE: " + this.toString());
+			//console.log(" ==> " + this.toRsTFun().toString());
 
 			var nonOptionalPamars = this.parameters.filter(p => !p.isOptional);
 			var nonOptionalLength = nonOptionalPamars.length;
@@ -1676,10 +1682,9 @@ module TypeScript {
 
 			var sigs: BoundedRsType[][] = []
 			for (var i = nonOptionalLength; i <= totParamsLength; i++) {
-				var aaa = tArgs.slice(0, i);
-				sigs.push(aaa);
+				sigs.push(tArgs.slice(0, i));
 			}
-			var retT = TVoid; 
+			var retT = this.returnType.toRsType(mut, presetMut);
 
 			switch (sigs.length) {
 				case 0	: return new RsTFun(tParams, tArgs, retT);
@@ -1687,8 +1692,6 @@ module TypeScript {
 				default: return new RsTAnd(sigs.map(s => new RsTFun(tParams, s, retT)));
 			}
 		}
-
-
 
 		public toRsTMeth(): RsFunctionLike {
             var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());

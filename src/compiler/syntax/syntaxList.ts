@@ -16,7 +16,7 @@ module TypeScript {
 		toRsExp(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsExpression>;
 		toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement>;
 		toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue>;
-		toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt>;
+		toRsClassElt(helper: RsHelper, mut?: RsType): RsASTList<RsClassElt>;
 		toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit>;
 		toRsMemList<T extends RsAST>(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<T>
 		toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): RsASTList<RsVarDecl>;	// Needs to be this way to capture ambient declarations.
@@ -48,8 +48,8 @@ module TypeScript.Syntax {
 		throw new Error("toRsLValue not implemented for " + SyntaxKind[list.kind()]);
 	}
 
-	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> {
-		return new RsASTList(list.toArray().map(m => m.toRsClassElt(helper)));
+	function toRsClassElt<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, mut?: RsType): RsASTList<RsClassElt> {
+		return new RsASTList(list.toArray().map(m => m.toRsClassElt(helper, mut)));
 	}
 
 	function toRsForInit<T extends ISyntaxNodeOrToken>(list: ISyntaxList<T>, helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> {
@@ -190,7 +190,7 @@ module TypeScript.Syntax {
 		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
 		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsASTList<RsClassElt> { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
 		public toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end
@@ -345,7 +345,7 @@ module TypeScript.Syntax {
 		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
 		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsASTList<RsClassElt> { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
 		public toRsVarDecl(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end
@@ -550,7 +550,7 @@ module TypeScript.Syntax {
 		public toRsStmt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsStatement> { return toRsStmt(this, helper); }
 		public toRsMemList(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsLValue> { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsClassElt> { return toRsClassElt(this, helper); } 
+		public toRsClassElt(helper: RsHelper, mut?: RsType): RsASTList<RsClassElt> { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper, anns?: RsAnnotation[]): RsASTList<RsForInit> { return toRsForInit(this, helper); } 
 		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): RsASTList<RsVarDecl> { return toRsVarDecl(this, helper, anns); } 
 		//RefScript - end 
