@@ -1853,5 +1853,9 @@
     "Initialization of parameter '{0}' at the signature site is not supported.":{
         "category": "Unimplemented",
 	"code": 8031
+    }, 
+    "Cannot infer mutability parameter for class constructor.":{
+        "category": "Unimplemented",
+	"code": 8032
     }
 }

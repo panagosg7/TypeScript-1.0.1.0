@@ -926,5 +926,7 @@ module TypeScript {
   { "code": 8030, "category": DiagnosticCategory.Unimplemented },
 "Initialization of parameter '{0}' at the signature site is not supported." : 
   { "code": 8031, "category": DiagnosticCategory.Unimplemented },
+"Cannot infer mutability parameter for class constructor." : 
+  { "code": 8032, "category": DiagnosticCategory.Unimplemented },
 }
 }

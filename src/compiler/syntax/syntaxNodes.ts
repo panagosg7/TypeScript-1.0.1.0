@@ -649,10 +649,27 @@ module TypeScript {
 				restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
 			}
 
+			if (this.classElements.toArray().some(v => v.kind() === SyntaxKind.ConstructorDeclaration)) {
+				//console.log("HAS CONSTRUCTOR: " + this.identifier.text());
+				var classElts = this.classElements.toRsClassElt(helper, mutabilityVar);
+			}
+			else {
+				//console.log("DOES NOT HAVE CONSTRUCTOR: " + this.identifier.text());
+				if (mutabilityVar) {
+					var consTy = new RsTFun([], [], new TTypeReference(this.identifier.text(), [mutabilityVar]));
+				}
+				else {
+					helper.postDiagnostic(this, DiagnosticCode.Cannot_infer_mutability_parameter_for_class_constructor);
+				}
+				var typeStr = consTy.toString();
+				var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
+				var ctor = new RsConstructor(helper.getSourceSpan(this), [], new RsASTList([]), new RsASTList([]));
+				var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
+			}
+
 			return new RsClassStmt(helper.getSourceSpan(this),
 				restAnnots, this.identifier.toRsId(helper),
-				(ext && ext.length > 0) ? ext[0] : null, imp,
-				this.classElements.toRsClassElt(helper, mutabilityVar));
+				(ext && ext.length > 0) ? ext[0] : null, imp, classElts);
 		}
 		//RefScript - end
 

@@ -463,5 +463,6 @@ Gather_statistics_about_initialization: "Gather statistics about initialization"
 Invalid_reference_of_this_in_constructor: "Invalid reference of 'this' in constructor.",
 No_support_for_value_assigned_enumeration_element_0: "No support for value assigned enumeration element '{0}'.",
 Initialization_of_parameter_0_at_the_signature_site_is_not_supported: "Initialization of parameter '{0}' at the signature site is not supported.",
+Cannot_infer_mutability_parameter_for_class_constructor: "Cannot infer mutability parameter for class constructor.",
 }
 }
