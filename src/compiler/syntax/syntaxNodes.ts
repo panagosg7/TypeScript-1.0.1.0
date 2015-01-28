@@ -658,7 +658,6 @@ module TypeScript {
 				var heritage = this.heritageClauses.toArray();
 
 				var extendsClass = heritage.some(h => {
-					console.log(SyntaxKind[h.kind()]);
 					for (var i = 0; i < h.childCount(); i++) {
 						if (h.childAt(i).kind() === SyntaxKind.ExtendsKeyword) return true;
 					}
