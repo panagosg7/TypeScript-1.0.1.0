@@ -663,7 +663,7 @@ module TypeScript {
 				}
 				var typeStr = consTy.toString();
 				var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
-				var ctor = new RsConstructor(helper.getSourceSpan(this), [], new RsASTList([]), new RsASTList([]));
+				var ctor = new RsConstructor(helper.getSourceSpan(this), anns, new RsASTList([]), new RsASTList([]));
 				var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
 			}
 
