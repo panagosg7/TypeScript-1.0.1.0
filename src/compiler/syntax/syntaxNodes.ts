@@ -654,6 +654,22 @@ module TypeScript {
 				var classElts = this.classElements.toRsClassElt(helper, mutabilityVar);
 			}
 			else {
+
+				var heritage = this.heritageClauses.toArray();
+
+				var extendsClass = heritage.some(h => {
+					console.log(SyntaxKind[h.kind()]);
+					for (var i = 0; i < h.childCount(); i++) {
+						if (h.childAt(i).kind() === SyntaxKind.ExtendsKeyword) return true;
+					}
+					return false;
+				});
+
+				if (extendsClass) {
+					// console.log("DOES NOT HAVE CONSTRUCTOR BUT HAS A PARENT: " + this.identifier.text());
+					helper.postDiagnostic(this, DiagnosticCode.Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor,
+						[this.identifier.text()]);
+				}
 				//console.log("DOES NOT HAVE CONSTRUCTOR: " + this.identifier.text());
 				if (mutabilityVar) {
 					var consTy = new RsTFun([], [], new TTypeReference(this.identifier.text(), [mutabilityVar]));
