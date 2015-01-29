@@ -792,6 +792,7 @@ module TypeScript {
             for (var i = 0; i < n; i++) {
                 var arg = parameters.astAt(i);
                 var id = parameters.identifierAt(i);
+				console.log("EMIT DEF VALUE: " + id.text());				 
                 var equalsValueClause = parameters.initializerAt(i);
                 if (equalsValueClause) {
                     this.emitIndent();
@@ -810,6 +811,7 @@ module TypeScript {
                 var n = parameters.length;
                 var lastArg = parameters.astAt(n - 1);
                 var id = parameters.identifierAt(n - 1);
+				console.log("EMIT REST VALUE: " + id.text());				 
                 this.emitIndent();
                 this.recordSourceMappingStart(lastArg);
                 this.writeToOutput("var ");
@@ -1971,7 +1973,8 @@ module TypeScript {
                     var parameterDecl = this.semanticInfoChain.getDeclForAST(parameter);
                     if (hasFlag(parameterDecl.flags, PullElementFlags.PropertyParameter)) {
                         this.emitIndent();
-                        this.recordSourceMappingStart(parameter);
+						this.recordSourceMappingStart(parameter);
+						console.log("PROPERTY PARAMETER: " + parameter.identifier.text());
                         this.writeToOutputWithSourceMapRecord("this." + parameter.identifier.text(), parameter.identifier);
                         this.writeToOutput(" = ");
                         this.writeToOutputWithSourceMapRecord(parameter.identifier.text(), parameter.identifier);
@@ -1987,6 +1990,7 @@ module TypeScript {
                     if (!hasModifier(varDecl.modifiers, PullElementFlags.Static) && varDecl.variableDeclarator.equalsValueClause) {
                         this.emitIndent();
                         this.emitMemberVariableDeclaration(varDecl);
+						console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
                         this.writeLineToOutput("");
                     }
                 }

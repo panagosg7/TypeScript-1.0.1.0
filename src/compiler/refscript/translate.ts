@@ -59,6 +59,29 @@ module TypeScript {
 			return this._diagnostics;
 		}
 
+		private _parentNode: ISyntaxNode[] = [];
+
+		public getParentNode(): ISyntaxNode {
+			if (this._parentNode && this._parentNode.length > 0) {
+				return this._parentNode[this._parentNode.length-1];
+			}
+			return null;
+		}
+
+		public pushParentNode(p: ISyntaxNode) {
+			if (!this._parentNode) {
+				this._parentNode = [];
+			}
+			this._parentNode.push(p);
+		}
+
+		public popParentNode(): ISyntaxNode {
+			if (this._parentNode && this._parentNode.length > 0) {
+				this._parentNode.pop();
+			}
+			return null;
+		}
+
 	}
 
 	export class FixResult {

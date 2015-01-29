@@ -629,6 +629,9 @@ module TypeScript {
 		}
 
 		public toRsStmt(helper: RsHelper): RsStatement {
+
+			helper.pushParentNode(this);
+
 			//Class header annotations
 			var originalAnnots = tokenAnnots(this.firstToken());
 			//Remove all class annotations and keep the rest
@@ -649,12 +652,13 @@ module TypeScript {
 				restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
 			}
 
+
 			if (this.classElements.toArray().some(v => v.kind() === SyntaxKind.ConstructorDeclaration)) {
-				//console.log("HAS CONSTRUCTOR: " + this.identifier.text());
+				// A constructor exists
 				var classElts = this.classElements.toRsClassElt(helper, mutabilityVar);
 			}
 			else {
-
+				// A constructor does not exist
 				var heritage = this.heritageClauses.toArray();
 
 				var extendsClass = heritage.some(h => {
@@ -679,8 +683,11 @@ module TypeScript {
 				var typeStr = consTy.toString();
 				var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
 				var ctor = new RsConstructor(helper.getSourceSpan(this), anns, new RsASTList([]), new RsASTList([]));
+
 				var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
 			}
+
+			helper.popParentNode();
 
 			return new RsClassStmt(helper.getSourceSpan(this),
 				restAnnots, this.identifier.toRsId(helper),
@@ -5197,6 +5204,29 @@ module TypeScript {
 		}
 
 		//RefScript - begin
+
+
+		private memberInitializations(helper: RsHelper, parentClass: ClassDeclarationSyntax) {
+
+			var statements: RsStatement[] = [];
+
+			for (var i = 0, n = parentClass.classElements.childCount(); i < n; i++) {
+				if (parentClass.classElements.childAt(i).kind() === SyntaxKind.MemberVariableDeclaration) {
+					var varDecl = <MemberVariableDeclarationSyntax>parentClass.classElements.childAt(i);
+					if (!hasModifier(varDecl.modifiers, PullElementFlags.Static) && varDecl.variableDeclarator.equalsValueClause) {
+						statements.push(
+							new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
+								new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
+								varDecl.variableDeclarator.equalsValueClause.toRsExp(helper))
+						);
+						// console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
+					}
+				}
+			}
+			return statements;		
+		}
+
+
 		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
 
 			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
@@ -5228,9 +5258,45 @@ module TypeScript {
 				//new RsASTList([this.block.toRsStmt(helper)]));
 			}
 
+			// Constructor block prelude
+
+            var list = this.block.statements;
+			var parent = helper.getParentNode();
+
+			var rsBlock: RsStatement[] = [];
+
+			if (parent && parent.kind() === SyntaxKind.ClassDeclaration) {
+				var parentClass = <ClassDeclarationSyntax> parent;
+
+				var emitPropertyAssignmentsAfterSuperCall = ASTHelpers.getExtendsHeritageClause(parentClass.heritageClauses) !== null;
+
+				var propertyAssignmentIndex = emitPropertyAssignmentsAfterSuperCall ? 1 : 0;
+
+				for (var i = 0, n = list.childCount(); i < n; i++) {
+					// In some circumstances, class property initializers must be emitted immediately after the 'super' constructor
+					// call which, in these cases, must be the first statement in the constructor body
+					if (i === propertyAssignmentIndex) {
+						rsBlock = ArrayUtilities.concat([rsBlock, this.memberInitializations(helper, parentClass)]);
+					}
+					var node = list.childAt(i);
+					rsBlock.push(node.toRsStmt(helper));
+				}
+
+				if (i === propertyAssignmentIndex) {
+					rsBlock = ArrayUtilities.concat([rsBlock, this.memberInitializations(helper, parentClass)]);
+				}
+
+			}
+			else {
+
+				console.log("ERROR NOT PARENT");
+
+
+			}
+
 			return new RsConstructor(helper.getSourceSpan(this), anns,
 				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
-				new RsASTList([this.block.toRsStmt(helper)]));
+				new RsASTList(rsBlock));
 		}
 		//RefScript - end
 
