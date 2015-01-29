@@ -5215,10 +5215,11 @@ module TypeScript {
 					var varDecl = <MemberVariableDeclarationSyntax>parentClass.classElements.childAt(i);
 					if (!hasModifier(varDecl.modifiers, PullElementFlags.Static) && varDecl.variableDeclarator.equalsValueClause) {
 						statements.push(
-							new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
-								new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
-								varDecl.variableDeclarator.equalsValueClause.toRsExp(helper))
-						);
+							new RsExprStmt(helper.getSourceSpan(this), [],
+								new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
+									new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
+									varDecl.variableDeclarator.equalsValueClause.toRsExp(helper)))
+							);
 						// console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
 					}
 				}
@@ -5288,10 +5289,7 @@ module TypeScript {
 
 			}
 			else {
-
-				console.log("ERROR NOT PARENT");
-
-
+				helper.postDiagnostic(this, DiagnosticCode.Constructor_parent_has_not_been_set);
 			}
 
 			return new RsConstructor(helper.getSourceSpan(this), anns,

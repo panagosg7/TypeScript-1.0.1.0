@@ -930,5 +930,7 @@ module TypeScript {
   { "code": 8032, "category": DiagnosticCategory.Unimplemented },
 "Class '{0}' extends other classes so needs to have an explicit constructor." : 
   { "code": 8033, "category": DiagnosticCategory.Unimplemented },
+"Constructor parent has not been set." : 
+  { "code": 8034, "category": DiagnosticCategory.Bug },
 }
 }

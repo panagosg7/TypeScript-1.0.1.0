@@ -1861,5 +1861,9 @@
     "Class '{0}' extends other classes so needs to have an explicit constructor.":{
         "category": "Unimplemented",
 	"code": 8033
+    },
+    "Constructor parent has not been set.":{
+        "category": "Bug",
+        "code": 8034
     }
 }
