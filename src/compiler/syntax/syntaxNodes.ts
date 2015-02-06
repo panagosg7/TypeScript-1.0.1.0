@@ -658,33 +658,40 @@ module TypeScript {
 				var classElts = this.classElements.toRsClassElt(helper, mutabilityVar);
 			}
 			else {
-				// A constructor does not exist
-				var heritage = this.heritageClauses.toArray();
 
-				var extendsClass = heritage.some(h => {
-					for (var i = 0; i < h.childCount(); i++) {
-						if (h.childAt(i).kind() === SyntaxKind.ExtendsKeyword) return true;
-					}
-					return false;
-				});
 
-				if (extendsClass) {
-					// console.log("DOES NOT HAVE CONSTRUCTOR BUT HAS A PARENT: " + this.identifier.text());
-					helper.postDiagnostic(this, DiagnosticCode.Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor,
-						[this.identifier.text()]);
-				}
-				//console.log("DOES NOT HAVE CONSTRUCTOR: " + this.identifier.text());
-				if (mutabilityVar) {
-					var consTy = new RsTFun([], [], new TTypeReference(this.identifier.text(), [mutabilityVar]));
-				}
-				else {
-					helper.postDiagnostic(this, DiagnosticCode.Cannot_infer_mutability_parameter_for_class_constructor);
-				}
-				var typeStr = consTy.toString();
-				var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
-				var ctor = new RsConstructor(helper.getSourceSpan(this), anns, new RsASTList([]), new RsASTList([]));
+				helper.postDiagnostic(this, DiagnosticCode.Class_0_needs_to_have_an_explicit_constructor, [this.identifier.text()]);
 
-				var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
+				// TODO : allow missing constructor -- this requires the right initialization 
+				//        assignments to be added to the inferred one.
+				
+				//// A constructor does not exist
+				//var heritage = this.heritageClauses.toArray();
+
+				//var extendsClass = heritage.some(h => {
+				//	for (var i = 0; i < h.childCount(); i++) {
+				//		if (h.childAt(i).kind() === SyntaxKind.ExtendsKeyword) return true;
+				//	}
+				//	return false;
+				//});
+
+				//if (extendsClass) {
+				//	// console.log("DOES NOT HAVE CONSTRUCTOR BUT HAS A PARENT: " + this.identifier.text());
+				//	helper.postDiagnostic(this, DiagnosticCode.Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor,
+				//		[this.identifier.text()]);
+				//}
+				////console.log("DOES NOT HAVE CONSTRUCTOR: " + this.identifier.text());
+				//if (mutabilityVar) {
+				//	var consTy = new RsTFun([], [], new TTypeReference(this.identifier.text(), [mutabilityVar]));
+				//}
+				//else {
+				//	helper.postDiagnostic(this, DiagnosticCode.Cannot_infer_mutability_parameter_for_class_constructor);
+				//}
+				//var typeStr = consTy.toString();
+				//var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
+				//var ctor = new RsConstructor(helper.getSourceSpan(this), anns, new RsASTList([]), new RsASTList([]));
+
+				//var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
 			}
 
 			helper.popParentNode();

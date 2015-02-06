@@ -928,9 +928,11 @@ module TypeScript {
   { "code": 8031, "category": DiagnosticCategory.Unimplemented },
 "Cannot infer mutability parameter for class constructor." : 
   { "code": 8032, "category": DiagnosticCategory.Unimplemented },
-"Class '{0}' extends other classes so needs to have an explicit constructor." : 
+"Class '{0}' needs to have an explicit constructor." : 
   { "code": 8033, "category": DiagnosticCategory.Unimplemented },
+"Class '{0}' extends other classes so needs to have an explicit constructor." : 
+  { "code": 8034, "category": DiagnosticCategory.Unimplemented },
 "Constructor parent has not been set." : 
-  { "code": 8034, "category": DiagnosticCategory.Bug },
+  { "code": 8035, "category": DiagnosticCategory.Bug },
 }
 }
