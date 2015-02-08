@@ -653,7 +653,8 @@ module TypeScript {
 			}
 
 
-			if (this.classElements.toArray().some(v => v.kind() === SyntaxKind.ConstructorDeclaration)) {
+			if (this.classElements.toArray().some(v => v.kind() === SyntaxKind.ConstructorDeclaration) ||
+				this.firstToken().kind() === SyntaxKind.DeclareKeyword) {
 				// A constructor exists
 				var classElts = this.classElements.toRsClassElt(helper, mutabilityVar);
 			}
