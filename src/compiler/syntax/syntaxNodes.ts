@@ -5236,7 +5236,7 @@ module TypeScript {
 		}
 
 
-		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt {
 
 			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
 				if (p.equalsValueClause) {
@@ -5250,12 +5250,7 @@ module TypeScript {
 			if (bindAnns.length === 0) {
 				// no annotation -- get the TS inferred one
 				var decl: PullDecl = helper.getDeclForAST(this);
-				if (mut) {
-					var type = decl.getSignatureSymbol().toRsTCtor(MutabilityKind.PresetK, mut);
-				}
-				else {
-					var type = decl.getSignatureSymbol().toRsTCtor();
-				}
+				var type = decl.getSignatureSymbol().toRsTCtor(mut);
 				var typeStr = type.toString();
 				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr,  "new " + typeStr));
 			}
@@ -5409,7 +5404,7 @@ module TypeScript {
 		}
 
 		//RefScript - begin
-		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt {
 
 			this.callSignature.parameterList.parameters.toNonSeparatorArray().forEach(p => {
 				if (p.equalsValueClause) {
@@ -5765,7 +5760,7 @@ module TypeScript {
 		}
 
 		//RefScript - begin
-		public toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt {
 
 			var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
 			var ctx = AnnotContext.ClassFieldContext;

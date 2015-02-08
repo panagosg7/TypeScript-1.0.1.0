@@ -451,7 +451,7 @@ module TypeScript {
 			throw new Error("toRsLValue not implemented for " + SyntaxKind[this.kind()]);
 		}
 
-		public toRsClassElt(helper: RsHelper): RsClassElt {
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt {
 			throw new Error("toRsClassElt not implemented for " + SyntaxKind[this.kind()]);
 		}
 

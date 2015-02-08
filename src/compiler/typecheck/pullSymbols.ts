@@ -1667,8 +1667,11 @@ module TypeScript {
 		}
 
 		// public toRsTCtor(): RsFunctionLike {
-		public toRsTCtor(mut?: MutabilityKind, presetMut?: RsType): RsFunctionLike {
+		public toRsTCtor(mut: RsType): RsFunctionLike {
 			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+			tParams.push(
+				new TTypeParam((<TTVar>mut).name)
+				);		//add mutability parameter
 			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
 
 			// console.log("RETURN TYPE: " + this.returnType.toString());
@@ -1684,7 +1687,7 @@ module TypeScript {
 			for (var i = nonOptionalLength; i <= totParamsLength; i++) {
 				sigs.push(tArgs.slice(0, i));
 			}
-			var retT = this.returnType.toRsType(mut, presetMut);
+			var retT = this.returnType.toRsType(MutabilityKind.PresetK, mut);
 
 			switch (sigs.length) {
 				case 0	: return new RsTFun(tParams, tArgs, retT);
