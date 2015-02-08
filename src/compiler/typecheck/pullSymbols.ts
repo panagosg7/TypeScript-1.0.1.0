@@ -1668,10 +1668,14 @@ module TypeScript {
 
 		// public toRsTCtor(): RsFunctionLike {
 		public toRsTCtor(mut: RsType): RsFunctionLike {
-			var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
-			tParams.push(
-				new TTypeParam((<TTVar>mut).name)
-				);		//add mutability parameter
+
+            // XXX : Handle type params in RSC !!!
+
+            var tParams: TTypeParam[] = [];
+
+            // var tParams = this.getTypeParameters().map(p => p.type.toRsTypeParameter());
+			// tParams.push(new TTypeParam((<TTVar>mut).name));		//add mutability parameter
+
 			var tArgs = this.parameters.map(p => new BoundedRsType(p.name, p.type.toRsType()));
 
 			// console.log("RETURN TYPE: " + this.returnType.toString());
