@@ -5221,15 +5221,24 @@ module TypeScript {
 			for (var i = 0, n = parentClass.classElements.childCount(); i < n; i++) {
 				if (parentClass.classElements.childAt(i).kind() === SyntaxKind.MemberVariableDeclaration) {
 					var varDecl = <MemberVariableDeclarationSyntax>parentClass.classElements.childAt(i);
-					if (!hasModifier(varDecl.modifiers, PullElementFlags.Static) && varDecl.variableDeclarator.equalsValueClause) {
-						statements.push(
-							new RsExprStmt(helper.getSourceSpan(this), [],
-								new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
-									new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
-									varDecl.variableDeclarator.equalsValueClause.toRsExp(helper)))
-							);
-						// console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
-					}
+                    if (!hasModifier(varDecl.modifiers, PullElementFlags.Static) && varDecl.variableDeclarator.equalsValueClause) {
+                        statements.push(
+                            new RsExprStmt(helper.getSourceSpan(this), [],
+                                new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
+                                    new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
+                                    varDecl.variableDeclarator.equalsValueClause.toRsExp(helper)))
+                            );
+                        // console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
+                    }
+                    else {
+                        statements.push(
+                            new RsExprStmt(helper.getSourceSpan(this), [],
+                                new RsAssignExpr(helper.getSourceSpan(this), [], new RsAssignOp("="),
+                                    new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []),
+                                        varDecl.variableDeclarator.propertyName.text()), new RsNullLit(helper.getSourceSpan(this), [])))
+                            );
+                    
+                    }
 				}
 			}
 			return statements;		
