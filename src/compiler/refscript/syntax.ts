@@ -476,8 +476,19 @@ module TypeScript {
 		        	public num: number) { super(ann); }
 	}
 
+	export class RsHexLit extends RsExpression {
+		public toObject() {
+			return {
+				HexLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
+					this.num]
+			};
+		}
 
-
+		constructor(public span: RsSourceSpan,
+        			public ann: RsAnnotation[],
+		        	public num: string) { super(ann); }
+	}
+    
 	export class RsStringLit extends RsExpression {
 		public toObject() {
 			//Quotes fix
@@ -1107,14 +1118,14 @@ module TypeScript {
 		  return [
           [this.span.toObject(), this.mapAnn(a => a.toObject())],
 					this.name.toObject(),
-					this.num
+					this.exp.toObject()
         ];
 		}
 
 		constructor(public span: RsSourceSpan,
 			public ann: RsAnnotation[],
 			public name: RsId,
-			public num: number) { super(ann); }
+			public exp: RsExpression) { super(ann); }
 	}
 
 }

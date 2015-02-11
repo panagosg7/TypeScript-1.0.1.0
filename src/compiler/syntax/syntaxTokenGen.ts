@@ -11,7 +11,21 @@ module TypeScript.Syntax {
 		throw new Error("toRsAST not implemented for " +  SyntaxKind[token.kind()]);
 	}
 
+
+    export function isHexLit(s: string): boolean {
+        var regexp = new RegExp('0[xX][0-9a-fA-F]+');
+        return regexp.test(s);
+    }
+
+    export function isIntLit(s: string): boolean {
+        var regexp = new RegExp('[0-9]+');
+        return regexp.test(s);
+    }
+
+
+
     function toRsExp(token: ISyntaxToken, helper: RsHelper): RsExpression {
+
 		switch (token.kind()) {
             case SyntaxKind.IdentifierName:
                 return new RsVarRef(
@@ -21,10 +35,16 @@ module TypeScript.Syntax {
 
 			case SyntaxKind.NumericLiteral:
 				if (token.text().indexOf(".") === -1) {
-					//No decimal part
-					return new RsIntLit(helper.getSourceSpan(token),
-						[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-						token.value());
+                    //console.log(token.text() + " kind: " + SyntaxKind[token.kind()] + "  ISHEX? " + isHexLit(token.text()));
+                    if (isHexLit(token.text())) {
+                        return new RsHexLit(helper.getSourceSpan(token), [], token.text());
+                    }
+                    else {
+                        //No decimal part
+                        return new RsIntLit(helper.getSourceSpan(token),
+                            [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+                            token.value());
+                    }
 				}
 				else {
 					return new RsNumLit(helper.getSourceSpan(token),
