@@ -1869,5 +1869,10 @@
     "Constructor parent has not been set.":{
         "category": "Bug",
         "code": 8035
+    },
+    "Invalid enumeration entry for '{0}'.":{
+        "category": "Unimplemented",
+	    "code": 8036
     }
+
 }

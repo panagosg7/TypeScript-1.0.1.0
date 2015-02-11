@@ -7301,10 +7301,10 @@ module TypeScript {
 		public toRsStmt(helper: RsHelper): RsEnumStmt {
 			var originalAnnots = tokenAnnots(this.firstToken());
 			var sourceSpan = helper.getSourceSpan(this);
-		return new RsEnumStmt(sourceSpan, originalAnnots,
+		    return new RsEnumStmt(sourceSpan, originalAnnots,
 				this.identifier.toRsId(helper),
 				new RsASTList(this.enumElements.toNonSeparatorArray().map(e => e.toRsEnumElt(helper))))
-	}
+	    }
 		// RefScript - end
 
 	}
@@ -7379,34 +7379,9 @@ module TypeScript {
 		// RefScript - begin
 		public toRsEnumElt(helper: RsHelper): RsEnumElt {
 			var anns = tokenAnnots(this.firstToken());
-            // Value has been provided
-            if (this.equalsValueClause && this.equalsValueClause.value) {
 
-                //console.log(SyntaxKind[this.equalsValueClause.kind()]);
-                //console.log(SyntaxKind[this.equalsValueClause.value.kind()]);
-                //console.log(this.equalsValueClause.value.fullText());
-                //console.log("ISHEX? " + this.isHexLit(this.equalsValueClause.value.fullText()));
-                //console.log();
-
-                // Provided Hex literal
-                if (Syntax.isHexLit(this.equalsValueClause.value.fullText())) {
-
-                    // console.log("A provided Hex lit: " + this.equalsValueClause.value.fullText());
-
-                    return new RsEnumElt(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper),
-                        new RsHexLit(helper.getSourceSpan(this.equalsValueClause.value), [], this.equalsValueClause.value.fullText()));
-                }
-                // Provided Int literal
-                else if (Syntax.isIntLit(this.equalsValueClause.value.fullText())) {
-                    var enumDecl = <PullEnumElementDecl>helper.getDeclForAST(this);
-
-                    //console.log("A provided int lit: " + enumDecl.constantValue);
-
-                    return new RsEnumElt(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper),
-                        new RsIntLit(helper.getSourceSpan(this.equalsValueClause.value), [], enumDecl.constantValue));
-                }
-            }
-            else {
+            // If there's no value provided, try to infer it
+            if (!this.equalsValueClause) {
                 // Inferred (Int) literal
                 var enumDecl = <PullEnumElementDecl>helper.getDeclForAST(this);
                 if (Syntax.isIntLit(enumDecl.constantValue.toString())) {
@@ -7417,7 +7392,13 @@ module TypeScript {
                         new RsIntLit(helper.getSourceSpan(this), [], enumDecl.constantValue));
                 }
 
+			    helper.postDiagnostic(this, DiagnosticCode.Invalid_enumeration_entry_for_0, [this.propertyName.text()]);
             }
+            
+            // Otherwise get an expression
+            return new RsEnumElt(helper.getSourceSpan(this), anns,
+                this.propertyName.toRsId(helper), this.equalsValueClause.toRsExp(helper));
+
 		}
 		// RefScript - end
 	}

@@ -934,5 +934,7 @@ module TypeScript {
   { "code": 8034, "category": DiagnosticCategory.Unimplemented },
 "Constructor parent has not been set." : 
   { "code": 8035, "category": DiagnosticCategory.Bug },
+"Invalid enumeration entry for '{0}'." : 
+  { "code": 8036, "category": DiagnosticCategory.Unimplemented },
 }
 }

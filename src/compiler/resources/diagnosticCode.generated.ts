@@ -467,5 +467,6 @@ Cannot_infer_mutability_parameter_for_class_constructor: "Cannot infer mutabilit
 Class_0_needs_to_have_an_explicit_constructor: "Class '{0}' needs to have an explicit constructor.",
 Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor: "Class '{0}' extends other classes so needs to have an explicit constructor.",
 Constructor_parent_has_not_been_set: "Constructor parent has not been set.",
+Invalid_enumeration_entry_for_0: "Invalid enumeration entry for '{0}'.",
 }
 }
