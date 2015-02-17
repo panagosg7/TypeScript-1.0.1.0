@@ -7500,7 +7500,7 @@ module TypeScript {
 					break;
 				case SyntaxKind.BooleanKeyword:
 					castType = TBoolean
-          break;
+                    break;
 				case SyntaxKind.NumberKeyword:
 					castType = TNumber;
 					break;
@@ -7512,7 +7512,13 @@ module TypeScript {
 					break;
 				default:
 					var eltSymbol = helper.getSymbolForAST(this.type);
-					castType = eltSymbol.type.toRsType(MutabilityKind.ParametricK);
+                    if (eltSymbol && eltSymbol.type) {
+                        castType = eltSymbol.type.toRsType(MutabilityKind.ParametricK);
+                    }
+                    else {
+                        castType = TError;
+				        helper.postDiagnostic(this, DiagnosticCode.RefScript_does_not_support_the_cast_0, [this.fullText()]);
+                    }
 					break;
 			}
 

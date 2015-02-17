@@ -468,5 +468,6 @@ Class_0_needs_to_have_an_explicit_constructor: "Class '{0}' needs to have an exp
 Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor: "Class '{0}' extends other classes so needs to have an explicit constructor.",
 Constructor_parent_has_not_been_set: "Constructor parent has not been set.",
 Invalid_enumeration_entry_for_0: "Invalid enumeration entry for '{0}'.",
+RefScript_does_not_support_the_cast_0: "RefScript does not support the cast: '{0}'.",
 }
 }

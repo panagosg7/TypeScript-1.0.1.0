@@ -936,5 +936,7 @@ module TypeScript {
   { "code": 8035, "category": DiagnosticCategory.Bug },
 "Invalid enumeration entry for '{0}'." : 
   { "code": 8036, "category": DiagnosticCategory.Unimplemented },
+"RefScript does not support the cast: '{0}'." : 
+  { "code": 8037, "category": DiagnosticCategory.Unimplemented },
 }
 }

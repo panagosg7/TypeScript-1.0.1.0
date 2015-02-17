@@ -1872,7 +1872,11 @@
     },
     "Invalid enumeration entry for '{0}'.":{
         "category": "Unimplemented",
-	    "code": 8036
+	"code": 8036
+    },
+    "RefScript does not support the cast: '{0}'.": {
+        "category": "Unimplemented",
+        "code": 8037
     }
 
 }
