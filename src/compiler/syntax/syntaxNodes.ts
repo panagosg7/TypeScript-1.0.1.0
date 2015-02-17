@@ -2,13 +2,25 @@
 
 module TypeScript {
 
-	//RefScript - begin
-	/* Get the annotations that lead a token */
-	export function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
+    //RefScript - begin
+    /* Get the annotations that lead a token */
+
+    export function leadingTokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
+        return tokenAnnots(token, true, context);
+    }
+
+    export function trailingTokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[]{
+        return tokenAnnots(token, false, context);
+    }
+
+	function tokenAnnots(token: ISyntaxElement, lead: boolean, context?: AnnotContext): RsAnnotation[] {
+
+        if (!token) return [];
 
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
 
-		var commentTrivia = token.leadingTrivia().toArray().filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
+        var commentTrivia = (lead) ? token.leadingTrivia() .toArray().filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia):
+                                     token.trailingTrivia().toArray().filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
 
 		var match = commentTrivia.map(ct => {
 			var cstart = ct.fullStart();
@@ -23,6 +35,7 @@ module TypeScript {
 			}
 			return null;
 		});
+
 		return match.filter(t => t !== null).map(t => RsAnnotation.createAnnotation(t.snd(), ctx, t.fst()));
 	}
 	//RefScript - end
@@ -634,7 +647,7 @@ module TypeScript {
 			helper.pushParentNode(this);
 
 			//Class header annotations
-			var originalAnnots = tokenAnnots(this.firstToken());
+			var originalAnnots = leadingTokenAnnots(this.firstToken());
 			//Remove all class annotations and keep the rest
 			var restAnnots: RsAnnotation[] = originalAnnots.filter(a => a.kind() !== AnnotKind.RawClass);
 			//Is there a class annotation given?
@@ -792,7 +805,7 @@ module TypeScript {
 		//RefScript - begin
 
 		public toRsStmt(helper: RsHelper): RsStatement {
-			var originalAnnots = tokenAnnots(this.firstToken());
+			var originalAnnots = leadingTokenAnnots(this.firstToken());
 
 			// Is this exported?
 			if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
@@ -853,7 +866,7 @@ module TypeScript {
 
 					case SyntaxKind.MethodSignature:			// Method signature
 						var v = <PropertySignatureSyntax> m;
-						var anns = tokenAnnots(v.propertyName);
+						var anns = leadingTokenAnnots(v.propertyName);
 						if (anns.length === 0) {
 							//If there is no annotation
 							var eltDecl = helper.getDeclForAST(v);
@@ -866,7 +879,7 @@ module TypeScript {
 
 					case SyntaxKind.PropertySignature:			// Field signature
 						var v = <PropertySignatureSyntax> m;
-						var anns = tokenAnnots(v.propertyName);
+						var anns = leadingTokenAnnots(v.propertyName);
 
 
 						if (anns.length === 0) {
@@ -881,7 +894,7 @@ module TypeScript {
 
 					case SyntaxKind.ConstructSignature:         // Constructor signature
 						var c = <ConstructSignatureSyntax> m;
-						var anns = tokenAnnots(c.newKeyword);
+						var anns = leadingTokenAnnots(c.newKeyword);
 						if (anns.length === 0) {
 							//If there is no annotation
 							var eltSymbol = helper.getSymbolForAST(c);
@@ -902,7 +915,7 @@ module TypeScript {
 
 					case SyntaxKind.CallSignature:              // Call signature
 						var cs = <CallSignatureSyntax> m;
-						var anns = tokenAnnots(cs);
+						var anns = leadingTokenAnnots(cs);
 						if (anns.length === 0) {
 							//If there is no annotation
                             var csDecl = helper.getDeclForAST(cs);
@@ -1171,7 +1184,7 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			var originalAnnots = tokenAnnots(this);
+			var originalAnnots = leadingTokenAnnots(this);
 			// Is this exported?
 			if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
 				originalAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
@@ -1303,7 +1316,7 @@ module TypeScript {
 			});
 
 			var name = this.identifier.text();
-			var anns = tokenAnnots(this.firstToken());
+			var anns = leadingTokenAnnots(this.firstToken());
 
 			var declID = PullHelpers.getSignatureForFuncDecl(helper.getDeclForAST(this)).signature.pullSymbolID;
 
@@ -1461,7 +1474,7 @@ module TypeScript {
 
 		public toRsStmt(helper: RsHelper): RsStatement {
 			var anns: RsAnnotation[] = ArrayUtilities.concat(
-				this.modifiers.toArray().map(m => tokenAnnots(m)));
+				this.modifiers.toArray().map(m => leadingTokenAnnots(m)));
 
 			if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
 				anns.push(new RsAnnotation(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
@@ -1563,7 +1576,7 @@ module TypeScript {
 
 		public toRsStmt(helper: RsHelper, parentAnns?: RsAnnotation[]): RsStatement {
 
-			var anns = tokenAnnots(this.firstToken(), AnnotContext.OtherContext);
+			var anns = leadingTokenAnnots(this.firstToken(), AnnotContext.OtherContext);
 
 			//var anns: RsAnnotation[] = this.varKeyword.leadingTrivia().toArray()
 			//	.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia)
@@ -1673,13 +1686,21 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
-			//Invariant: anns are of kind RawBind
+
+            // Is this variable ReadOnly ?
+            var ro = trailingTokenAnnots(this.propertyName).filter(a => a.kind() === AnnotKind.RawReadOnly);
+
 			if (anns) {
-				var anns1 = anns.filter(a => a.binderName(this, helper) === this.propertyName.text());
+
+			    // binderAnns: keep just the relevant binder annotations
+				var binderAnns = anns.filter(a => a.binderName(this, helper) === this.propertyName.text());
+
 				var pullDecl = helper.getDeclForAST(this);
+
 				if ((pullDecl.flags & PullElementFlags.Ambient) === PullElementFlags.Ambient) {
+
 					// Refscript treats ambient variable declarations as normal declarations. 
-					if (anns1.length === 0) {
+					if (binderAnns.length === 0) {
 						var type: RsType = helper.getDeclForAST(this).getSymbol().type.toRsType();
 						if (type instanceof TError) {
 							var tError = <TError>type;
@@ -1688,19 +1709,23 @@ module TypeScript {
 						var typeStr = type.toString();
 						anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, this.propertyName.text() + " :: " + typeStr));
 						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
+
 					}
-					else if (anns1.length === 1) {
-						anns1[0]["_kind"] = AnnotKind.RawAmbBind;
-						return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper), null);
+					else if (binderAnns.length === 1) {
+
+						binderAnns[0]["_kind"] = AnnotKind.RawAmbBind;
+						return new RsVarDecl(helper.getSourceSpan(this), binderAnns, this.propertyName.toRsId(helper), null);
+
 					}
 					helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation,
 						[this.propertyName.text()]);
 				}
-				//This is a normal declaration
 
-				if (anns1.length < 2) {
+				//This is a normal declaration
+				if (binderAnns.length < 2) {
 					//All necessary binders need to be in @anns@
-					return new RsVarDecl(helper.getSourceSpan(this), anns1, this.propertyName.toRsId(helper),
+                    return new RsVarDecl(helper.getSourceSpan(this),
+                        ArrayUtilities.concat([binderAnns, ro]), this.propertyName.toRsId(helper),
 						(this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
 				}
 
@@ -1859,7 +1884,7 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
-			var anns = tokenAnnots(this.operatorToken);
+			var anns = leadingTokenAnnots(this.operatorToken);
 			switch (this.kind()) {
 				case SyntaxKind.ObjectLiteralExpression:
 					return new RsObjectLit(helper.getSourceSpan(this), anns, this.operand.toRsMemList(helper));
@@ -2004,7 +2029,7 @@ module TypeScript {
 		//RefScript - begin
 
 		public toRsExp(helper: RsHelper): RsExpression {
-			return new RsArrayLit(helper.getSourceSpan(this), tokenAnnots(this.openBracketToken), this.expressions.toRsExp(helper));
+			return new RsArrayLit(helper.getSourceSpan(this), leadingTokenAnnots(this.openBracketToken), this.expressions.toRsExp(helper));
 		}
 		//RefScript - end
 	}
@@ -2427,7 +2452,7 @@ module TypeScript {
 		// RefScript - begin
 		public toRsId(helper: RsHelper): RsId {
 			return new RsId(helper.getSourceSpan(this),
-				tokenAnnots(this.firstToken()),
+				leadingTokenAnnots(this.firstToken()),
 				this.left.fullText() + "_" + this.right.fullText());
 		}
 		// RefScript - end
@@ -2921,7 +2946,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsId(helper: RsHelper): RsId {
 			return new RsId(helper.getSourceSpan(this),
-				tokenAnnots(this.name.firstToken()),
+				leadingTokenAnnots(this.name.firstToken()),
 				this.name.fullText());
 		}
 		//RefScript - end
@@ -3147,7 +3172,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			return new RsBlockStmt(helper.getSourceSpan(this),
-				tokenAnnots(this.openBraceToken),
+				leadingTokenAnnots(this.openBraceToken),
 				this.statements.toRsStmt(helper));
 		}
 		//RefScript - end
@@ -3369,7 +3394,7 @@ module TypeScript {
 			switch (this.kind()) {
 				case SyntaxKind.MemberAccessExpression: {
 					return new RsLDot(helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						this.expression.toRsExp(helper),
 						this.name.text());
 				}
@@ -3386,7 +3411,7 @@ module TypeScript {
 			switch (this.name.kind()) {
 				case SyntaxKind.IdentifierName: {
 					return new RsDotRef(helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						this.expression.toRsExp(helper),
 						this.name.toRsId(helper));
 				}
@@ -3480,9 +3505,9 @@ module TypeScript {
 		public toRsExp(helper: RsHelper): RsExpression {
 			switch (this.kind()) {
 				case SyntaxKind.PostIncrementExpression:
-					return new RsUnaryAssignExpr(helper.getSourceSpan(this), tokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
+					return new RsUnaryAssignExpr(helper.getSourceSpan(this), leadingTokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixInc), this.operand.toRsLValue(helper));
 				case SyntaxKind.PostDecrementExpression:
-					return new RsUnaryAssignExpr(helper.getSourceSpan(this), tokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
+					return new RsUnaryAssignExpr(helper.getSourceSpan(this), leadingTokenAnnots(this), new RsUnaryAssignOp(RsUnaryAssignOpKind.PostfixDec), this.operand.toRsLValue(helper));
 				default:
 					helper.postDiagnostic(this,
 						DiagnosticCode.Cannot_call_toRsExp_on_PostfixUnaryExpression_with_SyntaxKind_0,
@@ -3599,14 +3624,14 @@ module TypeScript {
 		//Refscript - begin
 		public toRsLValue(helper: RsHelper): RsLValue {
 			return new RsLBracket(helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.expression.toRsExp(helper),
 				this.argumentExpression.toRsExp(helper));
 		}
 
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsBracketRef(helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.expression.toRsExp(helper),
 				this.argumentExpression.toRsExp(helper));
 		}
@@ -3704,7 +3729,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsCallExpr(helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.expression.toRsExp(helper),
 				this.argumentList.arguments.toRsExp(helper));
 		}
@@ -3923,7 +3948,7 @@ module TypeScript {
 						case SyntaxKind.IdentifierName:
 							return new RsDotRef(
 								helper.getSourceSpan(this),
-								tokenAnnots(this),
+								leadingTokenAnnots(this),
 								this.left.toRsExp(helper),
 								<RsId>this.right.toRsAST(helper));
 					}
@@ -3936,7 +3961,7 @@ module TypeScript {
 				case SyntaxKind.AssignmentExpression:
 					return new RsAssignExpr(
 						helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						new RsAssignOp(this.operatorToken.text()),
 						this.left.toRsLValue(helper),
 						this.right.toRsExp(helper));
@@ -3944,7 +3969,7 @@ module TypeScript {
 				case SyntaxKind.ElementAccessExpression:
 					return new RsBracketRef(
 						helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						this.left.toRsExp(helper),
 						this.right.toRsExp(helper));
 
@@ -3971,7 +3996,7 @@ module TypeScript {
 				case SyntaxKind.BitwiseAndExpression:
 					return new RsInfixExpr(
 						helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						new RsInfixOp(this.operatorToken.text()),
 						this.left.toRsExp(helper),
 						this.right.toRsExp(helper));
@@ -3988,21 +4013,21 @@ module TypeScript {
 				case SyntaxKind.OrAssignmentExpression:
 					return new RsAssignExpr(
 						helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						new RsAssignOp(this.operatorToken.text()),
 						this.left.toRsLValue(helper),
 						this.right.toRsExp(helper));
 
 				case SyntaxKind.InstanceOfExpression:
 					return new RsInfixExpr(helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						new RsInfixOp("instanceof"),
 						this.left.toRsExp(helper),
 						this.right.toRsExp(helper));
 
 				case SyntaxKind.InExpression:
 					return new RsInfixExpr(helper.getSourceSpan(this),
-						tokenAnnots(this),
+						leadingTokenAnnots(this),
 						new RsInfixOp("in"),
 						this.left.toRsExp(helper),
 						this.right.toRsExp(helper));
@@ -4113,7 +4138,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsCondExpr(helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.condition.toRsExp(helper),
 				this.whenTrue.toRsExp(helper),
 				this.whenFalse.toRsExp(helper));
@@ -4989,11 +5014,11 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			if (this.elseClause) {
-				return new RsIfStmt(helper.getSourceSpan(this), tokenAnnots(this),
+				return new RsIfStmt(helper.getSourceSpan(this), leadingTokenAnnots(this),
 					this.condition.toRsExp(helper), this.statement.toRsStmt(helper), this.elseClause.toRsStmt(helper));
 			}
 			else {
-				return new RsIfSingleStmt(helper.getSourceSpan(this), tokenAnnots(this.ifKeyword), // tokenAnnots(this),
+				return new RsIfSingleStmt(helper.getSourceSpan(this), leadingTokenAnnots(this.ifKeyword), // tokenAnnots(this),
 					this.condition.toRsExp(helper), this.statement.toRsStmt(helper));
 			}
 		}
@@ -5218,7 +5243,7 @@ module TypeScript {
 				}
 			});
 
-			var anns = tokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
+			var anns = leadingTokenAnnots(this.firstToken(), AnnotContext.ClassContructorContext);
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawConstr);
 
 			if (bindAnns.length === 0) {
@@ -5391,7 +5416,7 @@ module TypeScript {
 
 			var ctx = AnnotContext.ClassMethodContext;
 
-			var anns = tokenAnnots(this.firstToken(), ctx);
+			var anns = leadingTokenAnnots(this.firstToken(), ctx);
 
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawMethod);
 
@@ -5739,7 +5764,7 @@ module TypeScript {
 			var isStatic = this.modifiers.toArray().some(t => t.kind() === SyntaxKind.StaticKeyword);
 			var ctx = AnnotContext.ClassFieldContext;
 
-			var anns = tokenAnnots(this.firstToken(), ctx);
+			var anns = leadingTokenAnnots(this.firstToken(), ctx);
 
 			var bindAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawField);
 
@@ -5946,7 +5971,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			var ret = this.expression.toRsExp(helper);
-			return new RsThrowStatement(helper.getSourceSpan(this), tokenAnnots(this), ret);
+			return new RsThrowStatement(helper.getSourceSpan(this), leadingTokenAnnots(this), ret);
 		}
 		//RefScript - end
 
@@ -6038,7 +6063,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			var ret = this.expression ? this.expression.toRsExp(helper) : null;
-			return new RsReturnStmt(helper.getSourceSpan(this), tokenAnnots(this), ret);
+			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), ret);
 		}
 		//RefScript - end
 
@@ -6147,7 +6172,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsNewExpr(helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.expression.toRsExp(helper),
 				this.argumentList.arguments.toRsExp(helper));
 		}
@@ -6766,11 +6791,11 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			//For the moment force variable declarations to be null. We'll only support initializers.
-			var anns = tokenAnnots(this.forKeyword);
+			var anns = leadingTokenAnnots(this.forKeyword);
 			if (this.variableDeclaration && !this.initializer) {
 				return new RsForStmt(
 					helper.getSourceSpan(this),
-					tokenAnnots(this),
+					leadingTokenAnnots(this),
 					this.variableDeclaration.toRsForInit(helper, anns),
 					this.condition ? this.condition.toRsExp(helper) : null,
 					this.incrementor ? this.incrementor.toRsExp(helper) : null,
@@ -6779,7 +6804,7 @@ module TypeScript {
 			else if (this.initializer && !this.variableDeclaration) {
 				return new RsForStmt(
 					helper.getSourceSpan(this),
-					tokenAnnots(this),
+					leadingTokenAnnots(this),
 					new RsExprInit(this.initializer.toRsExp(helper)),
 					this.condition ? this.condition.toRsExp(helper) : null,
 					this.incrementor ? this.incrementor.toRsExp(helper) : null,
@@ -6939,7 +6964,7 @@ module TypeScript {
 					helper.postDiagnostic(this, DiagnosticCode.ForInStatementSyntax_to_RsStatement);
 				}
 			}
-			return new RsForInStmt(helper.getSourceSpan(this), tokenAnnots(this),
+			return new RsForInStmt(helper.getSourceSpan(this), leadingTokenAnnots(this),
 				rsForInInit,
 				this.expression.toRsExp(helper),
 				this.statement.toRsStmt(helper));
@@ -7050,7 +7075,7 @@ module TypeScript {
 		public toRsStmt(helper: RsHelper): RsStatement {
 			return new RsWhileStmt(
 				helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.condition.toRsExp(helper),
 				this.statement.toRsStmt(helper));
 		}
@@ -7264,7 +7289,7 @@ module TypeScript {
 
 		// RefScript - begin
 		public toRsStmt(helper: RsHelper): RsEnumStmt {
-			var originalAnnots = tokenAnnots(this.firstToken());
+			var originalAnnots = leadingTokenAnnots(this.firstToken());
 			var sourceSpan = helper.getSourceSpan(this);
 		    return new RsEnumStmt(sourceSpan, originalAnnots,
 				this.identifier.toRsId(helper),
@@ -7343,7 +7368,7 @@ module TypeScript {
 
 		// RefScript - begin
 		public toRsEnumElt(helper: RsHelper): RsEnumElt {
-			var anns = tokenAnnots(this.firstToken());
+			var anns = leadingTokenAnnots(this.firstToken());
 
             // If there's no value provided, try to infer it
             if (!this.equalsValueClause) {
@@ -7598,7 +7623,7 @@ module TypeScript {
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsObjectLit(
 				helper.getSourceSpan(this),
-				tokenAnnots(this),
+				leadingTokenAnnots(this),
 				this.propertyAssignments.toRsMemList(helper));
 		}
 		//RefScript - end
@@ -7883,7 +7908,7 @@ module TypeScript {
 				}
 			});
 
-            var anns = ArrayUtilities.concat([tokenAnnots(this.functionKeyword), tokenAnnots(this.block)]);
+            var anns = ArrayUtilities.concat([leadingTokenAnnots(this.functionKeyword), leadingTokenAnnots(this.block)]);
 			var funcAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawFunc);
 
             if (funcAnns.length !== 1) {
@@ -7965,7 +7990,7 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			return new RsEmptyStmt(helper.getSourceSpan(this), tokenAnnots(this.semicolonToken));
+			return new RsEmptyStmt(helper.getSourceSpan(this), leadingTokenAnnots(this.semicolonToken));
 		}
 		//RefScript - end
 
@@ -8496,7 +8521,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsExp(helper: RsHelper): RsExpression {
 			return new RsPrefixExpr(helper.getSourceSpan(this),
-				tokenAnnots(this.firstToken()),
+				leadingTokenAnnots(this.firstToken()),
 				new RsPrefixOp(RsPrefixOpKind.PrefixTypeof),
 				this.expression.toRsExp(helper));
 		}

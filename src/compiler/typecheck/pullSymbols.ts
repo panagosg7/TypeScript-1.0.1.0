@@ -3314,7 +3314,7 @@ module TypeScript {
                             return m.type.getCallSignatures().map(function(s: PullSignatureSymbol): RsTypeMember {
                                 var decls = s.getDeclarations();
                                 if (decls.length === 1) {
-                                    var methAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
+                                    var methAnns = leadingTokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
                                     if (methAnns.length === 0) {
                                         var ty = decls[0].getSignatureSymbol().toRsTMeth()
                                         return new RsMethSig(m.name, ty);
@@ -3341,7 +3341,7 @@ module TypeScript {
                     this.getAllMembers(PullElementKind.Property, GetAllMembersVisiblity.all).
                         map(function(m: PullSymbol): RsTypeMember[] {
                             return m.getDeclarations().map(function (d: PullDecl): RsTypeMember {
-                                var propAnns = tokenAnnots(d.ast());
+                                var propAnns = leadingTokenAnnots(d.ast());
                                 switch (propAnns.length) {
                                     case 0:
                                         return new RsFieldSig(m.name, m.isOptional, m.type.toRsType());
@@ -3362,7 +3362,7 @@ module TypeScript {
                         map(function (s: PullSignatureSymbol): RsTypeMember {
                             var decls = s.getDeclarations();
                             if (decls.length === 1) {
-                                var constrAnns = tokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
+                                var constrAnns = leadingTokenAnnots(decls[0].ast()); //.filter(a => a.kind() === AnnotKind.RawMethod);
                                 switch (constrAnns.length) {
                                     case 0:
                                         return new RsConsSig(s.toRsTFun());
@@ -3385,7 +3385,7 @@ module TypeScript {
                         map(function (s: PullSignatureSymbol): RsTypeMember {
                             var decls = s.getDeclarations();
                             if (decls.length === 1) {
-                                var callAnns = tokenAnnots(decls[0].ast());
+                                var callAnns = leadingTokenAnnots(decls[0].ast());
                                 switch (callAnns.length) {
                                     case 0:
                                         return new RsCallSig(s.toRsTFun());

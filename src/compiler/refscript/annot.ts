@@ -22,6 +22,7 @@ module TypeScript {
 	}
 
 	export enum AnnotKind {
+		RawReadOnly,	// ReadOnly variable
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
 		RawAmbBind,		// Ambient / variable binder
@@ -75,6 +76,8 @@ module TypeScript {
 					return new RsExplicitClassAnnotation(ss, pair.snd());
 				case AnnotKind.RawIface:
 					return new RsExplicitInterfaceAnnotation(ss, pair.snd());
+                case AnnotKind.RawReadOnly:
+                    return new RsReadOnly(ss, AnnotKind.RawReadOnly, "");
 				default:
 					return new RsGlobalAnnotation(ss, pair.fst(), pair.snd()); 
 			}
@@ -122,25 +125,28 @@ module TypeScript {
 
 		private static toSpecKind(s: string): AnnotKind {
 			switch (s) {
-				case "measure": return AnnotKind.RawMeas;
-				case "qualif": return AnnotKind.RawQual;
-				case "interface": return AnnotKind.RawIface;
-				case "alias": return AnnotKind.RawTAlias;
-				case "class": return AnnotKind.RawClass;
-				case "predicate": return AnnotKind.RawPAlias;
-				case "invariant": return AnnotKind.RawInvt;
-				case "cast": return AnnotKind.RawCast;
-				case "<anonymous>": return AnnotKind.RawFunc;
-				case "option": return AnnotKind.RawOption;
-				default: return AnnotKind.RawBind;
+				case "readonly"    : return AnnotKind.RawReadOnly;
+				case "measure"     : return AnnotKind.RawMeas;
+				case "qualif"      : return AnnotKind.RawQual;
+				case "interface"   : return AnnotKind.RawIface;
+				case "alias"       : return AnnotKind.RawTAlias;
+				case "class"       : return AnnotKind.RawClass;
+				case "predicate"   : return AnnotKind.RawPAlias;
+				case "invariant"   : return AnnotKind.RawInvt;
+				case "cast"        : return AnnotKind.RawCast;
+				case "<anonymous>" : return AnnotKind.RawFunc;
+				case "option"      : return AnnotKind.RawOption;
+				default            : return AnnotKind.RawBind;
 			}
 		}
 	}
 
     export class RsExported extends RsAnnotation {
-
 		public isGlob(): boolean { return false; }
+    }
 
+    export class RsReadOnly extends RsAnnotation {
+        public isGlob(): boolean { return false; }
     }
 
 	export class RsBindAnnotation extends RsAnnotation {
