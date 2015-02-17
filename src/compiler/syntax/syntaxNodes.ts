@@ -5,9 +5,10 @@ module TypeScript {
 	//RefScript - begin
 	/* Get the annotations that lead a token */
 	export function tokenAnnots(token: ISyntaxElement, context?: AnnotContext): RsAnnotation[] {
+
 		var ctx = (context !== undefined) ? context : AnnotContext.OtherContext;
-		var commentTrivia = token.leadingTrivia().toArray()
-			.filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
+
+		var commentTrivia = token.leadingTrivia().toArray().filter(t => t.kind() === SyntaxKind.MultiLineCommentTrivia);
 
 		var match = commentTrivia.map(ct => {
 			var cstart = ct.fullStart();
@@ -666,34 +667,7 @@ module TypeScript {
 				// TODO : allow missing constructor -- this requires the right initialization 
 				//        assignments to be added to the inferred one.
 				
-				//// A constructor does not exist
-				//var heritage = this.heritageClauses.toArray();
-
-				//var extendsClass = heritage.some(h => {
-				//	for (var i = 0; i < h.childCount(); i++) {
-				//		if (h.childAt(i).kind() === SyntaxKind.ExtendsKeyword) return true;
-				//	}
-				//	return false;
-				//});
-
-				//if (extendsClass) {
-				//	// console.log("DOES NOT HAVE CONSTRUCTOR BUT HAS A PARENT: " + this.identifier.text());
-				//	helper.postDiagnostic(this, DiagnosticCode.Class_0_extends_other_classes_so_needs_to_have_an_explicit_constructor,
-				//		[this.identifier.text()]);
-				//}
-				////console.log("DOES NOT HAVE CONSTRUCTOR: " + this.identifier.text());
-				//if (mutabilityVar) {
-				//	var consTy = new RsTFun([], [], new TTypeReference(this.identifier.text(), [mutabilityVar]));
-				//}
-				//else {
-				//	helper.postDiagnostic(this, DiagnosticCode.Cannot_infer_mutability_parameter_for_class_constructor);
-				//}
-				//var typeStr = consTy.toString();
-				//var anns = [new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr, "new " + typeStr)];
-				//var ctor = new RsConstructor(helper.getSourceSpan(this), anns, new RsASTList([]), new RsASTList([]));
-
-				//var classElts = new RsASTList(this.classElements.toRsClassElt(helper, mutabilityVar).members.concat(ctor));
-			}
+            }
 
 			helper.popParentNode();
 
@@ -920,10 +894,6 @@ module TypeScript {
 							else {
 								var tRet = ss.returnType.toRsType();
 							}
-							//console.log(ss.toString());
-							//console.log(tParams.map(p => p.toString()).join(","));
-							//console.log(tArgs.map(a => a.toString()).join(","));
-							//console.log(tRet.toString());
 							return [new RsConsSig(new RsTFun(tParams, tArgs, tRet)).toString()];
 						}
 						else {
@@ -1055,10 +1025,6 @@ module TypeScript {
 						case SyntaxKind.IdentifierName:
 						case SyntaxKind.GenericType:
 						case SyntaxKind.QualifiedName:
-							//console.log(helper.getSymbolForAST(t).toString());
-							//console.log(helper.getSymbolForAST(t).type.toString());
-							//console.log(helper.getSymbolForAST(t).type.getScopedName());
-							//console.log(helper.getSymbolForAST(t).type.toRsType(mutParam). toString());
 							return helper.getSymbolForAST(t).type.toRsType(MutabilityKind.PresetK, mutParam);
 						default:
 							helper.postDiagnostic(this, DiagnosticCode.HeritageClauses_to_RefScript);
@@ -5228,7 +5194,6 @@ module TypeScript {
                                     new RsLDot(helper.getSourceSpan(this), [], new RsThisRef(helper.getSourceSpan(this), []), varDecl.variableDeclarator.propertyName.text()),
                                     varDecl.variableDeclarator.equalsValueClause.toRsExp(helper)))
                             );
-                        // console.log("MEMBER VARIABLE ASGN: " + varDecl.fullText());
                     }
                     else {
                         statements.push(
@@ -7386,8 +7351,6 @@ module TypeScript {
                 var enumDecl = <PullEnumElementDecl>helper.getDeclForAST(this);
                 if (Syntax.isIntLit(enumDecl.constantValue.toString())) {
 
-                    //console.log("An inferred int lit: " + enumDecl.constantValue);
-
                     return new RsEnumElt(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper),
                         new RsIntLit(helper.getSourceSpan(this), [], enumDecl.constantValue));
                 }
@@ -7920,24 +7883,11 @@ module TypeScript {
 				}
 			});
 
-			var anns = tokenAnnots(this.block);
+            var anns = ArrayUtilities.concat([tokenAnnots(this.functionKeyword), tokenAnnots(this.block)]);
 			var funcAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawFunc);
 
-			if (funcAnns.length === 0) {
-
-				// DO NOT INFER TYPES FOR FunctionExpressions 
-				// - Use contextual type (in RefScript) instead
-
-				//var type = helper.getDeclForAST(this).getSymbol().type.toRsType();
-				//if (type instanceof TError) {
-				//    var tError = <TError>type;
-				//    helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
-				//}
-				//var typeStr = type.toString();
-				//anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawFunc, typeStr));
-			}
-			else if (funcAnns.length !== 1) {
-				helper.postDiagnostic(this, DiagnosticCode.Anonymous_function_cannot_have_more_than_one_type_annotations);
+            if (funcAnns.length !== 1) {
+				helper.postDiagnostic(this, DiagnosticCode.Anonymous_function_should_have_exactly_one_type_annotation);
 			}
 
 			return new RsFuncExpr(helper.getSourceSpan(this),

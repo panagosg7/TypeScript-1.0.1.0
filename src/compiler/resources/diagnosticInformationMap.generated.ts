@@ -898,7 +898,7 @@ module TypeScript {
   { "code": 8016, "category": DiagnosticCategory.Unimplemented },
 "Cannot translate type '{0}' into RefScript type." : 
   { "code": 8017, "category": DiagnosticCategory.Unimplemented },
-"Anonymous function cannot have more than one type annotations." : 
+"Anonymous function should have exactly one type annotation." : 
   { "code": 8018, "category": DiagnosticCategory.Error },
 "Import library (only enabled with 'refscript')." : 
   { "code": 8019, "category": DiagnosticCategory.Message },

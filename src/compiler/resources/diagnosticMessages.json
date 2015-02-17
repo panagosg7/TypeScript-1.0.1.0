@@ -1798,7 +1798,7 @@
       "category": "Unimplemented",
       "code": 8017
     },
-    "Anonymous function cannot have more than one type annotations.":{
+    "Anonymous function should have exactly one type annotation.":{
       "category": "Error",
       "code": 8018
     },
