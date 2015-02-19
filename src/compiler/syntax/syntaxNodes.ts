@@ -7908,7 +7908,7 @@ module TypeScript {
 				}
 			});
 
-            var anns = ArrayUtilities.concat([leadingTokenAnnots(this.functionKeyword), leadingTokenAnnots(this.block)]);
+            var anns = ArrayUtilities.concat([leadingTokenAnnots(this.functionKeyword), trailingTokenAnnots(this.callSignature), leadingTokenAnnots(this.block)]);
 			var funcAnns: RsBindAnnotation[] = <RsBindAnnotation[]> anns.filter(a => a.kind() === AnnotKind.RawFunc);
 
             if (funcAnns.length !== 1) {
