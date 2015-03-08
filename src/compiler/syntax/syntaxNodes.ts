@@ -801,7 +801,6 @@ module TypeScript {
 		}
 
 
-
 		//RefScript - begin
 
 		public toRsStmt(helper: RsHelper): RsStatement {
