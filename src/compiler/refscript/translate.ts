@@ -100,12 +100,12 @@ module TypeScript {
 	}
 
 	export class FPSrcSpan {
-		constructor(private sp_begin: FPSrcPos, private sp_end: FPSrcPos) { }
+		constructor(private sp_start: FPSrcPos, private sp_stop: FPSrcPos) { }
 
 		public toObject(): any {
 			return {
-				"sp_begin": this.sp_begin.toObject(),
-				"sp_end": this.sp_end.toObject()
+				"sp_start": this.sp_start.toObject(),
+				"sp_stop": this.sp_stop.toObject()
 			};
 		}
 	}
