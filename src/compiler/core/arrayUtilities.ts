@@ -246,9 +246,19 @@ module TypeScript {
                     return i;
                 }
             }
-
             return -1;
         }
+
+        public static indexOfEq<T>(array: T[], v: T): number {
+            for (var i = 0, n = array.length; i < n; i++) {
+                if (array[i] === v) {
+                    return i;
+                }
+            }           
+            return -1;
+        }
+
+
 
         public static concatMap<T,U>(array: T[][], func: (v: T) => U): U[] {
             var result: U[] = [];

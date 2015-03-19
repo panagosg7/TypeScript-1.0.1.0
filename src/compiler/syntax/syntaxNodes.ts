@@ -1686,9 +1686,6 @@ module TypeScript {
 		//RefScript - begin
 		public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
 
-            // Is this variable ReadOnly ?
-            var ro = trailingTokenAnnots(this.propertyName).filter(a => a.kind() === AnnotKind.RawReadOnly);
-
 			if (anns) {
 
 			    // binderAnns: keep just the relevant binder annotations
@@ -1724,7 +1721,7 @@ module TypeScript {
 				if (binderAnns.length < 2) {
 					//All necessary binders need to be in @anns@
                     return new RsVarDecl(helper.getSourceSpan(this),
-                        ArrayUtilities.concat([binderAnns, ro]), this.propertyName.toRsId(helper),
+                        ArrayUtilities.concat([binderAnns]), this.propertyName.toRsId(helper),
 						(this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
 				}
 

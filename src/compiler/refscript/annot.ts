@@ -22,7 +22,6 @@ module TypeScript {
 	}
 
 	export enum AnnotKind {
-		RawReadOnly,	// ReadOnly variable
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
 		RawAmbBind,		// Ambient / variable binder
@@ -76,8 +75,6 @@ module TypeScript {
 					return new RsExplicitClassAnnotation(ss, pair.snd());
 				case AnnotKind.RawIface:
 					return new RsExplicitInterfaceAnnotation(ss, pair.snd());
-                case AnnotKind.RawReadOnly:
-                    return new RsReadOnly(ss, AnnotKind.RawReadOnly, "");
 				default:
 					return new RsGlobalAnnotation(ss, pair.fst(), pair.snd()); 
 			}
@@ -104,9 +101,27 @@ module TypeScript {
 		private static stringTag(s: string): Pair<AnnotKind, string> {
 			var tokens = RsAnnotation.stringTokens(s);
 			if (tokens && tokens.length > 0) {
+
+                // try to read some assignability first ... 
+                if (ArrayUtilities.indexOfEq(["readonly", "local", "global"], tokens[0]) !== -1) {
+                    // This is a bind ... 
+
+				    var kind = RsAnnotation.toSpecKind(tokens[1]);
+                    if (kind === AnnotKind.RawBind) {
+                        return new Pair(AnnotKind.RawBind, tokens.join(" "));
+                    }
+                    else {
+                        throw new Error("RsAnnotation could not parse string tag: " + s + "\n" +
+                                        "'" + tokens[1] + "' is an invalid binder.");
+                    }
+                }
+
+                // bind without an assignability modifier or something else ... 
 				var kind = RsAnnotation.toSpecKind(tokens[0]);
-				if (kind === AnnotKind.RawBind) {
-					return new Pair(AnnotKind.RawBind, tokens.join(" "));
+                if (kind === AnnotKind.RawBind) {
+
+                    // if it's a bind and there is no assignability specified, assume "global" ...
+					return new Pair(AnnotKind.RawBind, "global " + tokens.join(" "));
 				}
                 else if (kind === AnnotKind.RawAmbBind) {
 					return new Pair(AnnotKind.RawAmbBind, tokens.join(" "));
@@ -125,7 +140,6 @@ module TypeScript {
 
 		private static toSpecKind(s: string): AnnotKind {
 			switch (s) {
-				case "readonly"    : return AnnotKind.RawReadOnly;
 				case "measure"     : return AnnotKind.RawMeas;
 				case "qualif"      : return AnnotKind.RawQual;
 				case "interface"   : return AnnotKind.RawIface;
