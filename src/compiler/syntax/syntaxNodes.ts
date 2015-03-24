@@ -948,7 +948,7 @@ module TypeScript {
 
 			var sourceSpan = helper.getSourceSpan(this);
 
-			restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawIface, annotStr));
+			restAnnots.push(new RsBindAnnotation(sourceSpan, AnnotKind.RawIface, Assignability.AErrorAssignability,  annotStr));
 
 			// Returning an empty statement
 			return new RsIfaceStmt(helper.getSourceSpan(this), restAnnots,
@@ -1332,7 +1332,7 @@ module TypeScript {
 				// no annotation -- get the TS inferred one
 				var type = decl.getSignatureSymbol().toRsTFun();
 				var typeStr = type.toString();
-				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, this.identifier.text() + " :: " + typeStr));
+				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawBind, Assignability.AErrorAssignability, this.identifier.text() + " :: " + typeStr));
 			}
 			else if (bindAnnNames.length !== 1 || bindAnnNames[0] !== name) {
 				helper.postDiagnostic(this, DiagnosticCode.Function_0_can_have_at_most_one_type_annotation, [name]);
@@ -1686,9 +1686,6 @@ module TypeScript {
 		//RefScript - begin
 		public toRsVarDecl(helper: RsHelper, anns?: RsBindAnnotation[]): IRsVarDeclLike {
 
-            // Is this variable ReadOnly ?
-            var ro = trailingTokenAnnots(this.propertyName).filter(a => a.kind() === AnnotKind.RawReadOnly);
-
 			if (anns) {
 
 			    // binderAnns: keep just the relevant binder annotations
@@ -1706,7 +1703,7 @@ module TypeScript {
 							helper.postDiagnostic(this, DiagnosticCode.Cannot_translate_type_0_into_RefScript_type, [tError.message()]);
 						}
 						var typeStr = type.toString();
-						anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, this.propertyName.text() + " :: " + typeStr));
+						anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, Assignability.AErrorAssignability, this.propertyName.text() + " :: " + typeStr));
 						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
 
 					}
@@ -1722,9 +1719,10 @@ module TypeScript {
 
 				//This is a normal declaration
 				if (binderAnns.length < 2) {
+                    
 					//All necessary binders need to be in @anns@
                     return new RsVarDecl(helper.getSourceSpan(this),
-                        ArrayUtilities.concat([binderAnns, ro]), this.propertyName.toRsId(helper),
+                        ArrayUtilities.concat([binderAnns]), this.propertyName.toRsId(helper),
 						(this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
 				}
 
@@ -5250,7 +5248,7 @@ module TypeScript {
 				var decl: PullDecl = helper.getDeclForAST(this);
 				var type = decl.getSignatureSymbol().toRsTCtor(mut);
 				var typeStr = type.toString();
-				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr,  "new " + typeStr));
+				anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawConstr,  Assignability.AErrorAssignability, "new " + typeStr));
 			}
 			if (bindAnns.length > 1) {
 				helper.postDiagnostic(this, DiagnosticCode.Constructors_should_have_at_most_one_annotation);
@@ -5427,6 +5425,7 @@ module TypeScript {
 				anns.push(new RsBindAnnotation(
 					helper.getSourceSpan(this),
 					AnnotKind.RawMethod,
+                    Assignability.AErrorAssignability,
 					new RsMethSig(methodName, sym.toRsTMeth()).toString()));
 			}
 
@@ -5777,6 +5776,7 @@ module TypeScript {
 				anns.push(new RsBindAnnotation(
 					helper.getSourceSpan(this),
 					AnnotKind.RawField,
+                    Assignability.AErrorAssignability,
 					new RsFieldSig(this.variableDeclarator.propertyName.text(), 
                       sym.isOptional, sym.type.toRsType()).toString()));
 			}
@@ -7509,7 +7509,7 @@ module TypeScript {
 					break;
 			}
 
-			var castAnn = new RsBindAnnotation(sourceSpan, AnnotKind.RawCast, castType.toString());
+			var castAnn = new RsBindAnnotation(sourceSpan, AnnotKind.RawCast, Assignability.AErrorAssignability, castType.toString());
 			return new RsCast(helper.getSourceSpan(this), [castAnn], this.expression.toRsExp(helper));
 		}
 		//RefScript - end

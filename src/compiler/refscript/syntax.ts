@@ -25,8 +25,8 @@ module TypeScript {
 		public toObject(): any {
 			return {
 			//Doing the line and col fix here.
-				"sp_begin": [this.file, this.start.line() + 1, this.start.character() + 1],
-				"sp_end"  : [this.file, this.stop.line() + 1, this.stop.character() + 1]
+				"sp_start": [this.file, this.start.line() + 1, this.start.character() + 1],
+				"sp_stop"  : [this.file, this.stop.line() + 1, this.stop.character() + 1]
 			};
 		}
 

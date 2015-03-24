@@ -5,24 +5,25 @@ module TypeScript {
 
 	export class Pair<A, B> {
 		constructor(private _fst: A, private _snd: B) { }
-
 		public fst(): A { return this._fst; }
-
 		public snd(): B { return this._snd;	}
 	}
-
 	export class Triple<A, B, C> {
 		constructor(private _fst: A, private _snd: B, private _thd: C) { }
-
 		public fst(): A { return this._fst; }
-
 		public snd(): B { return this._snd;	}
-
 		public thd(): C { return this._thd;	}
 	}
 
+    export enum Assignability {
+        AWriteLocal,
+        AWriteGlobal,
+        AReadOnly,
+
+        AErrorAssignability
+    }
+
 	export enum AnnotKind {
-		RawReadOnly,	// ReadOnly variable
 		RawMeas,		// Measure
 		RawBind,		// Function / variable binder
 		RawAmbBind,		// Ambient / variable binder
@@ -56,30 +57,32 @@ module TypeScript {
 
 		/** This will create a RsAnnoation object based on user annotations */
 		public static createAnnotation(s: string, ctx: AnnotContext, ss: RsSourceSpan): RsAnnotation {
-			var pair = RsAnnotation.stringTag(s);
-			switch (pair.fst()) {
+			var triplet = RsAnnotation.stringTag(s);
+			switch (triplet.fst()) {
 				case AnnotKind.RawBind: {
 					switch (ctx) {
 						case AnnotContext.ClassMethodContext:
-							return new RsBindAnnotation(ss, AnnotKind.RawMethod, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawMethod, triplet.snd(), triplet.thd());
+
 						case AnnotContext.ClassFieldContext:
-							return new RsBindAnnotation(ss, AnnotKind.RawField, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawField, triplet.snd(), triplet.thd());
+
 						case AnnotContext.ClassContructorContext:
-							return new RsBindAnnotation(ss, AnnotKind.RawConstr, pair.snd());
+							return new RsBindAnnotation(ss, AnnotKind.RawConstr, triplet.snd(), triplet.thd());
+
 						case AnnotContext.OtherContext:
-							return new RsBindAnnotation(ss, pair.fst(), pair.snd());
+							return new RsBindAnnotation(ss, triplet.fst(), triplet.snd(), triplet.thd());
+
 						default:
 							throw new Error("BUG: there is no default context");
 					}
 				}
 				case AnnotKind.RawClass:
-					return new RsExplicitClassAnnotation(ss, pair.snd());
+					return new RsExplicitClassAnnotation(ss, triplet.thd());
 				case AnnotKind.RawIface:
-					return new RsExplicitInterfaceAnnotation(ss, pair.snd());
-                case AnnotKind.RawReadOnly:
-                    return new RsReadOnly(ss, AnnotKind.RawReadOnly, "");
+					return new RsExplicitInterfaceAnnotation(ss, triplet.thd());
 				default:
-					return new RsGlobalAnnotation(ss, pair.fst(), pair.snd()); 
+					return new RsGlobalAnnotation(ss, triplet.fst(), triplet.thd()); 
 			}
 		} 
 
@@ -101,18 +104,52 @@ module TypeScript {
 			return obj;
 		}
 
-		private static stringTag(s: string): Pair<AnnotKind, string> {
+		private static stringTag(s: string): Triple<AnnotKind, Assignability, string> {
 			var tokens = RsAnnotation.stringTokens(s);
 			if (tokens && tokens.length > 0) {
+
+                // try to read some assignability first ... 
+                if (ArrayUtilities.indexOfEq(["readonly", "local", "global"], tokens[0]) !== -1) {
+
+                    // This is a bind ... 
+                    var asgn: Assignability; 
+                    switch (tokens[0]) {
+                        case "readonly":
+                            asgn = Assignability.AReadOnly;
+                            break;
+                        case "local":
+                            asgn = Assignability.AWriteLocal;
+                            break;
+                        case "global":
+                            asgn = Assignability.AWriteGlobal
+                            break;
+                        default:
+                            asgn = Assignability.AErrorAssignability    
+                    }
+
+				    var kind = RsAnnotation.toSpecKind(tokens[1]);
+                    if (kind === AnnotKind.RawBind) {
+                        var content = tokens.slice(1).join(" ");
+                        return new Triple(AnnotKind.RawBind, asgn, content);
+                    }
+                    else {
+                        throw new Error("RsAnnotation could not parse string tag: " + s + "\n" +
+                                        "'" + tokens[1] + "' is an invalid binder.");
+                    }
+                }
+
+                // bind without an assignability modifier or something else ... 
 				var kind = RsAnnotation.toSpecKind(tokens[0]);
-				if (kind === AnnotKind.RawBind) {
-					return new Pair(AnnotKind.RawBind, tokens.join(" "));
+                if (kind === AnnotKind.RawBind) {
+
+                    // if it's a bind and there is no assignability specified, assume "global" ...
+					return new Triple(AnnotKind.RawBind, Assignability.AErrorAssignability, tokens.join(" "));
 				}
                 else if (kind === AnnotKind.RawAmbBind) {
-					return new Pair(AnnotKind.RawAmbBind, tokens.join(" "));
+					return new Triple(AnnotKind.RawAmbBind, Assignability.AErrorAssignability, tokens.join(" "));
 				}
 				else {
-					return new Pair(RsAnnotation.toSpecKind(tokens[0]), tokens.slice(1).join(" "));
+					return new Triple(RsAnnotation.toSpecKind(tokens[0]), Assignability.AErrorAssignability, tokens.slice(1).join(" "));
 				}
 			}
 			throw new Error("RsAnnotation could not parse string tag: " + s);
@@ -125,7 +162,6 @@ module TypeScript {
 
 		private static toSpecKind(s: string): AnnotKind {
 			switch (s) {
-				case "readonly"    : return AnnotKind.RawReadOnly;
 				case "measure"     : return AnnotKind.RawMeas;
 				case "qualif"      : return AnnotKind.RawQual;
 				case "interface"   : return AnnotKind.RawIface;
@@ -151,7 +187,7 @@ module TypeScript {
 
 	export class RsBindAnnotation extends RsAnnotation {
 
-		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, content: string) {
+		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, private asgn: Assignability, content: string) {
 			super(sourceSpan, kind, content);
 		}
 
@@ -194,7 +230,11 @@ module TypeScript {
 		}
 
 		public content(): string {
-			return super.content();
+            var s = ""
+            if (this.asgn === Assignability.AReadOnly) s += "readonly ";
+            else if (this.asgn === Assignability.AWriteGlobal) s += "global ";
+            else if (this.asgn === Assignability.AWriteLocal) s += "local ";
+            return s + super.content();
 		}
 	}
 
