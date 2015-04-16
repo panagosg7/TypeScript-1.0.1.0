@@ -51,12 +51,12 @@ module TypeScript {
 
 	export class RsAnnotation {
 
-		constructor(private _sourceSpan: RsSourceSpan, private _kind: AnnotKind, private _content: string) { }
+		constructor(private _sourceSpan: RsSrcSpan, private _kind: AnnotKind, private _content: string) { }
 
 		public isGlob(): boolean { throw new Error("ABSTRACT: RsAnnotation.isGlob."); }
 
 		/** This will create a RsAnnoation object based on user annotations */
-		public static createAnnotation(s: string, ctx: AnnotContext, ss: RsSourceSpan): RsAnnotation {
+		public static createAnnotation(s: string, ctx: AnnotContext, ss: RsSrcSpan): RsAnnotation {
 			var triplet = RsAnnotation.stringTag(s);
 			switch (triplet.fst()) {
 				case AnnotKind.RawBind: {
@@ -86,7 +86,7 @@ module TypeScript {
 			}
 		} 
 
-		public sourceSpan(): RsSourceSpan {
+		public sourceSpan(): RsSrcSpan {
 			return this._sourceSpan;
 		}
 
@@ -98,10 +98,8 @@ module TypeScript {
 			return this._kind;
 		}
 
-		public toObject(): any {
-			var obj: any = {};
-			obj[AnnotKind[this.kind()]] = [this.sourceSpan().toObject(), this.content()];
-			return obj;
+		public serialize(): any {
+            return TypeScript.aesonEncode(AnnotKind[this.kind()], [[this.sourceSpan().serialize(), this.content()]]);
 		}
 
 		private static stringTag(s: string): Triple<AnnotKind, Assignability, string> {
@@ -187,7 +185,7 @@ module TypeScript {
 
 	export class RsBindAnnotation extends RsAnnotation {
 
-		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, private asgn: Assignability, content: string) {
+		constructor(sourceSpan: RsSrcSpan, kind: AnnotKind, private asgn: Assignability, content: string) {
 			super(sourceSpan, kind, content);
 		}
 
@@ -245,7 +243,7 @@ module TypeScript {
 	export class RsInferredClassAnnotation extends RsClassAnnotation {
 
 		constructor(
-			sourceSpan: RsSourceSpan,
+			sourceSpan: RsSrcSpan,
 			private _className: ISyntaxToken,
 			private _typeParams: string[],
 			private _extends: Serializable,
@@ -285,7 +283,7 @@ module TypeScript {
 			Needs to stick around a class declaration. */
 		public isGlob(): boolean { return false; }
 
-		constructor(sourceSpan: RsSourceSpan, content: string) {
+		constructor(sourceSpan: RsSrcSpan, content: string) {
 			super(sourceSpan, AnnotKind.RawClass, content);
 		}
 
@@ -300,7 +298,7 @@ module TypeScript {
 			Needs to stick around an interface declaration. */
 		public isGlob(): boolean { return false; }
 
-		constructor(sourceSpan: RsSourceSpan, content: string) {
+		constructor(sourceSpan: RsSrcSpan, content: string) {
 			super(sourceSpan, AnnotKind.RawIface, content);
 		}
 
@@ -314,7 +312,7 @@ module TypeScript {
 	export class RsGlobalAnnotation extends RsAnnotation {
 		public isGlob(): boolean { return true; }
 
-		constructor(sourceSpan: RsSourceSpan, kind: AnnotKind, content: string) {
+		constructor(sourceSpan: RsSrcSpan, kind: AnnotKind, content: string) {
 			super(sourceSpan, kind, content);
 		}
 

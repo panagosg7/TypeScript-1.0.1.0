@@ -44,7 +44,7 @@ module TypeScript {
 			var cstop  = ast.fullEnd();
 			var startLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
 			var endLineAndChar = ast.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstop);
-			return new RsSourceSpan(ast.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
+			return new RsSrcSpan(ast.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
 		}
 
 	    static pre(ast: ISyntaxElement, context: StatsContext) {

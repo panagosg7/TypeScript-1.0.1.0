@@ -2366,10 +2366,9 @@ module TypeScript {
             if (ast === null) {
                 return;
             }
-			this.writeToOutput(JSON.stringify(ast.toObject(), undefined, 2));
+			this.writeToOutput(JSON.stringify(ast.serialize(), undefined, 2));
         }
 		//RefScript - end
-
 
         public emitAccessorMemberDeclaration(funcDecl: ISyntaxElement, name: ISyntaxToken, className: string, isProto: boolean) {
             if (funcDecl.kind() !== SyntaxKind.GetAccessor) {

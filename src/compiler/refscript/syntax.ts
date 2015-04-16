@@ -2,32 +2,24 @@
 
 // Object representation of the AST definition found here:
 //
-// https://github.com/UCSD-PL/language-ecmascript/blob/RefScript/src/Language/ECMAScript3/Syntax.hs
+// https://github.com/UCSD-PL/RefScript/blob/master/src/Language/Nano/Syntax.hs
+// 
+// The serialization works with aeson-0.8.0.2
 //
 
 module TypeScript {
 
-	export class RsAST {
-		public toObject(): any {
-			throw new Error("RsAST: child class should implement toObject");
-		}
-	}
-
-	export class RsAnnotatedAST extends RsAST {
-		constructor(public ann: RsAnnotation[]) { super(); }
-
-		public mapAnn<T>(f: (a:RsAnnotation) => T): T[] {
-			return this.ann.filter(a => a !== null).map(f);
-		}
-	}
-
-	export class RsSourceSpan {
-		public toObject(): any {
-			return {
-			//Doing the line and col fix here.
-				"sp_start": [this.file, this.start.line() + 1, this.start.character() + 1],
-				"sp_stop"  : [this.file, this.stop.line() + 1, this.stop.character() + 1]
-			};
+    export function aesonEncode(tag: string, content: any): any {
+        return { "tag": tag, "content": content };
+    }
+	export class RsSrcSpan {
+		public serialize(): any {
+            return aesonEncode("SrcSpan",
+                //Doing the line and col fix here.
+                {
+                    "sp_start": [this.file, this.start.line() + 1, this.start.character() + 1],
+                    "sp_stop": [this.file, this.stop.line() + 1, this.stop.character() + 1]
+                });
 		}
 
 		public toString(): string {
@@ -38,96 +30,119 @@ module TypeScript {
 		constructor(private file: string, private start: LineAndCharacter, private stop: LineAndCharacter) { }
 	}
 
-
-	/* ****************************************************************************
-	 *
-	 *				AST Misc
-	 * 
-	 * ****************************************************************************/
-
-	export class RsASTList<T extends RsAST> extends RsAST {
+	export class RsList<T extends RsAST> extends RsAST {
 		constructor(public members: T[]) { super(); }
 
-		public toObject(): any { return this.members.map(m => m.toObject()); }
+        public serialize(): any { 
+            return this.members.map(m => m.serialize());
+        }
 	}
 
-	export class RsASTPair<S extends RsAST, T extends RsAST> extends RsAST {
+	export class RsPair<S extends RsAST, T extends RsAST> extends RsAST {
 		constructor(public fst: S, public snd:  T) { super(); }
 
-		public toObject(): any { return [this.fst.toObject(), this.snd.toObject()] }
+        public serialize(): any { 
+            return [this.fst.serialize(), this.snd.serialize()];
+        }
+	}
+
+	export class RsMaybe<T extends RsAST> extends RsAST {
+        constructor(public content: T) {
+            super();
+        }
+
+        public serialize(): any {
+            if (this.content) {
+                return this.content.serialize();
+            }
+            return null;
+        }
+	}
+
+    export interface IRsAST {
+        serialize(): any;
+        _toAeson(tag: string, content: any[]): any;
+    }
+
+	export class RsAST {
+		public serialize(): any {
+			throw new Error("RsAST: child class should implement serialize");
+		}
+
+        // No annotation field here
+        public _toAeson(tag: string, content: any[]) {
+            return aesonEncode(tag, content);
+        }
+	}
+
+	export class RsAnnotatedAST extends RsAST {
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) { super(); }
+
+		public mapAnn<T>(f: (a:RsAnnotation) => T): T[] {
+			return this.ann.filter(a => a !== null).map(f);
+		}
+
+        // This one adds the annotation field first
+        public _toAeson(tag: string, content: any) {
+            return aesonEncode(tag, [[this.span.serialize(),this.ann.map(a => a.serialize())]].concat(content));
+        }
 	}
 
 	export class RsId extends RsAnnotatedAST {
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public id: string) { super(ann); }
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[],	public id: string) { super(span, ann); }
 
-		public toObject(): any {
-			return [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-				this.id];
+		public serialize(): any {
+			return this._toAeson("Id", [this.id]);
 		}
 	}
 
     // Includes normal and ambient declarations
-    export interface IRsVarDeclLike {
-        toObject(): any;
-        span: RsSourceSpan;
+    export interface IRsVarDeclLike extends IRsAST {
+        serialize(): any;
+        span: RsSrcSpan;
         ann: RsAnnotation[];
     } 
 
 	export class RsVarDecl extends RsAnnotatedAST implements IRsVarDeclLike {
-		public toObject(): any {
-			return [
-				[this.span.toObject(), this.mapAnn(a => a.toObject())],
-				this.name.toObject(),
-				(this.exp) ? this.exp.toObject() : null
-			];
+		public serialize(): any {
+            return this._toAeson("VarDecl", [this.name.serialize(), this.exp.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public name: RsId,
-			public exp?: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId, public exp: RsMaybe<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsPropId extends RsAnnotatedAST {
-		public toObject(): any {
-			return {
-				PropId: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.f.toObject()]
-			};
+		public serialize(): any {
+            return this._toAeson("PropId", [this.f.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public f: RsId) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public f: RsId) {
+            super(span, ann);
+        }
 	}
 
 	export class RsPropString extends RsAnnotatedAST {
-		public toObject(): any {
-			return {
-				PropString: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.s]
-			};
+		public serialize(): any {
+            return this._toAeson("PropString", [this.s]);			
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public s: string) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public s: string) {
+            super(span, ann);
+        }
 	}
 
 	export class RsPropNum extends RsAnnotatedAST {
-		public toObject(): any {
-			return {
-				PropNum: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.n]
-			};
+		public serialize(): any {
+			return this._toAeson("PropNum", [this.n]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public n: number) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public n: number) {
+            super(span, ann);
+        }
 	}
+
 
 	/* ****************************************************************************
 	 *
@@ -135,29 +150,36 @@ module TypeScript {
 	 * 
 	 * ****************************************************************************/
 
-
-	export class RsForInit extends RsAnnotatedAST { }
+	export class RsForInit extends RsAST { }
 
 	export class RsNoInit extends RsForInit {
-		public toObject(): any {
-			return { NoInit: [this.span.toObject(), this.mapAnn(a => a.toObject())] };
+		public serialize(): any {
+			return this._toAeson("NoInit", []);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) {
+            super();
+        }
 	}
 
 	export class RsVarInit extends RsForInit {
-		public toObject(): any { return { VarInit: this.vds.toObject() }; }
+        public serialize(): any {
+            return this._toAeson("VarInit", [this.vds.serialize()]);
+        }
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public vds: RsASTList<RsVarDecl>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public vds: RsList<RsVarDecl>) {
+            super();
+        }
 	}
 
 	export class RsExprInit extends RsForInit {
-		public toObject(): any { return { ExprInit: this.exp.toObject() } ; }
+        public serialize(): any {
+            return this._toAeson("ExprInit", [this.exp.serialize()]);
+        }
 
-		constructor(public exp: RsExpression) {	super(null); }
+        constructor(public exp: RsExpression) {
+            super();
+        }
 	}
 
 
@@ -171,19 +193,23 @@ module TypeScript {
 	export class RsForInInit extends RsAST { }
 
 	export class RsForInVar extends RsForInInit {
-		public toObject(): any {
-			return { ForInVar: this.id.toObject() };
+		public serialize(): any {
+			return this._toAeson("ForInVar", [this.id.serialize()]);
 		}
 
-		constructor(private id: RsId) { super(); }
+        constructor(private id: RsId) {
+            super();
+        }
 	}
 
 	export class RsForInLVal extends RsForInInit {
-		public toObject(): any {
-			return { ForInLVal: this.lval.toObject() };
+		public serialize(): any {
+            return this._toAeson("ForInLVal", [this.lval.serialize()]);
 		}
 
-		constructor(public lval: RsLValue) { super(); }
+        constructor(public lval: RsLValue) {
+            super();
+        }
 	}
 
 
@@ -251,7 +277,7 @@ module TypeScript {
 			throw new Error("Case: " + this.sign + " not handled in RsInfixOp.signToOpKind");
 		}
 
-		public toObject() {
+		public serialize() {
 			var obj: any = {};
 			obj[RsInfixOpKind[this.signToOpKind()]] = [];
 			return obj;
@@ -298,10 +324,8 @@ module TypeScript {
 			throw new Error("Case: " + this.sign + " not handled in RsAssignOp.signToOpKind");
 		}
 
-		public toObject() {
-			var obj: any = {};
-			obj[RsAssignOpKind[this.signToOpKind()]] = [];
-			return obj;
+        public serialize() {
+            return this._toAeson(RsAssignOpKind[this.signToOpKind()], []);
 		}
 
 		constructor(public sign: string) {
@@ -319,10 +343,8 @@ module TypeScript {
 
 	export class RsUnaryAssignOp extends RsAST {
 
-		public toObject() {
-			var op: any = {};
-			op[RsUnaryAssignOpKind[this.opKind]] = [];
-			return op;
+        public serialize() {
+            return this._toAeson(RsUnaryAssignOpKind[this.opKind], []);
 		}
 
 		constructor(public opKind: RsUnaryAssignOpKind) {
@@ -341,16 +363,12 @@ module TypeScript {
 	}
 	
 	export class RsPrefixOp extends RsAST {
-		public toObject() {
-			var op: any = {};
-			op[RsPrefixOpKind[this.opKind]] = [];
-			return op;
+		public serialize() {
+            return this._toAeson(RsPrefixOpKind[this.opKind], []);
 		}
 
 		constructor(public opKind: RsPrefixOpKind) { super(); }
 	}
-
-
 
 
 	/* ****************************************************************************
@@ -362,50 +380,34 @@ module TypeScript {
 	export class RsLValue extends RsAnnotatedAST { }
 
 	export class RsLVar extends RsLValue {
-		public toObject(): any {
-			return {
-				LVar: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.s]
-			};
-		}
+		public serialize(): any {
+            return this._toAeson("LVar", [this.s]);
+        }
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public s: string) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public s: string) {
+            super(span, ann);
+        }
 	}
-
 
 	export class RsLDot extends RsLValue {
-		public toObject(): any {
-			return {
-				LDot: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject(),
-					this.str]
-			};
-		}
+		public serialize(): any {
+            return this._toAeson("LDot", [this.exp.serialize(), this.str]);
+        }
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public exp: RsExpression,
-			public str: string) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public exp: RsExpression, public str: string) {
+            super(span, ann);
+        }
 	}
-
 
 	export class RsLBracket extends RsLValue {
-		public toObject(): any {
-			return {
-				LBracket: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.e1.toObject(),
-					this.e2.toObject()]
-			};
+		public serialize(): any {
+            return this._toAeson("LBracket", [this.e1.serialize(), this.e2.serialize()]); 
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public e1: RsExpression,
-			public e2: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public e1: RsExpression, public e2: RsExpression) {
+            super(span, ann);
+        }
 	}
-
 
 
 	/* ****************************************************************************
@@ -417,80 +419,57 @@ module TypeScript {
 	export class RsExpression extends RsAnnotatedAST {	}
 
 	export class RsInfixExpr extends RsExpression {
-		public toObject() {
-			return {
-				InfixExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.op.toObject(),
-					this.operand1.toObject(),
-					this.operand2.toObject()]
-			};
-		}
+		public serialize() {
+            return this._toAeson("InfixExpr", [this.op.serialize(), this.operand1.serialize(), this.operand2.serialize()]);
+        }
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public op: RsInfixOp,
-					public operand1: RsExpression,
-					public operand2: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public op: RsInfixOp, public operand1: RsExpression, public operand2: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsCondExpr extends RsExpression {
-		public toObject() {
-			return {
-				CondExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.cond.toObject(),
-					this.exp1.toObject(),
-					this.exp2.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("CondExpr", [this.cond.serialize(), this.exp1.serialize(), this.exp2.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public cond: RsExpression,
-					public exp1: RsExpression,
-					public exp2: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public cond: RsExpression, public exp1: RsExpression, public exp2: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsNumLit extends RsExpression {
-		public toObject() {
-			return {
-				NumLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.num]
-			};
-		}
+		public serialize() {
+            return this._toAeson("NumLit", [this.num]);
+        }
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public num: number) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public num: number) {
+            super(span, ann);
+        }
 	}
 
 	export class RsIntLit extends RsExpression {
-		public toObject() {
-			return {
-				IntLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.num]
-			};
+		public serialize() {
+            return this._toAeson("IntLit", [this.num]);
 		}
 
-		constructor(public span: RsSourceSpan,
-        			public ann: RsAnnotation[],
-		        	public num: number) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public num: number) {
+            super(span, ann);
+        }
 	}
 
 	export class RsHexLit extends RsExpression {
-		public toObject() {
-			return {
-				HexLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.num]
-			};
-		}
+		public serialize() {
+            return this._toAeson("HexLit", [this.num]);
+        }
 
-		constructor(public span: RsSourceSpan,
-        			public ann: RsAnnotation[],
-		        	public num: string) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public num: string) {
+            super(span, ann);
+        }
 	}
     
 	export class RsStringLit extends RsExpression {
-		public toObject() {
+		public serialize() {
 			//Quotes fix
 			var l = this.str.length;
 			var newStr = this.str;
@@ -498,246 +477,174 @@ module TypeScript {
 				newStr[0] === '\'' && newStr[l - 1] === '\'')) {
 				newStr = newStr.substring(1, l - 1);
 			}
-			return { StringLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],newStr] };
+            return this._toAeson("StringLit", [newStr]);
 		}
 
-		constructor(public span: RsSourceSpan,
-        			public ann: RsAnnotation[],
-		        	public str: string) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public str: string) {
+            super(span, ann);
+        }
 	}
 	
 	export class RsFuncExpr extends RsExpression {
-		public toObject() {
-			return { FuncExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-				(this.id) ? this.id.toObject() : null,
-				this.args.toObject(),
-				this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("FuncExpr", [this.id.serialize(), this.args.serialize(), this.body.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public id: RsId,		// could be null
-			public args: RsASTList<RsId>,
-			public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsMaybe<RsId>, public args: RsList<RsId>, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsVarRef extends RsExpression {
-		public toObject() {
-			return {
-				VarRef: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("VarRef", [this.id.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public id: RsId) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId) {
+            super(span, ann);
+        }
 	}
 
 	export class RsDotRef extends RsExpression {
-		public toObject() {
-			return {
-				DotRef: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.expression.toObject(), this.id.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("DotRef", [this.expression.serialize(), this.id.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public expression: RsExpression,
-					public id: RsId) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: RsExpression, public id: RsId) {
+            super(span, ann);
+        }
 	}
 
 	export class RsBracketRef extends RsExpression {
-		public toObject() {
-			return {
-				BracketRef: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.e1.toObject(), this.e2.toObject()]
-			};
-		}
+		public serialize() {
+            return this._toAeson("BracketRef", [this.e1.serialize(), this.e2.serialize()]);
+        }
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public e1: RsExpression,
-					public e2: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public e1: RsExpression, public e2: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsCallExpr extends RsExpression {
-		public toObject() {
-			return {
-				CallExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.target.toObject(),	this.args.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("CallExpr", [this.target.serialize(), this.args.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public target: RsExpression,
-					public args: RsASTList<RsExpression>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public target: RsExpression, public args: RsList<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsObjectLit extends RsExpression {
-		public toObject() {
-			return {
-				ObjectLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.bindings.toObject()]
-			};
+		public serialize() {
+			return this._toAeson("ObjectLit", [this.bindings.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public bindings: RsASTList<RsAST>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public bindings: RsList<RsAST>) {
+            super(span, ann);
+        }
 	}
 
 
 	export class RsAssignExpr extends RsExpression {
-
-		public toObject() {
-			return {
-				AssignExpr: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.assignOp.toObject(),
-					this.lval.toObject(),
-					this.expression.toObject()
-				]
-			};
+		public serialize() {
+			return this._toAeson("AssignExpr", [this.assignOp.serialize(), this.lval.serialize(), this.expression.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public assignOp: RsAssignOp, public lval: RsLValue, public expression: RsExpression) {
-			super(ann);
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public assignOp: RsAssignOp, public lval: RsLValue, public expression: RsExpression) {
+			super(span, ann);
 		}
 	}
 
 	export class RsThisRef extends RsExpression {
-
-		public toObject() {
-			return {
-				ThisRef: [this.span.toObject(), this.mapAnn(a => a.toObject())]
-			};
+		public serialize() {
+            return this._toAeson("ThisRef", []);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
-			super(ann);
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) {
+			super(span, ann);
 		}
-		
 	}
 
 	export class RsSuperRef extends RsExpression {
-
-		public toObject() {
-			return {
-				SuperRef: [this.span.toObject(), this.mapAnn(a => a.toObject())]
-			};
+		public serialize() {
+			return this._toAeson("SuperRef", []);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
-			super(ann);
-		}
-		
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) {
+			super(span, ann);
+		}		
 	}
 
 	export class RsNullLit extends RsExpression {
-
-		public toObject() {
-			return {
-				NullLit: [this.span.toObject(), this.mapAnn(a => a.toObject())]
-			};
+		public serialize() {
+			return this._toAeson("NullLit", []);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
-			super(ann);
-		}
-		
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) {
+			super(span, ann);
+		}		
 	}
 
 	export class RsBoolLit extends RsExpression {
-
-		public toObject() {
-			return {
-				BoolLit: [
-					[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.b
-				]
-			};
+		public serialize() {
+			return this._toAeson("BoolLit", [this.b]);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[], public b: boolean) {
-			super(ann);
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public b: boolean) {
+			super(span, ann);
 		}
-
 	}
 
 	export class RsNewExpr extends RsExpression {
-		public toObject() {
-			return {
-				NewExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.e.toObject(), this.es.toObject()]
-			};
+		public serialize() {
+			return this._toAeson("NewExpr", [this.e.serialize(), this.es.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public e: RsExpression,
-					public es: RsASTList<RsExpression>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public e: RsExpression, public es: RsList<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
     export class RsUnaryAssignExpr extends RsExpression {
-		public toObject() {
-			return {
-				UnaryAssignExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.op.toObject(),	this.lval.toObject() ]
-			};
+		public serialize() {
+            return this._toAeson("UnaryAssignExpr", [this.op.serialize(), this.lval.serialize()]); 
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public op: RsUnaryAssignOp,
-					public lval: RsLValue) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public op: RsUnaryAssignOp, public lval: RsLValue) {
+            super(span, ann);
+        }
 	}
 
 	export class RsPrefixExpr extends RsExpression {
-		public toObject() {
-			return {
-				PrefixExpr: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.op.toObject(),	this.exp.toObject()]
-			};
+		public serialize() {
+			return this._toAeson("PrefixExpr", [this.op.serialize(), this.exp.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public op: RsPrefixOp,
-					public exp: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public op: RsPrefixOp, public exp: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsArrayLit extends RsExpression {
-		public toObject() {
-			return {
-				ArrayLit: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.members.toObject() ]
-			};
+		public serialize() {
+			return this._toAeson("ArrayLit", [this.members.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public members: RsASTList<RsExpression>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public members: RsList<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsCast extends RsExpression {
-		public toObject() {
-			return {
-				Cast: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.expression.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("Cast", [this.expression.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public expression: RsExpression) { super(ann); }
-	}
-
-
-
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: RsExpression) {
+            super(span, ann);
+        }
+    }
 
 
 	/* ****************************************************************************
@@ -747,75 +654,50 @@ module TypeScript {
 	 * ****************************************************************************/
 
 	export class RsClassElt extends RsAnnotatedAST {
-		public toObject(): any {
+		public serialize(): any {
 			throw new Error("RsClassElt: child class should implement toJSON");
 		}
 	}
 
 	export class RsConstructor extends RsClassElt {
-		public toObject(): any {
-			return {
-				Constructor: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					(this.args) ? this.args.toObject() : null, this.body.toObject()]
-			};
-		}
+		public serialize(): any {
+            return this._toAeson("Constructor", [this.args.serialize(), this.body.serialize()]);            			
+        }
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public /*Maybe*/ args: RsASTList<RsId>,
-					public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public args: RsList<RsId>, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsMemberVarDecl extends RsClassElt {
-		public toObject(): any {
-			return {
-				MemberVarDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.sta,
-					this.name.toObject(),
-					(this.exp) ? this.exp.toObject() : null
-				]
-			};
+		public serialize(): any {
+			return this._toAeson("MemberVarDecl", [this.sta, this.name.serialize(), this.exp.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public sta: boolean,
-					public name: RsId,
-					public exp?: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public sta: boolean, public name: RsId, public exp: RsMaybe<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsMemberMethDef extends RsClassElt {
-		public toObject(): any {
-			return {
-				MemberMethDef: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.sta, this.name.toObject(),	this.args.toObject(), this.body.toObject()]
-			};
+		public serialize(): any {
+			return this._toAeson("MemberMethDef", [this.sta, this.name.serialize(),	this.args.serialize(), this.body.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public sta: boolean,
-					public name: RsId,
-					public args: RsASTList<RsId>,
-					public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public sta: boolean, public name: RsId, public args: RsList<RsId>, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsMemberMethDecl extends RsClassElt {
-		public toObject(): any {
-			return {
-				MemberMethDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.sta, this.name.toObject(),	this.args.toObject()]
-			};
+		public serialize(): any {
+			return this._toAeson("MemberMethDecl", [this.sta, this.name.serialize(), this.args.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public sta: boolean,
-					public name: RsId,
-					public args: RsASTList<RsId>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public sta: boolean, public name: RsId, public args: RsList<RsId>) {
+            super(span, ann);
+        }
 	}
-
-
 
 
 	/* ****************************************************************************
@@ -825,285 +707,198 @@ module TypeScript {
 	 * ****************************************************************************/
 
 	export class RsStatement extends RsAnnotatedAST {
-		public toObject(): any {
+		public serialize(): any {
 			throw new Error("RsStatement: child class should implement toJSON");
 		}
 	}
 
 	export class RsEmptyStmt extends RsStatement implements IRsVarDeclLike {
-		public toObject(): any {
-			return { EmptyStmt: [this.span.toObject(), this.mapAnn(a => a.toObject())] };
+		public serialize(): any {
+            return this._toAeson("EmptyStmt", []);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[]) {
-			super(ann);
+		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) {
+			super(span, ann);
 		}
 	}
 
 	export class RsExprStmt extends RsStatement {
-		public toObject(): any {
-			return {
-				ExprStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject()]
-			};
+		public serialize(): any {
+			return this._toAeson("ExprStmt", [this.exp.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public exp: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public exp: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsVarDeclStmt extends RsStatement {
-		public toObject(): any {
-			return {
-				VarDeclStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.varDecls.toObject()]
-			};
+		public serialize(): any {
+			return this._toAeson("VarDeclStmt", [this.varDecls.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],	
-					public varDecls: RsASTList<RsVarDecl>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public varDecls: RsList <RsVarDecl>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsFunctionStmt extends RsStatement {
-		public toObject() {
-			return {
-				FunctionStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(), this.args.toObject(), this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("FunctionStmt", [this.id.serialize(), this.args.serialize(), this.body.serialize()]); 
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public id: RsId,
-					public args: RsASTList<RsId>,
-					public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public args: RsList<RsId>, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsFuncCtorStmt extends RsStatement {
-		public toObject() {
-			return {
-				FuncCtorStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(), this.args.toObject(), this.body.toObject()]
-			};
+		public serialize() {
+			return this._toAeson("FuncCtorStmt", [this.id.serialize(), this.args.serialize(), this.body.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public id: RsId,
-					public args: RsASTList<RsId>,
-					public body: RsASTList<RsStatement>) { super(ann); }
-	}
-
-
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public args: RsList<RsId>, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
+    }    
 
 	export class RsFunctionAmbientDecl extends RsStatement {
-		public toObject() {
-			return {
-				FuncAmbDecl: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(), this.args.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("FuncAmbDecl", [this.id.serialize(), this.args.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public id: RsId,
-					public args: RsASTList<RsId>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public args: RsList<RsId>) {
+            super(span, ann);
+        }
 	}
 
   export class RsFunctionOverload extends RsStatement {
-		public toObject() {
-			return {
-				FuncOverload: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(), this.args.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("FuncOverload", [this.id.serialize(), this.args.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public id: RsId,
-					public args: RsASTList<RsId>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public args: RsList<RsId>) {
+            super(span, ann);
+        }
 	}
 
-
 	export class RsReturnStmt extends RsStatement {
-		public toObject() {
-			return {
-				ReturnStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					(this.expression) ? this.expression.toObject() : null]
-			};
+		public serialize() {
+            return this._toAeson("ReturnStmt", [this.expression.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public expression: RsExpression) {  super(ann);	}
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: RsMaybe<RsExpression>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsBlockStmt extends RsStatement {
-		public toObject() {
-			return {
-				BlockStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("BlockStmt", [this.body.serialize()]); 
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsClassStmt extends RsStatement {
-
-		public toObject() {
-			return {
-				ClassStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(),
-					(this.extendsClass) ? this.extendsClass.toObject() : null,
-					this.implementsInterfaces.toObject(),
-					this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("ClassStmt", [this.id.serialize(), this.extendsClass.serialize(), this.implementsInterfaces.serialize(), this.body.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public id: RsId,
-			public extendsClass/* Maybe */: RsId,
-			public implementsInterfaces: RsASTList<RsId>,
-			public body: RsASTList<RsClassElt>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public extendsClass: RsMaybe<RsId>, public implementsInterfaces: RsList<RsId>, public body: RsList<RsClassElt>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsEnumStmt extends RsStatement {
-		public toObject() {
-			return {
-				EnumStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.id.toObject(),
-					this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("EnumStmt", [this.id.serialize(), this.body.serialize()]); 
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public id: RsId,
-			public body: RsASTList<RsEnumElt>) { super(ann); }
-	}
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public body: RsList<RsEnumElt>) {
+            super(span, ann);
+        }
+    }
 
 	export class RsWhileStmt extends RsStatement {
-		public toObject() {
-			return {
-				WhileStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.exp.toObject(),this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("WhileStmt", [this.exp.serialize(), this.body.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public exp: RsExpression,
-					public body: RsStatement) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public exp: RsExpression, public body: RsStatement) {
+            super(span, ann);
+        }
 	}
 
 	export class RsForInStmt extends RsStatement {
-		public toObject() {
-			return {
-                ForInStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-                    this.init.toObject(),
-					this.exp.toObject(),
-					this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("ForInStmt", [this.init.serialize(), this.exp.serialize(), this.body.serialize()]);
 		}
 
-        constructor(    public span: RsSourceSpan,
-                        public ann : RsAnnotation[],
-                        public init: RsForInInit,
-						public exp : RsExpression,
-                        public body: RsStatement) {	super(ann);	}
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public init: RsForInInit, public exp: RsExpression, public body: RsStatement) {
+            super(span, ann);
+        }
 	}
 
 	export class RsForStmt extends RsStatement {
-		public toObject() {
-			return {
-                ForStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-                    this.init.toObject(),
-					(this.test) ? this.test.toObject() : null,
-					(this.inc) ? this.inc.toObject() : null,
-					this.body.toObject()]
-			};
+		public serialize() {
+			return this._toAeson("ForStmt", [this.init.serialize(), this.test.serialize(), this.inc.serialize(), this.body.serialize()]);
 		}
 
-        constructor(    public span: RsSourceSpan,
-                        public ann : RsAnnotation[],
-                        public init: RsForInit,
-              /*Maybe*/ public test: RsExpression,
-              /*Maybe*/ public inc : RsExpression,
-                        public body: RsStatement) {	super(ann);	}
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public init: RsForInit, public test: RsMaybe<RsExpression>, public inc: RsMaybe<RsExpression>, public body: RsStatement) {
+            super(span, ann);
+        }
 	}
 
 	export class RsIfStmt extends RsStatement {
-		public toObject() {
-			return {
-				IfStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.cond.toObject(), this.s1.toObject(), this.s2.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("IfStmt", [this.cond.serialize(), this.s1.serialize(), this.s2.serialize()]); 
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public cond: RsExpression,
-					public s1: RsStatement,
-					public s2: RsStatement) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public cond: RsExpression, public s1: RsStatement, public s2: RsStatement) {
+            super(span, ann);
+        }
 	}
 
 	export class RsIfSingleStmt extends RsStatement {
-		public toObject() {
-			return {
-				IfSingleStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.cond.toObject(), this.s.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("IfSingleStmt", [this.cond.serialize(), this.s.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public cond: RsExpression,
-					public s: RsStatement) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public cond: RsExpression, public s: RsStatement) {
+            super(span, ann);
+        }
 	}
 
 	export class RsThrowStatement extends RsStatement {
-		public toObject() {
-			return {
-				ThrowStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.expression.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("ThrowStmt", [this.expression.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public expression: RsExpression) {  super(ann);	}
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 	export class RsModuleStmt extends RsStatement {
-		public toObject() {
-			return {
-				ModuleStmt: [[this.span.toObject(), this.mapAnn(a => a.toObject())],
-          this.name.toObject(),
-					this.body.toObject()]
-			};
+		public serialize() {
+            return this._toAeson("ModuleStmt", [this.name.serialize(), this.body.serialize()]);
 		}
 		
-		constructor(public span: RsSourceSpan,
-					public ann: RsAnnotation[],
-					public name: RsId,
-                    public body: RsASTList<RsStatement>) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId, public body: RsList<RsStatement>) {
+            super(span, ann);
+        }
 	}
 
 	export class RsIfaceStmt extends RsStatement implements IRsVarDeclLike {
-		public toObject(): any {
-			return { IfaceStmt: [[this.span.toObject(), this.mapAnn(a =>
-                a.toObject())], this.name.toObject()] };
+		public serialize(): any {
+            return this._toAeson("IfaceStmt", [this.name.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan, public ann: RsAnnotation[],
-            public name: RsId) {
-			super(ann);
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId) {
+            super(span, ann);
 		}
 	}
 
@@ -1114,18 +909,13 @@ module TypeScript {
 	 * ****************************************************************************/
 
 	export class RsEnumElt extends RsAnnotatedAST {
-		public toObject() {
-		  return [
-          [this.span.toObject(), this.mapAnn(a => a.toObject())],
-					this.name.toObject(),
-					this.exp.toObject()
-        ];
+		public serialize() {
+            return this._toAeson("EnumElt", [this.name.serialize(), this.exp.serialize()]);
 		}
 
-		constructor(public span: RsSourceSpan,
-			public ann: RsAnnotation[],
-			public name: RsId,
-			public exp: RsExpression) { super(ann); }
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId, public exp: RsExpression) {
+            super(span, ann);
+        }
 	}
 
 }

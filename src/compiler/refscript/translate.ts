@@ -38,11 +38,11 @@ module TypeScript {
 			return this._semanticInfoChain.getSymbolForDecl(decl);
 		}
 
-		public getSourceSpan(ast: ISyntaxElement): RsSourceSpan {
+		public getSourceSpan(ast: ISyntaxElement): RsSrcSpan {
 			var lineMap = this._document.lineMap();
 			var startLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.start());
 			var stopLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.end());
-			return new RsSourceSpan(ast.fileName(), startLineAndChar, stopLineAndChar);
+			return new RsSrcSpan(ast.fileName(), startLineAndChar, stopLineAndChar);
 		}
 
 		public isLibrary(ast: ISyntaxElement): boolean {
@@ -102,7 +102,7 @@ module TypeScript {
 	export class FPSrcSpan {
 		constructor(private sp_start: FPSrcPos, private sp_stop: FPSrcPos) { }
 
-		public toObject(): any {
+		public serialize(): any {
 			return {
 				"sp_start": this.sp_start.toObject(),
 				"sp_stop": this.sp_stop.toObject()
@@ -127,7 +127,7 @@ module TypeScript {
 		public toObject() {
 			return {
 				"errMsg": this.errMsg,
-				"errLoc": this.errLoc.toObject()
+				"errLoc": this.errLoc.serialize()
 			};
 		}
 
