@@ -12,6 +12,23 @@ module TypeScript {
     export function aesonEncode(tag: string, content: any): any {
         return { "tag": tag, "content": content };
     }
+
+    export interface IRsAST {
+        serialize(): any;
+        _toAeson(tag: string, content: any[]): any;
+    }
+
+	export class RsAST {
+		public serialize(): any {
+			throw new Error("RsAST: child class should implement serialize");
+		}
+
+        // No annotation field here
+        public _toAeson(tag: string, content: any[]) {
+            return aesonEncode(tag, content);
+        }
+	}
+
 	export class RsSrcSpan {
 		public serialize(): any {
             return aesonEncode("SrcSpan",
@@ -46,34 +63,25 @@ module TypeScript {
         }
 	}
 
-	export class RsMaybe<T extends RsAST> extends RsAST {
+    export interface IRsMaybe<T extends RsAST> {
+        serialize(): any;
+    }
+
+    export class RsJust<T extends RsAST> extends RsAST implements IRsMaybe<T> {
         constructor(public content: T) {
             super();
         }
 
         public serialize(): any {
-            if (this.content) {
-                return this.content.serialize();
-            }
+            return this.content.serialize();
+        }
+	}
+
+    export class RsNothing extends RsAST implements IRsMaybe<any> {
+        public serialize(): any {
             return null;
         }
-	}
-
-    export interface IRsAST {
-        serialize(): any;
-        _toAeson(tag: string, content: any[]): any;
     }
-
-	export class RsAST {
-		public serialize(): any {
-			throw new Error("RsAST: child class should implement serialize");
-		}
-
-        // No annotation field here
-        public _toAeson(tag: string, content: any[]) {
-            return aesonEncode(tag, content);
-        }
-	}
 
 	export class RsAnnotatedAST extends RsAST {
 		constructor(public span: RsSrcSpan, public ann: RsAnnotation[]) { super(); }
@@ -108,7 +116,7 @@ module TypeScript {
             return this._toAeson("VarDecl", [this.name.serialize(), this.exp.serialize()]);
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId, public exp: RsMaybe<RsExpression>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public name: RsId, public exp: IRsMaybe<RsExpression>) {
             super(span, ann);
         }
 	}
@@ -490,7 +498,7 @@ module TypeScript {
             return this._toAeson("FuncExpr", [this.id.serialize(), this.args.serialize(), this.body.serialize()]);
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsMaybe<RsId>, public args: RsList<RsId>, public body: RsList<RsStatement>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: IRsMaybe<RsId>, public args: RsList<RsId>, public body: RsList<RsStatement>) {
             super(span, ann);
         }
 	}
@@ -674,7 +682,7 @@ module TypeScript {
 			return this._toAeson("MemberVarDecl", [this.sta, this.name.serialize(), this.exp.serialize()]);
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public sta: boolean, public name: RsId, public exp: RsMaybe<RsExpression>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public sta: boolean, public name: RsId, public exp: IRsMaybe<RsExpression>) {
             super(span, ann);
         }
 	}
@@ -734,10 +742,10 @@ module TypeScript {
 
 	export class RsVarDeclStmt extends RsStatement {
 		public serialize(): any {
-			return this._toAeson("VarDeclStmt", [this.varDecls.serialize()]);
+			return this._toAeson("VarDeclStmt", this.varDecls.serialize());
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public varDecls: RsList <RsVarDecl>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public varDecls: RsList<RsVarDecl>) {
             super(span, ann);
         }
 	}
@@ -787,7 +795,7 @@ module TypeScript {
             return this._toAeson("ReturnStmt", [this.expression.serialize()]);
 		}
 		
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: RsMaybe<RsExpression>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public expression: IRsMaybe<RsExpression>) {
             super(span, ann);
         }
 	}
@@ -807,7 +815,7 @@ module TypeScript {
             return this._toAeson("ClassStmt", [this.id.serialize(), this.extendsClass.serialize(), this.implementsInterfaces.serialize(), this.body.serialize()]);
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public extendsClass: RsMaybe<RsId>, public implementsInterfaces: RsList<RsId>, public body: RsList<RsClassElt>) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public id: RsId, public extendsClass: IRsMaybe<RsId>, public implementsInterfaces: RsList<RsId>, public body: RsList<RsClassElt>) {
             super(span, ann);
         }
 	}
@@ -847,7 +855,7 @@ module TypeScript {
 			return this._toAeson("ForStmt", [this.init.serialize(), this.test.serialize(), this.inc.serialize(), this.body.serialize()]);
 		}
 
-        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public init: RsForInit, public test: RsMaybe<RsExpression>, public inc: RsMaybe<RsExpression>, public body: RsStatement) {
+        constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public init: RsForInit, public test: IRsMaybe<RsExpression>, public inc: IRsMaybe<RsExpression>, public body: RsStatement) {
             super(span, ann);
         }
 	}

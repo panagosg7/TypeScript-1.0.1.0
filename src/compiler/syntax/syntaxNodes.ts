@@ -686,7 +686,7 @@ module TypeScript {
 
 			return new RsClassStmt(helper.getSourceSpan(this),
                 restAnnots, this.identifier.toRsId(helper),
-                (ext && ext.length > 0) ? new RsMaybe(ext[0]) : new RsMaybe(null),
+                (ext && ext.length > 0) ? new RsJust(ext[0]) : new RsNothing(),
                 imp, classElts);
 		}
 		//RefScript - end
@@ -1705,13 +1705,13 @@ module TypeScript {
 						}
 						var typeStr = type.toString();
 						anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, Assignability.AErrorAssignability, this.propertyName.text() + " :: " + typeStr));
-						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
+						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), new RsNothing());
 
 					}
 					else if (binderAnns.length === 1) {
 
 						binderAnns[0]["_kind"] = AnnotKind.RawAmbBind;
-						return new RsVarDecl(helper.getSourceSpan(this), binderAnns, this.propertyName.toRsId(helper), null);
+						return new RsVarDecl(helper.getSourceSpan(this), binderAnns, this.propertyName.toRsId(helper), new RsNothing());
 
 					}
 					helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation,
@@ -1724,7 +1724,7 @@ module TypeScript {
 					//All necessary binders need to be in @anns@
                     return new RsVarDecl(helper.getSourceSpan(this),
                         ArrayUtilities.concat([binderAnns]), this.propertyName.toRsId(helper),
-						(this.equalsValueClause) ? new RsMaybe(this.equalsValueClause.toRsExp(helper)) : new RsMaybe(null));
+						(this.equalsValueClause) ? new RsJust(this.equalsValueClause.toRsExp(helper)) : new RsNothing());
 				}
 
 				helper.postDiagnostic(this, DiagnosticCode.Variable_declarator_for_0_needs_to_have_at_most_one_type_annotation,
@@ -5795,12 +5795,12 @@ module TypeScript {
 			if (this.variableDeclarator.equalsValueClause) {
 				return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
 					this.variableDeclarator.propertyName.toRsId(helper),
-					new RsMaybe(this.variableDeclarator.equalsValueClause.toRsExp(helper)));
+					new RsJust(this.variableDeclarator.equalsValueClause.toRsExp(helper)));
 			}
 			else {
 				return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
 					this.variableDeclarator.propertyName.toRsId(helper),
-					new RsMaybe(null));
+					new RsNothing());
 			}
 		}
 		//RefScript - end
@@ -6063,7 +6063,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
 			var ret = this.expression ? this.expression.toRsExp(helper) : null;
-			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), new RsMaybe(ret));
+			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), new RsJust(ret));
 		}
 		//RefScript - end
 
@@ -6797,8 +6797,8 @@ module TypeScript {
 					helper.getSourceSpan(this),
 					leadingTokenAnnots(this),
 					this.variableDeclaration.toRsForInit(helper, anns),
-					new RsMaybe(this.condition ? this.condition.toRsExp(helper) : null),
-					new RsMaybe(this.incrementor ? this.incrementor.toRsExp(helper) : null),
+					(this.condition) ? new RsJust(this.condition.toRsExp(helper)) : new RsNothing(),
+					(this.incrementor) ? new RsJust(this.incrementor.toRsExp(helper)) : new RsNothing(),
 					this.statement.toRsStmt(helper));
 			}
 			else if (this.initializer && !this.variableDeclaration) {
@@ -6806,8 +6806,8 @@ module TypeScript {
 					helper.getSourceSpan(this),
 					leadingTokenAnnots(this),
 					new RsExprInit(this.initializer.toRsExp(helper)),
-					new RsMaybe(this.condition ? this.condition.toRsExp(helper) : null),
-					new RsMaybe(this.incrementor ? this.incrementor.toRsExp(helper) : null),
+					(this.condition) ? new RsJust(this.condition.toRsExp(helper)) : new RsNothing(),
+					(this.incrementor) ? new RsJust(this.incrementor.toRsExp(helper)) : new RsNothing(),
 					this.statement.toRsStmt(helper));
 			}
 			helper.postDiagnostic(this, DiagnosticCode.Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0, [this.initializer.fullText()]);
@@ -7916,7 +7916,7 @@ module TypeScript {
 			}
 
 			return new RsFuncExpr(helper.getSourceSpan(this), anns,
-				new RsMaybe(this.identifier ? this.identifier.toRsId(helper) : null),
+				(this.identifier) ? new RsJust(this.identifier.toRsId(helper)) : new RsNothing(),
 				new RsList<RsId>(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(p => p.toRsId(helper))),
 				new RsList<RsStatement>(this.block.statements.toArray().map(s => s.toRsStmt(helper))));
 		}
