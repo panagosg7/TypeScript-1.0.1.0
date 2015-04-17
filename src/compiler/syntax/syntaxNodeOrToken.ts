@@ -15,7 +15,7 @@ module TypeScript {
 		toRsLValue(helper: RsHelper): RsLValue;
 		toRsClassElt(helper: RsHelper, mut?: RsType): RsClassElt;
 		toRsForInit(helper: RsHelper): RsForInit;
-        toRsMemList<T extends RsAST>(helper: RsHelper): RsASTList<T>;
+        toRsMemList<T extends RsAST>(helper: RsHelper): RsList<T>;
 		toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike;
 		//RefScript - end
 

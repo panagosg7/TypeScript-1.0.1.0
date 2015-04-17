@@ -443,7 +443,7 @@ module TypeScript {
 			throw new Error("toRsId not implemented for " + SyntaxKind[this.kind()]);
 		}
 
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> {
+		public toRsMemList(helper: RsHelper): RsList<RsAST> {
 			throw new Error("toRsMemList not implemented for " + SyntaxKind[this.kind()]);
 		}
 
@@ -463,45 +463,15 @@ module TypeScript {
 			throw new Error("toRsVarDecl not implemented for " + SyntaxKind[this.kind()]);
 		}
 
-		public getSourceSpan(helper: RsHelper): RsSourceSpan {
+		public getSourceSpan(helper: RsHelper): RsSrcSpan {
 			return helper.getSourceSpan(this);
 		}
-
-		///** Returns annotations of the current ISyntaxElement node */
-        //// FIXME: preComments does not work
-		//public getRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
-		//	var annStrings: string[] = [];
-		//	var pre = ASTHelpers.preComments(this);
-		//	if (pre) {
-		//		pre.forEach((p: Comment) => {
-		//			var t = p.fullText().match("/\*@(([^])*)\\*/");
-		//			if (t && t[1]) { annStrings = annStrings.concat([t[1]]); }
-		//		});
-		//	}
-		//	//TODO: possibly add check for multiple annotations on a single FunctionStmt etc.
-		//	return annStrings.map(s => RsAnnotation.createAnnotation(s, ctx));
-		//}
-
-		///** Returns all annotations (recursively) of the ISyntaxElement rooted at the current node */
-		//public getAllRsAnnotations(ctx: AnnotContext): RsAnnotation[] {
-		//	var annots: RsAnnotation[] = [];
-		//	TypeScript.getAstWalkerFactory().walk(this, function (cur: SyntaxNode, walker: IAstWalker) {
-		//		//Careful - only SyntaxNodes have a getRsAnnotations method
-		//		if(cur.isNode()) {
-		//			annots = annots.concat(cur.getRsAnnotations(ctx));
-		//		}
-		//		return cur;
-		//	});
-		//	return annots;
-		//}
-
 
 		/** Names defined in this ISyntaxElement - This makes sense for nodes like VariableDeclaration
 			So it will have to be reimplemented there. */
 		public definedNames(): string[] {
 			return [];
 		}
-
 
 		/** Sanity check for variable / field definitions
 			An definition is allowed to be missing the annotation. */

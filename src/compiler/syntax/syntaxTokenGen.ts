@@ -88,7 +88,7 @@ module TypeScript.Syntax {
         return new RsId(helper.getSourceSpan(token), [] /*token.getNanoAnnotations(AnnotContext.OtherContext)*/, token.text());
 	}
 
-	function toRsMemList<T extends ISyntaxToken>(token: T, helper: RsHelper): RsASTList<RsAST> {
+	function toRsMemList<T extends ISyntaxToken>(token: T, helper: RsHelper): RsList<RsAST> {
 		throw new Error("toRsMemList not implemented for " + SyntaxKind[token.kind()]);
 	}
 
@@ -251,7 +251,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -405,7 +405,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -558,7 +558,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -714,7 +714,7 @@ module TypeScript.Syntax {
         public toRsExp(helper: RsHelper): RsExpression { return toRsExp(this, helper); }
         public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
         public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
         public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
@@ -847,7 +847,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -986,7 +986,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -1125,7 +1125,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
@@ -1269,7 +1269,7 @@ module TypeScript.Syntax {
 		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsASTList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
 		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
 		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 

@@ -38,11 +38,11 @@ module TypeScript {
 			return this._semanticInfoChain.getSymbolForDecl(decl);
 		}
 
-		public getSourceSpan(ast: ISyntaxElement): RsSourceSpan {
+		public getSourceSpan(ast: ISyntaxElement): RsSrcSpan {
 			var lineMap = this._document.lineMap();
 			var startLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.start());
 			var stopLineAndChar = lineMap.getLineAndCharacterFromPosition(ast.end());
-			return new RsSourceSpan(ast.fileName(), startLineAndChar, stopLineAndChar);
+			return new RsSrcSpan(ast.fileName(), startLineAndChar, stopLineAndChar);
 		}
 
 		public isLibrary(ast: ISyntaxElement): boolean {
@@ -85,15 +85,15 @@ module TypeScript {
 	}
 
 	export class FixResult {
-		public toObject(): any {
-			throw new Error("FixResult.toObject - abstract");
+		public serialize() {
+			throw new Error("FixResult.serialize - abstract");
 		}
 	}
 
 	export class FPSrcPos {
 		constructor(private name: string, private line: number, private column: number) { }
 
-		public toObject() {
+		public serialize() {
 			return [ this.name, this.line + 1, this.column + 1 ]; // Calibrating off by one 
 				//"name": this.name, "line": this.line, "column": this.column
 		}
@@ -102,10 +102,10 @@ module TypeScript {
 	export class FPSrcSpan {
 		constructor(private sp_start: FPSrcPos, private sp_stop: FPSrcPos) { }
 
-		public toObject(): any {
+		public serialize(): any {
 			return {
-				"sp_start": this.sp_start.toObject(),
-				"sp_stop": this.sp_stop.toObject()
+				"sp_start": this.sp_start.serialize(),
+				"sp_stop": this.sp_stop.serialize()
 			};
 		}
 	}
@@ -124,10 +124,10 @@ module TypeScript {
 					new FPSrcPos(diagnostic.fileName(), stopLineAndCharacter.line(), stopLineAndCharacter.character())));			
 		}
 
-		public toObject() {
+		public serialize() {
 			return {
 				"errMsg": this.errMsg,
-				"errLoc": this.errLoc.toObject()
+				"errLoc": this.errLoc.serialize()
 			};
 		}
 
@@ -138,14 +138,14 @@ module TypeScript {
 			super();
 		}
 
-		public toObject() {
-			return { "Crash": [this.errs.map(err => err.toObject()), this.msg] };
+		public serialize() {
+			return TypeScript.aesonEncode("Crash", [this.errs.map(err => err.serialize()), this.msg]);
 		}
 	}
 
 	export class FRSafe extends FixResult { 
-		public toObject(): any {
-			return { "Safe": [] };
+		public serialize() {
+			return TypeScript.aesonEncode("Safe", []);
 		}
   }
 
@@ -154,8 +154,8 @@ module TypeScript {
 			super();
 		}
 
-		public toObject() {
-			return { "Unsafe": this.errs.map(err => err.toObject()) };
+		public serialize() {
+			return TypeScript.aesonEncode("Unsafe", this.errs.map(err => err.serialize()));
 		}
 	}
 
@@ -164,7 +164,7 @@ module TypeScript {
 			super();
 		}
 
-		public toObject() {
+		public serialize() {
 			return { "UnknownError": this.msg };
 		}
 	}

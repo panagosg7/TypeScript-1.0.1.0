@@ -836,7 +836,7 @@ module TypeScript {
                 else {
                     fixResult = new FRUnsafe(errors);
                 }
-                this.ioHost.stdout.Write(JSON.stringify(fixResult.toObject(), undefined, 2));
+                this.ioHost.stdout.Write(JSON.stringify(fixResult.serialize(), undefined, 2));
                 this.ioHost.quit(1);
             }
             else {
@@ -846,7 +846,7 @@ module TypeScript {
 
         private dumpRefScriptUnknownError(msg: string) {
             var unknownError = new FRUnknownError(msg);
-            this.ioHost.stdout.Write(JSON.stringify(unknownError.toObject(), undefined, 2));
+            this.ioHost.stdout.Write(JSON.stringify(unknownError.serialize(), undefined, 2));
         }
         // RefScript - end
     

@@ -30,7 +30,7 @@ module TypeScript {
 				var cstring = fullStr.substring(3, fullStr.length - 2);
 				var startLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart);
 				var endLineAndChar = ct.syntaxTree().lineMap().getLineAndCharacterFromPosition(cstart + cstring.length);
-				var ss = new RsSourceSpan(ct.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
+				var ss = new RsSrcSpan(ct.syntaxTree().sourceUnit().fileName(), startLineAndChar, endLineAndChar);
 				return new Pair(ss, cstring);
 			}
 			return null;
@@ -660,7 +660,7 @@ module TypeScript {
 			restAnnots.push(_headerAnnotation.ann);
 
 			var ext = ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ExtendsKeyword)));
-			var imp = new RsASTList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
+			var imp = new RsList(ArrayUtilities.concat(this.heritageClauses.toArray().map(t => t.toRsHeritageIds(helper, SyntaxKind.ImplementsKeyword))));
 
 			if (this.modifiers.toArray().some(m => m.tokenKind === SyntaxKind.ExportKeyword)) {
 				restAnnots.push(new RsExported(this.getSourceSpan(helper), AnnotKind.RawExported, ""));
@@ -685,8 +685,9 @@ module TypeScript {
 			helper.popParentNode();
 
 			return new RsClassStmt(helper.getSourceSpan(this),
-				restAnnots, this.identifier.toRsId(helper),
-				(ext && ext.length > 0) ? ext[0] : null, imp, classElts);
+                restAnnots, this.identifier.toRsId(helper),
+                (ext && ext.length > 0) ? new RsJust(ext[0]) : new RsNothing(),
+                imp, classElts);
 		}
 		//RefScript - end
 
@@ -1343,12 +1344,12 @@ module TypeScript {
 					// Ambient function declaration
 					return new RsFunctionAmbientDecl(
 						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
+						<RsList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
 				}
 				else {
 					return new RsFunctionOverload(
 						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
+						<RsList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper));
 				}
 			}
 			else {
@@ -1368,8 +1369,8 @@ module TypeScript {
 					// Function definition
 					return new RsFunctionStmt(
 						helper.getSourceSpan(this), anns, this.identifier.toRsId(helper),
-						<RsASTList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
-						new RsASTList([this.block.toRsStmt(helper)]));
+						<RsList<RsId>>this.callSignature.parameterList.parameters.toRsAST(helper),
+						new RsList([this.block.toRsStmt(helper)]));
 				//}
 			}
 		}
@@ -1568,7 +1569,7 @@ module TypeScript {
 			var decls = this.variableDeclarators.toRsVarDecl(helper, bindAnns);
 
 			if (decls.members.every(d => d instanceof RsVarDecl)) {
-				return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
+				return new RsVarInit(helper.getSourceSpan(this), noBindAnns, <RsList<RsVarDecl>>decls);
 			}
 			helper.postDiagnostic(this, DiagnosticCode.For_in_only_non_ambient_variable_declarators_are_allowed_here);
 		}
@@ -1591,7 +1592,7 @@ module TypeScript {
 			var decls = this.variableDeclarators.toRsVarDecl(helper, bindAnns);
 
 			if (decls.members.every(d => d instanceof RsVarDecl)) {
-				return new RsVarDeclStmt(helper.getSourceSpan(this), noBindAnns, <RsASTList<RsVarDecl>>decls);
+				return new RsVarDeclStmt(helper.getSourceSpan(this), noBindAnns, <RsList<RsVarDecl>>decls);
 			}
 			// NO EMPTY STATEMENTS ANY MORE
 			//else if (decls.members.every(d => d instanceof RsEmptyStmt)) {
@@ -1704,13 +1705,13 @@ module TypeScript {
 						}
 						var typeStr = type.toString();
 						anns.push(new RsBindAnnotation(helper.getSourceSpan(this), AnnotKind.RawAmbBind, Assignability.AErrorAssignability, this.propertyName.text() + " :: " + typeStr));
-						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), null);
+						return new RsVarDecl(helper.getSourceSpan(this), anns, this.propertyName.toRsId(helper), new RsNothing());
 
 					}
 					else if (binderAnns.length === 1) {
 
 						binderAnns[0]["_kind"] = AnnotKind.RawAmbBind;
-						return new RsVarDecl(helper.getSourceSpan(this), binderAnns, this.propertyName.toRsId(helper), null);
+						return new RsVarDecl(helper.getSourceSpan(this), binderAnns, this.propertyName.toRsId(helper), new RsNothing());
 
 					}
 					helper.postDiagnostic(this, DiagnosticCode.Ambient_variable_declarator_for_0_needs_to_have_at_least_one_type_annotation,
@@ -1723,7 +1724,7 @@ module TypeScript {
 					//All necessary binders need to be in @anns@
                     return new RsVarDecl(helper.getSourceSpan(this),
                         ArrayUtilities.concat([binderAnns]), this.propertyName.toRsId(helper),
-						(this.equalsValueClause) ? this.equalsValueClause.toRsExp(helper) : null);
+						(this.equalsValueClause) ? new RsJust(this.equalsValueClause.toRsExp(helper)) : new RsNothing());
 				}
 
 				helper.postDiagnostic(this, DiagnosticCode.Variable_declarator_for_0_needs_to_have_at_most_one_type_annotation,
@@ -5292,8 +5293,8 @@ module TypeScript {
 			}
 
 			return new RsConstructor(helper.getSourceSpan(this), anns,
-				new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
-				new RsASTList(rsBlock));
+				new RsList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+				new RsList(rsBlock));
 		}
 		//RefScript - end
 
@@ -5432,13 +5433,13 @@ module TypeScript {
 			if (this.block) {
 				return new RsMemberMethDef(helper.getSourceSpan(this), anns, isStatic,
 					this.propertyName.toRsId(helper),
-					new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
-					new RsASTList([this.block.toRsStmt(helper)]));
+					new RsList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))),
+					new RsList([this.block.toRsStmt(helper)]));
 			}
 			else {
 				return new RsMemberMethDecl(helper.getSourceSpan(this), anns, isStatic,
 					this.propertyName.toRsId(helper),
-					new RsASTList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))));
+					new RsList(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(t => t.toRsId(helper))));
 			}
 		}
 		//RefScript - end
@@ -5794,12 +5795,12 @@ module TypeScript {
 			if (this.variableDeclarator.equalsValueClause) {
 				return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
 					this.variableDeclarator.propertyName.toRsId(helper),
-					this.variableDeclarator.equalsValueClause.toRsExp(helper));
+					new RsJust(this.variableDeclarator.equalsValueClause.toRsExp(helper)));
 			}
 			else {
 				return new RsMemberVarDecl(helper.getSourceSpan(this), anns, isStatic,
 					this.variableDeclarator.propertyName.toRsId(helper),
-					null);
+					new RsNothing());
 			}
 		}
 		//RefScript - end
@@ -6061,8 +6062,8 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			var ret = this.expression ? this.expression.toRsExp(helper) : null;
-			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), ret);
+			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), 
+        (this.expression) ? new RsJust(this.expression.toRsExp(helper)) : new RsNothing());
 		}
 		//RefScript - end
 
@@ -6796,8 +6797,8 @@ module TypeScript {
 					helper.getSourceSpan(this),
 					leadingTokenAnnots(this),
 					this.variableDeclaration.toRsForInit(helper, anns),
-					this.condition ? this.condition.toRsExp(helper) : null,
-					this.incrementor ? this.incrementor.toRsExp(helper) : null,
+					(this.condition) ? new RsJust(this.condition.toRsExp(helper)) : new RsNothing(),
+					(this.incrementor) ? new RsJust(this.incrementor.toRsExp(helper)) : new RsNothing(),
 					this.statement.toRsStmt(helper));
 			}
 			else if (this.initializer && !this.variableDeclaration) {
@@ -6805,8 +6806,8 @@ module TypeScript {
 					helper.getSourceSpan(this),
 					leadingTokenAnnots(this),
 					new RsExprInit(this.initializer.toRsExp(helper)),
-					this.condition ? this.condition.toRsExp(helper) : null,
-					this.incrementor ? this.incrementor.toRsExp(helper) : null,
+					(this.condition) ? new RsJust(this.condition.toRsExp(helper)) : new RsNothing(),
+					(this.incrementor) ? new RsJust(this.incrementor.toRsExp(helper)) : new RsNothing(),
 					this.statement.toRsStmt(helper));
 			}
 			helper.postDiagnostic(this, DiagnosticCode.Variable_declarations_are_only_supported_in_the_first_part_of_the_loop_in_0, [this.initializer.fullText()]);
@@ -7292,7 +7293,7 @@ module TypeScript {
 			var sourceSpan = helper.getSourceSpan(this);
 		    return new RsEnumStmt(sourceSpan, originalAnnots,
 				this.identifier.toRsId(helper),
-				new RsASTList(this.enumElements.toNonSeparatorArray().map(e => e.toRsEnumElt(helper))))
+				new RsList(this.enumElements.toNonSeparatorArray().map(e => e.toRsEnumElt(helper))))
 	    }
 		// RefScript - end
 
@@ -7707,7 +7708,7 @@ module TypeScript {
 		//RefScript - begin
 		public toRsMemList(helper: RsHelper) {
 			var pName = this.propertyName;
-			return new RsASTList(
+			return new RsList(
 				[new RsPropId(helper.getSourceSpan(pName), [], this.propertyName.toRsId(helper)),
 					this.expression.toRsExp(helper)]);
 		}
@@ -7914,11 +7915,10 @@ module TypeScript {
 				helper.postDiagnostic(this, DiagnosticCode.Anonymous_function_should_have_exactly_one_type_annotation);
 			}
 
-			return new RsFuncExpr(helper.getSourceSpan(this),
-				anns,
-				this.identifier ? this.identifier.toRsId(helper) : null,
-				new RsASTList<RsId>(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(p => p.toRsId(helper))),
-				new RsASTList<RsStatement>(this.block.statements.toArray().map(s => s.toRsStmt(helper))));
+			return new RsFuncExpr(helper.getSourceSpan(this), anns,
+				(this.identifier) ? new RsJust(this.identifier.toRsId(helper)) : new RsNothing(),
+				new RsList<RsId>(this.callSignature.parameterList.parameters.toNonSeparatorArray().map(p => p.toRsId(helper))),
+				new RsList<RsStatement>(this.block.statements.toArray().map(s => s.toRsStmt(helper))));
 		}
 		//RefScript - end
 
