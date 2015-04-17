@@ -6062,8 +6062,8 @@ module TypeScript {
 
 		//RefScript - begin
 		public toRsStmt(helper: RsHelper): RsStatement {
-			var ret = this.expression ? this.expression.toRsExp(helper) : null;
-			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), new RsJust(ret));
+			return new RsReturnStmt(helper.getSourceSpan(this), leadingTokenAnnots(this), 
+        (this.expression) ? new RsJust(this.expression.toRsExp(helper)) : new RsNothing());
 		}
 		//RefScript - end
 

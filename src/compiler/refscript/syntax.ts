@@ -99,7 +99,12 @@ module TypeScript {
     // This one adds the annotation field first
     public _toAeson(tag: string, content: any, ctor: AesonCtor) {
       if (ctor === AesonCtor.WITH_CTOR) {
-        return aesonEncode(tag, [[this.span.serialize(),this.ann.map(a => a.serialize())]].concat(content));
+        if (content instanceof Array && content.length === 0) {
+          return aesonEncode(tag, [this.span.serialize(),this.ann.map(a => a.serialize())]);
+        }
+        else {
+          return aesonEncode(tag, [[this.span.serialize(),this.ann.map(a => a.serialize())]].concat(content));
+        }
       }
       else {
         return [[this.span.serialize(),this.ann.map(a => a.serialize())]].concat(content);
@@ -179,7 +184,7 @@ module TypeScript {
 
   export class RsVarInit extends RsForInit {
     public serialize(): any {
-      return this._toAeson("VarInit", [this.vds.serialize()], AesonCtor.WITH_CTOR);
+      return this._toAeson("VarInit", this.vds.serialize(), AesonCtor.WITH_CTOR);
     }
 
     constructor(public span: RsSrcSpan, public ann: RsAnnotation[], public vds: RsList<RsVarDecl>) {
@@ -189,7 +194,7 @@ module TypeScript {
 
   export class RsExprInit extends RsForInit {
     public serialize(): any {
-      return this._toAeson("ExprInit", [this.exp.serialize()], AesonCtor.WITH_CTOR);
+      return this._toAeson("ExprInit", this.exp.serialize(), AesonCtor.WITH_CTOR);
     }
 
     constructor(public exp: RsExpression) {
@@ -204,7 +209,7 @@ module TypeScript {
 
   export class RsForInVar extends RsForInInit {
     public serialize(): any {
-      return this._toAeson("ForInVar", [this.id.serialize()], AesonCtor.WITH_CTOR);
+      return this._toAeson("ForInVar", this.id.serialize(), AesonCtor.WITH_CTOR);
     }
 
     constructor(private id: RsId) {
@@ -214,7 +219,7 @@ module TypeScript {
 
   export class RsForInLVal extends RsForInInit {
     public serialize(): any {
-      return this._toAeson("ForInLVal", [this.lval.serialize()], AesonCtor.WITH_CTOR);
+      return this._toAeson("ForInLVal", this.lval.serialize(), AesonCtor.WITH_CTOR);
     }
 
     constructor(public lval: RsLValue) {
@@ -879,7 +884,7 @@ module TypeScript {
   }
 
   export class RsIfaceStmt extends RsStatement implements IRsVarDeclLike {
-    public serialize(): any {
+    public serialize() {
       return this._toAeson("IfaceStmt", [this.name.serialize()], AesonCtor.WITH_CTOR);
     }
 
