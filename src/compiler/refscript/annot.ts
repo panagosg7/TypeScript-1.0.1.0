@@ -81,9 +81,9 @@ module TypeScript {
       case AnnotKind.RawIface:
         return new RsExplicitInterfaceAnnotation(ss, triplet.thd());
       default:
-        return new RsGlobalAnnotation(ss, triplet.fst(), triplet.thd()); 
+        return new RsGlobalAnnotation(ss, triplet.fst(), triplet.thd());
       }
-    } 
+    }
 
     public sourceSpan(): RsSrcSpan {
       return this._sourceSpan;
@@ -105,11 +105,11 @@ module TypeScript {
       var tokens = RsAnnotation.stringTokens(s);
       if (tokens && tokens.length > 0) {
 
-        // try to read some assignability first ... 
+        // try to read some assignability first ...
         if (ArrayUtilities.indexOfEq(["readonly", "local", "global"], tokens[0]) !== -1) {
 
-          // This is a bind ... 
-          var asgn: Assignability; 
+          // This is a bind ...
+          var asgn: Assignability;
           switch (tokens[0]) {
             case "readonly":
               asgn = Assignability.AReadOnly;
@@ -121,7 +121,7 @@ module TypeScript {
               asgn = Assignability.AWriteGlobal
               break;
             default:
-              asgn = Assignability.AErrorAssignability    
+              asgn = Assignability.AErrorAssignability
           }
 
           var kind = RsAnnotation.toSpecKind(tokens[1]);
@@ -135,7 +135,7 @@ module TypeScript {
           }
         }
 
-        // bind without an assignability modifier or something else ... 
+        // bind without an assignability modifier or something else ...
         var kind = RsAnnotation.toSpecKind(tokens[0]);
         if (kind === AnnotKind.RawBind) {
 
@@ -188,9 +188,9 @@ module TypeScript {
       super(sourceSpan, kind, content);
     }
 
-    /** Returns true if this is a global annotation (can float to top-level). 
-        Compared to function / variable binders that need to be local to 
-        particular AST nodes. 
+    /** Returns true if this is a global annotation (can float to top-level).
+        Compared to function / variable binders that need to be local to
+        particular AST nodes.
     */
     public isGlob(): boolean {	return true; }
 
@@ -252,7 +252,7 @@ module TypeScript {
       }
 
 
-      /** This is not a global annotation (cannot float to top-level). 
+      /** This is not a global annotation (cannot float to top-level).
        Needs to stick around a class declaration. */
        public isGlob(): boolean { return false; }
 
@@ -279,7 +279,7 @@ module TypeScript {
 
   /** A class annotation provided by the user */
   export class RsExplicitClassAnnotation extends RsClassAnnotation {
-    /** This is not a global annotation (cannot float to top-level). 
+    /** This is not a global annotation (cannot float to top-level).
      Needs to stick around a class declaration. */
      public isGlob(): boolean { return false; }
 
@@ -294,7 +294,7 @@ module TypeScript {
 
   /** An interface annotation provided by the user */
   export class RsExplicitInterfaceAnnotation extends RsClassAnnotation {
-    /** This is not a global annotation (cannot float to top-level). 
+    /** This is not a global annotation (cannot float to top-level).
      Needs to stick around an interface declaration. */
      public isGlob(): boolean { return false; }
 

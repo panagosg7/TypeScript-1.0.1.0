@@ -11,12 +11,12 @@ module TypeScript.Syntax {
 		throw new Error("toRsAST not implemented for " +  SyntaxKind[token.kind()]);
 	}
 
-
+	// DONE
     export function isHexLit(s: string): boolean {
         var regexp = new RegExp('0[xX][0-9a-fA-F]+');
         return regexp.test(s);
     }
-
+	// DONE
     export function isIntLit(s: string): boolean {
         var regexp = new RegExp('[0-9]+');
         return regexp.test(s);
@@ -28,35 +28,36 @@ module TypeScript.Syntax {
 
 		switch (token.kind()) {
             case SyntaxKind.IdentifierName:
-                return new RsVarRef(
-                    helper.getSourceSpan(token),
-                    [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-                    token.toRsId(helper));
+                // return new RsVarRef(
+                //     helper.getSourceSpan(token),
+                //     [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+                //     token.toRsId(helper));
 
-			case SyntaxKind.NumericLiteral:
-				if (token.text().indexOf(".") === -1) {
-                    //console.log(token.text() + " kind: " + SyntaxKind[token.kind()] + "  ISHEX? " + isHexLit(token.text()));
-                    if (isHexLit(token.text())) {
-                        return new RsHexLit(helper.getSourceSpan(token), [], token.text());
-                    }
-                    else {
-                        //No decimal part
-                        return new RsIntLit(helper.getSourceSpan(token),
-                            [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-                            token.value());
-                    }
-				}
-				else {
-					return new RsNumLit(helper.getSourceSpan(token),
-						[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
-						token.value());
-				}
+			// case SyntaxKind.NumericLiteral:
+			// 	if (token.text().indexOf(".") === -1) {
+            //         //console.log(token.text() + " kind: " + SyntaxKind[token.kind()] + "  ISHEX? " + isHexLit(token.text()));
+            //         if (isHexLit(token.text())) {
+            //             return new RsHexLit(helper.getSourceSpan(token), [], token.text());
+            //         }
+            //         else {
+            //             //No decimal part
+            //             return new
+			// 			(helper.getSourceSpan(token),
+            //                 [] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+            //                 token.value());
+            //         }
+			// 	}
+			// 	else {
+			// 		return new RsNumLit(helper.getSourceSpan(token),
+			// 			[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
+			// 			token.value());
+			// 	}
 
 			case SyntaxKind.StringLiteral:
 				return new RsStringLit(helper.getSourceSpan(token),
 					[] /*token.getRsAnnotations(AnnotContext.OtherContext)*/,
 					token.value());
-			
+
 			case SyntaxKind.FalseKeyword:
 			case SyntaxKind.TrueKeyword:
 				return new RsBoolLit(helper.getSourceSpan(token),
@@ -168,7 +169,7 @@ module TypeScript.Syntax {
         public width(): number { return this.fullWidth() - this.leadingTriviaWidth() - this.trailingTriviaWidth(); }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return this.fullText().substr(this.leadingTriviaWidth(), this.width()); }
         public fullText(): string { return this._fullText; }
@@ -248,14 +249,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
 
     }
@@ -322,7 +323,7 @@ module TypeScript.Syntax {
         public width(): number { return this.fullWidth() - this.leadingTriviaWidth() - this.trailingTriviaWidth(); }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return this.fullText().substr(this.leadingTriviaWidth(), this.width()); }
         public fullText(): string { return this._fullText; }
@@ -402,14 +403,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
     }
 
@@ -475,7 +476,7 @@ module TypeScript.Syntax {
         public width(): number { return this.fullWidth() - this.leadingTriviaWidth() - this.trailingTriviaWidth(); }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return this.fullText().substr(this.leadingTriviaWidth(), this.width()); }
         public fullText(): string { return this._fullText; }
@@ -555,14 +556,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
     }
 
@@ -714,9 +715,9 @@ module TypeScript.Syntax {
         public toRsExp(helper: RsHelper): RsExpression { return toRsExp(this, helper); }
         public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
         public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
         public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
         public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
         //RefScript - end
@@ -778,7 +779,7 @@ module TypeScript.Syntax {
         public width(): number { return this.text().length; }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return SyntaxFacts.getText(this.tokenKind); }
         public fullText(): string { return this.text(); }
@@ -844,14 +845,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
     }
 
@@ -917,7 +918,7 @@ module TypeScript.Syntax {
         public width(): number { return this.text().length; }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return SyntaxFacts.getText(this.tokenKind); }
         public fullText(): string { return this._fullText; }
@@ -983,14 +984,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
     }
 
@@ -1056,7 +1057,7 @@ module TypeScript.Syntax {
         public width(): number { return this.text().length; }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return SyntaxFacts.getText(this.tokenKind); }
         public fullText(): string { return this._fullText; }
@@ -1122,14 +1123,14 @@ module TypeScript.Syntax {
         }
 		//RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
 
     }
@@ -1199,7 +1200,7 @@ module TypeScript.Syntax {
         public width(): number { return this.text().length; }
 
         public end(): number { return this.start() + this.width(); }
-        public fullEnd(): number { return this._fullStart + this.fullWidth(); } 
+        public fullEnd(): number { return this._fullStart + this.fullWidth(); }
 
         public text(): string { return SyntaxFacts.getText(this.tokenKind); }
         public fullText(): string { return this._fullText; }
@@ -1263,17 +1264,17 @@ module TypeScript.Syntax {
         public isUnaryExpression(): boolean {
             return this.isPrimaryExpression();
         }
-	    
+
         //RefScript - begin
 		public toRsAST(helper: RsHelper): RsAST { return toRsAST(this, helper); }
-		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); } 
+		public toRsExp(helper: RsHelper): RsExpression {return toRsExp(this, helper); }
 		public toRsStmt(helper: RsHelper): RsStatement { return toRsStmt(this, helper); }
 		public toRsId(helper: RsHelper): RsId { return toRsId(this, helper); }
-		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); } 
+		public toRsMemList(helper: RsHelper): RsList<RsAST> { return toRsMemList(this, helper); }
 		public toRsLValue(helper: RsHelper): RsLValue { return toRsLValue(this, helper); }
-		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); } 
-		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); } 
-		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); } 
+		public toRsClassElt(helper: RsHelper, mut: RsType): RsClassElt { return toRsClassElt(this, helper, mut); }
+		public toRsForInit(helper: RsHelper): RsForInit { return toRsForInit(this, helper); }
+		public toRsVarDecl(helper: RsHelper, anns: RsBindAnnotation[]): IRsVarDeclLike { return toRsVarDecl(this, helper, anns); }
 		//RefScript - end
 
    }
